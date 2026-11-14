@@ -2,6 +2,10 @@
 
 Private daily trading operations, wallet evaluation, and prop-challenge research workspace.
 
+## Session Startup (Mandatory)
+
+- **Read [LESSONS.md](LESSONS.md) first:** Before starting any new session, research, backtest, or portfolio proposal in `trading-ops`, read [LESSONS.md](LESSONS.md) in full. Record any new durable lessons learned during the session back into [LESSONS.md](LESSONS.md).
+
 ## Authority & safety boundaries
 
 - **Read-only desk & research only:** Never execute real orders, place prop-firm challenge trades, or bypass Guardian inside `trading-ops`. Real challenge execution belongs strictly to `/home/quant/dev/prop-production` + `/home/quant/dev/trading-connector` under Guardian risk, `HALT`, and explicit authorization.
