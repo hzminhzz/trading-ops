@@ -1,0 +1,133 @@
+{
+  "candidate_portfolios": [
+    {
+      "accepted_execution_k": {
+        "ACT04": null,
+        "ACT08": null,
+        "ACT09": null
+      },
+      "members": [
+        "ACT04",
+        "ACT08",
+        "ACT09"
+      ],
+      "name": "regime.macro/TriadA",
+      "retrospective_scenario": {
+        "common_marked_minutes": 152380,
+        "complete_requested_window": false,
+        "does_not_net_cross_wallet_fills": true,
+        "end_requested_exclusive_utc": "2026-11-01T00:00:00+00:00",
+        "first_equity_floor_breach_utc": null,
+        "funding_unknown": true,
+        "lot_and_venue_capacity_unverified": true,
+        "max_peak_drawdown_usd": 245.06,
+        "minimum_equity_usd": 9980.41,
+        "missing_realized_daily_balance": true,
+        "not_independent_portfolio_selection_oos": true,
+        "october_chronological_net_usd": 90.15,
+        "october_peak_drawdown_usd": 245.06,
+        "source_supported_through_utc": "2026-10-14T19:40:00+00:00",
+        "start_utc": "2026-07-01T00:00:00+00:00",
+        "status": "PARTIAL_RETROSPECTIVE_SCENARIO",
+        "total_net_through_coverage_usd": 572.34,
+        "train_net_usd": 482.19,
+        "worst_utc_day_from_prior_day_end_usd": 108.07
+      },
+      "risk_sized_research_k": {
+        "ACT04": "0.000040384748",
+        "ACT08": "0.001853992857",
+        "ACT09": "0.000336736564"
+      },
+      "scientifically_qualified": false
+    },
+    {
+      "accepted_execution_k": {
+        "ACT04": null,
+        "ACT08": null,
+        "W031": null
+      },
+      "members": [
+        "ACT04",
+        "ACT08",
+        "W031"
+      ],
+      "name": "research.crypto/Balanced",
+      "retrospective_scenario": {
+        "common_marked_minutes": 152380,
+        "complete_requested_window": false,
+        "does_not_net_cross_wallet_fills": true,
+        "end_requested_exclusive_utc": "2026-11-01T00:00:00+00:00",
+        "first_equity_floor_breach_utc": null,
+        "funding_unknown": true,
+        "lot_and_venue_capacity_unverified": true,
+        "max_peak_drawdown_usd": 195.96,
+        "minimum_equity_usd": 9982.58,
+        "missing_realized_daily_balance": true,
+        "not_independent_portfolio_selection_oos": true,
+        "october_chronological_net_usd": 14.27,
+        "october_peak_drawdown_usd": 195.96,
+        "source_supported_through_utc": "2026-10-14T19:40:00+00:00",
+        "start_utc": "2026-07-01T00:00:00+00:00",
+        "status": "PARTIAL_RETROSPECTIVE_SCENARIO",
+        "total_net_through_coverage_usd": 519.41,
+        "train_net_usd": 505.14,
+        "worst_utc_day_from_prior_day_end_usd": 89.09
+      },
+      "risk_sized_research_k": {
+        "ACT04": "0.000040384748",
+        "ACT08": "0.001853992857",
+        "W031": "0.037093437333"
+      },
+      "scientifically_qualified": false
+    },
+    {
+      "accepted_execution_k": {
+        "ACT08": null,
+        "ACT09": null,
+        "W031": null
+      },
+      "members": [
+        "ACT08",
+        "ACT09",
+        "W031"
+      ],
+      "name": "research.crypto/RegimeAlt",
+      "retrospective_scenario": {
+        "common_marked_minutes": 152380,
+        "complete_requested_window": false,
+        "does_not_net_cross_wallet_fills": true,
+        "end_requested_exclusive_utc": "2026-11-01T00:00:00+00:00",
+        "first_equity_floor_breach_utc": null,
+        "funding_unknown": true,
+        "lot_and_venue_capacity_unverified": true,
+        "max_peak_drawdown_usd": 272.12,
+        "minimum_equity_usd": 9981.26,
+        "missing_realized_daily_balance": true,
+        "not_independent_portfolio_selection_oos": true,
+        "october_chronological_net_usd": -24.44,
+        "october_peak_drawdown_usd": 272.12,
+        "source_supported_through_utc": "2026-10-14T19:40:00+00:00",
+        "start_utc": "2026-07-01T00:00:00+00:00",
+        "status": "PARTIAL_RETROSPECTIVE_SCENARIO",
+        "total_net_through_coverage_usd": 396.55,
+        "train_net_usd": 420.99,
+        "worst_utc_day_from_prior_day_end_usd": 94.54
+      },
+      "risk_sized_research_k": {
+        "ACT08": "0.001853992857",
+        "ACT09": "0.000336736564",
+        "W031": "0.037093437333"
+      },
+      "scientifically_qualified": false
+    }
+  ],
+  "classification": "RESEARCH_PROPOSAL_SCENARIO_ONLY",
+  "end_exclusive_utc": "2026-11-01T00:00:00+00:00",
+  "order_route": "NONE",
+  "schema": "historical_half_wallet_risk_k_proposal_v1",
+  "start_utc": "2026-07-01T00:00:00+00:00",
+  "trading_authorized": false,
+  "train_end_exclusive_utc": "2026-10-01T00:00:00+00:00",
+  "wallet_static_risk_usd": "166.6666666666666666666666667",
+  "wallet_target_maxdd_usd": "83.33333333333333333333333335"
+}

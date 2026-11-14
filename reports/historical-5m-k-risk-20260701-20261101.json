@@ -1,0 +1,694 @@
+{
+  "audited_wallet_count": 4,
+  "classification": "RETROSPECTIVE_SCENARIO_ONLY",
+  "defaults": {
+    "daily_loss_usd": "300",
+    "end_exclusive_utc": "2026-11-01T00:00:00+00:00",
+    "per_wallet_risk_allocation_usd": "166.6666666666666666666666667",
+    "per_wallet_risk_drawdown_target_usd": "83.33333333333333333333333335",
+    "portfolio_static_floor_usd": "9500",
+    "sizing_formula": "k = (0.50 * wallet_allocated_risk_usd) / training_unit_k_1_max_drawdown_usd",
+    "sizing_policy": "FIXED_K_NATIVE_QUANTITY",
+    "start_utc": "2026-07-01T00:00:00+00:00",
+    "train_end_exclusive_utc": "2026-10-01T00:00:00+00:00"
+  },
+  "order_route": "NONE",
+  "portfolios": {
+    "regime.macro/TriadA": {
+      "accepted_executable_k": {
+        "ACT04": null,
+        "ACT08": null,
+        "ACT09": null
+      },
+      "chronological_scenario": {
+        "common_marked_minutes": 152380,
+        "complete_requested_window": false,
+        "does_not_net_cross_wallet_fills": true,
+        "end_requested_exclusive_utc": "2026-11-01T00:00:00+00:00",
+        "first_equity_floor_breach_utc": null,
+        "funding_unknown": true,
+        "lot_and_venue_capacity_unverified": true,
+        "max_peak_drawdown_usd": 245.06,
+        "minimum_equity_usd": 9980.41,
+        "missing_realized_daily_balance": true,
+        "not_independent_portfolio_selection_oos": true,
+        "october_chronological_net_usd": 90.15,
+        "october_peak_drawdown_usd": 245.06,
+        "source_supported_through_utc": "2026-10-14T19:40:00+00:00",
+        "start_utc": "2026-07-01T00:00:00+00:00",
+        "status": "PARTIAL_RETROSPECTIVE_SCENARIO",
+        "total_net_through_coverage_usd": 572.34,
+        "train_net_usd": 482.19,
+        "worst_utc_day_from_prior_day_end_usd": 108.07
+      },
+      "k_by_member": {
+        "ACT04": "0.000040384748",
+        "ACT08": "0.001853992857",
+        "ACT09": "0.000336736564"
+      },
+      "members": [
+        "ACT04",
+        "ACT08",
+        "ACT09"
+      ],
+      "qualification": "NOT_SCIENTIFIC_OOS_NO_NATIVE_JUL_OCT_SOURCE_RECEIPTS"
+    },
+    "research.crypto/Balanced": {
+      "accepted_executable_k": {
+        "ACT04": null,
+        "ACT08": null,
+        "W031": null
+      },
+      "chronological_scenario": {
+        "common_marked_minutes": 152380,
+        "complete_requested_window": false,
+        "does_not_net_cross_wallet_fills": true,
+        "end_requested_exclusive_utc": "2026-11-01T00:00:00+00:00",
+        "first_equity_floor_breach_utc": null,
+        "funding_unknown": true,
+        "lot_and_venue_capacity_unverified": true,
+        "max_peak_drawdown_usd": 195.96,
+        "minimum_equity_usd": 9982.58,
+        "missing_realized_daily_balance": true,
+        "not_independent_portfolio_selection_oos": true,
+        "october_chronological_net_usd": 14.27,
+        "october_peak_drawdown_usd": 195.96,
+        "source_supported_through_utc": "2026-10-14T19:40:00+00:00",
+        "start_utc": "2026-07-01T00:00:00+00:00",
+        "status": "PARTIAL_RETROSPECTIVE_SCENARIO",
+        "total_net_through_coverage_usd": 519.41,
+        "train_net_usd": 505.14,
+        "worst_utc_day_from_prior_day_end_usd": 89.09
+      },
+      "k_by_member": {
+        "ACT04": "0.000040384748",
+        "ACT08": "0.001853992857",
+        "W031": "0.037093437333"
+      },
+      "members": [
+        "ACT04",
+        "ACT08",
+        "W031"
+      ],
+      "qualification": "NOT_SCIENTIFIC_OOS_NO_NATIVE_JUL_OCT_SOURCE_RECEIPTS"
+    },
+    "research.crypto/RegimeAlt": {
+      "accepted_executable_k": {
+        "ACT08": null,
+        "ACT09": null,
+        "W031": null
+      },
+      "chronological_scenario": {
+        "common_marked_minutes": 152380,
+        "complete_requested_window": false,
+        "does_not_net_cross_wallet_fills": true,
+        "end_requested_exclusive_utc": "2026-11-01T00:00:00+00:00",
+        "first_equity_floor_breach_utc": null,
+        "funding_unknown": true,
+        "lot_and_venue_capacity_unverified": true,
+        "max_peak_drawdown_usd": 272.12,
+        "minimum_equity_usd": 9981.26,
+        "missing_realized_daily_balance": true,
+        "not_independent_portfolio_selection_oos": true,
+        "october_chronological_net_usd": -24.44,
+        "october_peak_drawdown_usd": 272.12,
+        "source_supported_through_utc": "2026-10-14T19:40:00+00:00",
+        "start_utc": "2026-07-01T00:00:00+00:00",
+        "status": "PARTIAL_RETROSPECTIVE_SCENARIO",
+        "total_net_through_coverage_usd": 396.55,
+        "train_net_usd": 420.99,
+        "worst_utc_day_from_prior_day_end_usd": 94.54
+      },
+      "k_by_member": {
+        "ACT08": "0.001853992857",
+        "ACT09": "0.000336736564",
+        "W031": "0.037093437333"
+      },
+      "members": [
+        "ACT08",
+        "ACT09",
+        "W031"
+      ],
+      "qualification": "NOT_SCIENTIFIC_OOS_NO_NATIVE_JUL_OCT_SOURCE_RECEIPTS"
+    }
+  },
+  "price_coverage": {
+    "AAVE": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "AERO": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 0.99999,
+      "minute_rows": 177118
+    },
+    "APT": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "ARB": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "ASTER": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 0.99999,
+      "minute_rows": 177119
+    },
+    "AVAX": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "AZTEC": {
+      "days_present": 95,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-12T12:35:00+00:00",
+      "fraction": 0.7666,
+      "minute_rows": 135780
+    },
+    "BTC": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "CRV": {
+      "days_present": 95,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-12T05:30:00+00:00",
+      "fraction": 0.76996,
+      "minute_rows": 136376
+    },
+    "DOGE": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "ENA": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "ETH": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "ETHFI": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "FARTCOIN": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "FET": {
+      "days_present": 96,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-11T19:49:00+00:00",
+      "fraction": 0.77364,
+      "minute_rows": 137027
+    },
+    "FIL": {
+      "days_present": 96,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-11T20:08:00+00:00",
+      "fraction": 0.77353,
+      "minute_rows": 137008
+    },
+    "GMX": {
+      "days_present": 95,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-12T12:35:00+00:00",
+      "fraction": 0.76796,
+      "minute_rows": 136021
+    },
+    "GRAM": {
+      "days_present": 103,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-12T12:35:00+00:00",
+      "fraction": 0.83314,
+      "minute_rows": 147565
+    },
+    "GRASS": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 0.99998,
+      "minute_rows": 177116
+    },
+    "HBAR": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "HYPE": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "LINEA": {
+      "days_present": 97,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-11T21:08:00+00:00",
+      "fraction": 0.77424,
+      "minute_rows": 137134
+    },
+    "LINK": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "NEAR": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "NIL": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:01:00+00:00",
+      "fraction": 0.99996,
+      "minute_rows": 177113
+    },
+    "ONDO": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "PENDLE": {
+      "days_present": 111,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-11T23:42:00+00:00",
+      "fraction": 0.8944,
+      "minute_rows": 158416
+    },
+    "PENGU": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:01:00+00:00",
+      "fraction": 0.99999,
+      "minute_rows": 177119
+    },
+    "PONS": {
+      "days_present": 62,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-08-31T03:50:00+00:00",
+      "fraction": 0.50277,
+      "minute_rows": 89050
+    },
+    "PUMP": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "SEI": {
+      "days_present": 104,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-12T12:35:00+00:00",
+      "fraction": 0.84075,
+      "minute_rows": 148914
+    },
+    "STRK": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 0.99998,
+      "minute_rows": 177116
+    },
+    "SUI": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "TAO": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 0.99999,
+      "minute_rows": 177119
+    },
+    "UMA": {
+      "days_present": 0,
+      "expected_window_minutes": 177120,
+      "first_available_utc": null,
+      "fraction": 0.0,
+      "minute_rows": 0
+    },
+    "UNI": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "USELESS": {
+      "days_present": 54,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-09-08T16:02:00+00:00",
+      "fraction": 0.43359,
+      "minute_rows": 76798
+    },
+    "VVV": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "WLD": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "XLM": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 0.99999,
+      "minute_rows": 177119
+    },
+    "XMR": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "XPL": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "XRP": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "ZEC": {
+      "days_present": 123,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-01T00:00:00+00:00",
+      "fraction": 1.0,
+      "minute_rows": 177120
+    },
+    "ZK": {
+      "days_present": 95,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-12T12:35:00+00:00",
+      "fraction": 0.76601,
+      "minute_rows": 135675
+    },
+    "kPEPE": {
+      "days_present": 111,
+      "expected_window_minutes": 177120,
+      "first_available_utc": "2026-07-11T21:32:00+00:00",
+      "fraction": 0.89486,
+      "minute_rows": 158497
+    }
+  },
+  "schema": "historical_position_checkpoints_fixed_k_risk_half_budget_v1",
+  "source_first_known_valid": false,
+  "trading_authorized": false,
+  "wallets": {
+    "ACT04": {
+      "accepted_executable_k": null,
+      "calibrated_k": "0.000040384748",
+      "calibrated_train_drawdown_usd": "83.333332738893084640000000",
+      "registry": {
+        "current_exclusions": 0,
+        "historical_selection_as_of_start": false,
+        "registered": true
+      },
+      "research_calibrated_k": "0.000040384748",
+      "risk_target_50pct_usd": "83.33333333333333333333333335",
+      "source": {
+        "anchor_and_fills_consistent": false,
+        "backcast_from_future_anchor": true,
+        "duplicate_fill_rows_removed": 0,
+        "fills_in_window": 7311,
+        "first_fills_backcast_for_start": 2061,
+        "first_full_snapshot_utc": "2026-08-01T00:03:00+00:00",
+        "historical_first_known_receipts": false,
+        "latest_snapshot_utc": "2026-10-01T23:58:00+00:00",
+        "sampled_snapshot_checks": 133,
+        "sampled_snapshot_disagreements": 3,
+        "sampled_snapshot_max_abs_qty_error": "12.49",
+        "snapshot_rows": 170245,
+        "snapshot_timestamps": 17151,
+        "validation_examples": [
+          {
+            "date": "2026-09-17T00:00:00+00:00",
+            "max_abs_quantity_gap": "5.55"
+          },
+          {
+            "date": "2026-09-17T00:05:00+00:00",
+            "max_abs_quantity_gap": "12.49"
+          },
+          {
+            "date": "2026-09-17T00:10:00+00:00",
+            "max_abs_quantity_gap": "2.78"
+          }
+        ]
+      },
+      "train_wallet_risk_allocation_usd": "166.6666666666666666666666667",
+      "unit": {
+        "complete_train_minutes": true,
+        "complete_window_minutes": false,
+        "counters": {
+          "marked_minutes": 152621,
+          "modeled_unit_orders": 257,
+          "retrospective_initial_baseline_no_trade": 1,
+          "retrospective_snapshot_inventory_corrections": 239,
+          "unknown_target_mark": 13,
+          "unmarkable_open_position": 1
+        },
+        "full_unit_net_usd": "6191673.0080772920000",
+        "open_position_mark_gap": {
+          "symbol": "GMX",
+          "time": "2026-10-14T23:41:00+00:00"
+        },
+        "scenario": "RETROSPECTIVE_EVENT_TIME_NOT_CWSA_FIRST_KNOWN",
+        "train_end_exclusive": "2026-10-01T00:00:00+00:00",
+        "train_unit_max_drawdown_usd": "2063485.272680000000",
+        "train_unit_net_usd": "6620635.4342731520000",
+        "unit_fees_usd": "47087.67267447",
+        "unit_full_max_drawdown_usd": "2063485.272680000000",
+        "unit_k": 1,
+        "wallet": "ACT04",
+        "window_end_exclusive": "2026-11-01T00:00:00+00:00",
+        "window_start": "2026-07-01T00:00:00+00:00"
+      }
+    },
+    "ACT08": {
+      "accepted_executable_k": null,
+      "calibrated_k": "0.001853992857",
+      "calibrated_train_drawdown_usd": "83.33333330344308253724400",
+      "registry": {
+        "current_exclusions": 0,
+        "historical_selection_as_of_start": false,
+        "registered": true
+      },
+      "research_calibrated_k": "0.001853992857",
+      "risk_target_50pct_usd": "83.33333333333333333333333335",
+      "source": {
+        "anchor_and_fills_consistent": true,
+        "backcast_from_future_anchor": true,
+        "duplicate_fill_rows_removed": 0,
+        "fills_in_window": 5471,
+        "first_fills_backcast_for_start": 1650,
+        "first_full_snapshot_utc": "2026-09-29T00:01:00+00:00",
+        "historical_first_known_receipts": false,
+        "latest_snapshot_utc": "2026-09-29T23:55:00+00:00",
+        "sampled_snapshot_checks": 3,
+        "sampled_snapshot_disagreements": 0,
+        "sampled_snapshot_max_abs_qty_error": "0",
+        "snapshot_rows": 1365,
+        "snapshot_timestamps": 273,
+        "validation_examples": []
+      },
+      "train_wallet_risk_allocation_usd": "166.6666666666666666666666667",
+      "unit": {
+        "complete_train_minutes": true,
+        "complete_window_minutes": false,
+        "counters": {
+          "marked_minutes": 152380,
+          "modeled_unit_orders": 450,
+          "retrospective_initial_baseline_no_trade": 1,
+          "unmarkable_open_position": 1
+        },
+        "full_unit_net_usd": "105205.83383757600",
+        "open_position_mark_gap": {
+          "symbol": "AZTEC",
+          "time": "2026-10-14T19:40:00+00:00"
+        },
+        "scenario": "RETROSPECTIVE_EVENT_TIME_NOT_CWSA_FIRST_KNOWN",
+        "train_end_exclusive": "2026-10-01T00:00:00+00:00",
+        "train_unit_max_drawdown_usd": "44948.03363929200",
+        "train_unit_net_usd": "17040.42499743500",
+        "unit_fees_usd": "688.09106598",
+        "unit_full_max_drawdown_usd": "140168.66557802900",
+        "unit_k": 1,
+        "wallet": "ACT08",
+        "window_end_exclusive": "2026-11-01T00:00:00+00:00",
+        "window_start": "2026-07-01T00:00:00+00:00"
+      }
+    },
+    "ACT09": {
+      "accepted_executable_k": null,
+      "calibrated_k": "0.000336736564",
+      "calibrated_train_drawdown_usd": "83.3333332465915753969200",
+      "registry": {
+        "current_exclusions": 0,
+        "historical_selection_as_of_start": false,
+        "registered": true
+      },
+      "research_calibrated_k": "0.000336736564",
+      "risk_target_50pct_usd": "83.33333333333333333333333335",
+      "source": {
+        "anchor_and_fills_consistent": true,
+        "backcast_from_future_anchor": true,
+        "duplicate_fill_rows_removed": 0,
+        "fills_in_window": 2828,
+        "first_fills_backcast_for_start": 346,
+        "first_full_snapshot_utc": "2026-09-29T00:01:00+00:00",
+        "historical_first_known_receipts": false,
+        "latest_snapshot_utc": "2026-09-29T23:55:00+00:00",
+        "sampled_snapshot_checks": 3,
+        "sampled_snapshot_disagreements": 0,
+        "sampled_snapshot_max_abs_qty_error": "0",
+        "snapshot_rows": 1638,
+        "snapshot_timestamps": 273,
+        "validation_examples": []
+      },
+      "train_wallet_risk_allocation_usd": "166.6666666666666666666666667",
+      "unit": {
+        "complete_train_minutes": true,
+        "complete_window_minutes": true,
+        "counters": {
+          "marked_minutes": 177120,
+          "modeled_unit_orders": 103,
+          "retrospective_initial_baseline_no_trade": 1,
+          "retrospective_snapshot_inventory_corrections": 20,
+          "unknown_target_mark": 68
+        },
+        "full_unit_net_usd": "381101.6489215330",
+        "open_position_mark_gap": null,
+        "scenario": "RETROSPECTIVE_EVENT_TIME_NOT_CWSA_FIRST_KNOWN",
+        "train_end_exclusive": "2026-10-01T00:00:00+00:00",
+        "train_unit_max_drawdown_usd": "247473.3728250300",
+        "train_unit_net_usd": "544124.8485828890",
+        "unit_fees_usd": "1626.95544867",
+        "unit_full_max_drawdown_usd": "284967.8465400200",
+        "unit_k": 1,
+        "wallet": "ACT09",
+        "window_end_exclusive": "2026-11-01T00:00:00+00:00",
+        "window_start": "2026-07-01T00:00:00+00:00"
+      }
+    },
+    "W031": {
+      "accepted_executable_k": null,
+      "calibrated_k": "0.037093437333",
+      "calibrated_train_drawdown_usd": "83.3333333323766889947715000",
+      "registry": {
+        "current_exclusions": 0,
+        "historical_selection_as_of_start": false,
+        "registered": true
+      },
+      "research_calibrated_k": "0.037093437333",
+      "risk_target_50pct_usd": "83.33333333333333333333333335",
+      "source": {
+        "anchor_and_fills_consistent": true,
+        "backcast_from_future_anchor": true,
+        "duplicate_fill_rows_removed": 0,
+        "fills_in_window": 814,
+        "first_fills_backcast_for_start": 624,
+        "first_full_snapshot_utc": "2026-09-29T00:01:00+00:00",
+        "historical_first_known_receipts": false,
+        "latest_snapshot_utc": "2026-09-29T23:55:00+00:00",
+        "sampled_snapshot_checks": 3,
+        "sampled_snapshot_disagreements": 0,
+        "sampled_snapshot_max_abs_qty_error": "0",
+        "snapshot_rows": 2470,
+        "snapshot_timestamps": 273,
+        "validation_examples": []
+      },
+      "train_wallet_risk_allocation_usd": "166.6666666666666666666666667",
+      "unit": {
+        "complete_train_minutes": true,
+        "complete_window_minutes": false,
+        "counters": {
+          "marked_minutes": 165605,
+          "modeled_unit_orders": 187,
+          "retrospective_initial_baseline_no_trade": 1,
+          "retrospective_snapshot_inventory_corrections": 10,
+          "unmarkable_open_position": 1
+        },
+        "full_unit_net_usd": "1213.7717651992000",
+        "open_position_mark_gap": {
+          "symbol": "SEI",
+          "time": "2026-10-24T00:05:00+00:00"
+        },
+        "scenario": "RETROSPECTIVE_EVENT_TIME_NOT_CWSA_FIRST_KNOWN",
+        "train_end_exclusive": "2026-10-01T00:00:00+00:00",
+        "train_unit_max_drawdown_usd": "2246.5788916855000",
+        "train_unit_net_usd": "5558.1396727092000",
+        "unit_fees_usd": "266.23799088",
+        "unit_full_max_drawdown_usd": "6232.7699674100000",
+        "unit_k": 1,
+        "wallet": "W031",
+        "window_end_exclusive": "2026-11-01T00:00:00+00:00",
+        "window_start": "2026-07-01T00:00:00+00:00"
+      }
+    }
+  }
+}
