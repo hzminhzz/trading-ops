@@ -30,12 +30,16 @@ from copytrade_pm.pm03_account import Account, Instrument, Rulebook
 from copytrade_pm.pm03_execution import CostModel, MarketObservation
 from copytrade_pm.pm_exposure_sizing import target_from_fixed_k
 from copytrade_pm.wallet_store import scan
+from market_data_fallback import load_market_recovery
 
 START = datetime(2026, 7, 1, tzinfo=UTC)
 TRAIN_END = datetime(2026, 10, 1, tzinfo=UTC)
 END = datetime(2026, 11, 1, tzinfo=UTC)
 MINUTE = 60_000
 GRID = 5 * MINUTE
+# Filled-trade candles naturally skip quiet minutes. 30 absent minutes indicate
+# a candidate data outage for this *retrospective scenario*, not a real fill.
+MARK_STALE_TOLERANCE_MINUTES = 30
 EQUITY = D(10_000)
 STATIC_LOSS = D(500)
 DAILY_LOSS = D(300)
@@ -371,9 +375,21 @@ class LocalBars:
                 n += 1
         else:
             n = 0
+        recovered, recovery_audit = load_market_recovery(
+            symbol, start_ms=self.start_ms, end_ms=self.end_ms, existing=data
+        )
+        original_local_rows = n
+        for ts, close, traded_volume in recovered:
+            i = (ts - self.start_ms) // MINUTE
+            data[i] = close
+            volume[i] = traded_volume
+        n += len(recovered)
         self.prices[symbol] = data
         self.volumes[symbol] = volume
         self.coverage[symbol] = {
+            "original_local_rows": original_local_rows,
+            "recovered_vike_or_reservoir_rows": len(recovered),
+            "fallback": recovery_audit,
             "days_present": len(fs),
             "minute_rows": n,
             "expected_window_minutes": self.count,
@@ -393,6 +409,17 @@ class LocalBars:
         for j in range(index, max(-1, index - tolerance - 1), -1):
             if 0 <= j < self.count and not math.isnan(self.prices[symbol][j]):
                 return d(self.prices[symbol][j])
+        return None
+
+    def last_observed(self, symbol: str, t: int) -> tuple[D, int] | None:
+        """A past recorded traded close, never a future or fabricated price."""
+        if symbol not in self.prices:
+            return None
+        index = min((t - self.start_ms) // MINUTE, self.count - 1)
+        for j in range(index, -1, -1):
+            px = self.prices[symbol][j]
+            if math.isfinite(px) and px > 0:
+                return d(px), self.start_ms + j * MINUTE
         return None
 
     def prev_volume(self, symbol: str, t: int) -> D | None:
@@ -424,15 +451,23 @@ def replay_unit(
     train_end: datetime = TRAIN_END,
     end: datetime = END,
 ) -> dict:
-    """Historical-oracle unit book, PM03 financial ledger; 1m MTM, 5m targets."""
+    """A full-calendar, per-market-fail-closed retrospective PM03 unit replay.
+
+    Source signals use historical event-time books, never first-known receipts.
+    After Vike/Reservoir cache lookup, a missing *single* quote disables that
+    follower instrument. Its open position is hypothetically closed at the
+    last verifiably observed price with a 50 bps adverse stress haircut and a
+    separate fee. This is a scenario exit, NOT a verified executable fill.
+    Other instruments continue through the requested backtest end.
+    """
     high_balance = D(1000000000000)
     all_inst = tuple(Instrument.parse(SOURCE_PREFIX + s) for s in wallet.symbols)
     rb = Rulebook(
-        program="RETROSPECTIVE_UNIT_K_SLOPE_ONLY",
+        program="RETROSPECTIVE_PER_MARKET_GAP_EXIT_UNIT_K",
         stage="scenario",
-        source="LOCAL_HL_1M_RETROSPECTIVE_NO_FIRST_KNOWN",
+        source="LOCAL_AND_VIKE_1M_RETROSPECTIVE_NO_FIRST_KNOWN",
         observed_at=start.isoformat(),
-        version="research-v1",
+        version="research-v2",
         timezone="UTC",
         initial_balance=high_balance,
         profit_target=None,
@@ -446,173 +481,244 @@ def replay_unit(
     account = Account.start(rb, start.isoformat())
     book = dict(wallet.initial)
     prev_book = None
-    # Ordered native historical position observations override fill-derived
-    # estimates at their stated event time. Never claim these were first-known.
+    # Independent archived books are ex-post event-time anchors. Corrections
+    # must be reported and cannot be called contemporaneous leader receipts.
     events = sorted(
-        [(r.t, 0, r) for r in wallet.fills]
-        + [(t, 1, snapshot) for t, snapshot in wallet.snapshots],
+        [(r.t, 0, r) for r in wallet.fills] + [(t, 1, snap) for t, snap in wallet.snapshots],
         key=lambda row: (row[0], row[1]),
     )
-    fillidx = 0
+    event_index = 0
     costs = cost_model()
     counters = Counter()
+    disabled_symbols: set[str] = set()
+    pending_unpriced: set[str] = set()
+    first_gap: dict | None = None
+    forced_exits = []
     peak = D(0)
-    dd = D(0)
+    max_dd = D(0)
     train_peak = D(0)
-    train_dd = D(0)
-    min_equity = D(0)
+    train_max_dd = D(0)
     train_last = D(0)
-    first_gap = None
-    marks = {}
-    unit_curve = []
+    min_equity = D(0)
+    unit_curve: list[float] = []
+    marks: dict[Instrument, D] = {}
+    STALE_EXIT_HAIRCUT_BPS = D(50)
+    FEE_BPS = D("4.5")
 
-    def mark_book(t: int, *, lag: int = 0) -> dict[Instrument, D] | None:
-        active = {inst for inst, quantity in account.quantities.items() if quantity}
-        present = active | {Instrument.parse(SOURCE_PREFIX + s) for s in book if book[s]}
-        result = {}
-        for inst in present:
-            px = bars.mark(inst.symbol, t, lag_minutes=lag)
-            if px is None:
-                return None
-            result[inst] = px
-        return result
+    def forced_close(inst: Instrument, now: int) -> None:
+        """Close only this follower leg using a documented stale-price proxy.
+
+        The actual market-order price is unknown in a no-data interval. This
+        action therefore cannot be credited as executed follower PnL.
+        """
+        nonlocal first_gap
+        qty = account.quantities.get(inst, D(0))
+        if not qty:
+            return
+        prev = bars.last_observed(inst.symbol, now - MINUTE)
+        if prev is None:
+            last_px = account.marks.get(inst)
+            if last_px is None:
+                raise ValueError("INVARIANT_UNMARKED_OPEN_FOLLOWER_LEG")
+            observed_at = None
+        else:
+            last_px, observed_at = prev
+        direction = D(1) if qty > 0 else D(-1)
+        modeled_exit_px = last_px * (D(1) - direction * STALE_EXIT_HAIRCUT_BPS / D(10000))
+        fee = abs(qty * modeled_exit_px) * FEE_BPS / D(10000)
+        # A stale last-trade print is not an exchange book, so this deliberately
+        # bypasses the normal execution quote-freshness admission guard.
+        account.mark({**account.marks, inst: last_px}, date(now - 1))
+        account.simulate_fill(
+            inst,
+            -qty,
+            modeled_exit_px,
+            fee,
+            accepted=True,
+            allocated={wallet.alias: -qty},
+        )
+        disabled_symbols.add(inst.symbol)
+        pending_unpriced.discard(inst.symbol)
+        counters["hypothetical_stale_quote_forced_closes"] += 1
+        counters["hypothetical_stale_quote_forced_close_fee_usd"] += fee
+        event = {
+            "symbol": inst.symbol,
+            "source_gap_detected_utc": date(now),
+            "last_observed_market_bar_utc": date(observed_at) if observed_at is not None else None,
+            "last_price_age_min": (now - observed_at) // MINUTE
+            if observed_at is not None
+            else None,
+            "unit_follower_quantity_before_close": str(qty),
+            "last_observed_price_usd": str(last_px),
+            "hypothetical_exit_price_usd": str(modeled_exit_px),
+            "adverse_stress_bps": str(STALE_EXIT_HAIRCUT_BPS),
+            "modeled_fee_usd": str(fee),
+            "executed": False,
+            "uncertain_slippage_and_venue_orderability": True,
+        }
+        forced_exits.append(event)
+        if first_gap is None:
+            first_gap = {"time": date(now), "symbol": inst.symbol}
 
     for now in range(ms(start), ms(end), MINUTE):
-        # Both fills and archived full books use retrospective event clocks,
-        # not genuine historical first-known observations. A full book fences
-        # inconsistent inferred inventory; no invented flat from a gap.
-        while fillidx < len(events) and events[fillidx][0] < now:
-            _, kind, payload = events[fillidx]
+        # No information from current or future bars is used for a checkpoint.
+        while event_index < len(events) and events[event_index][0] < now:
+            _, kind, payload = events[event_index]
             if kind == 0:
                 _changed_book(book, payload.symbol, payload.delta)
             else:
-                if max(
+                gap = max(
                     (
                         abs(book.get(s, D(0)) - payload.get(s, D(0)))
                         for s in set(book) | set(payload)
                     ),
                     default=D(0),
-                ) > D("0.000001"):
+                )
+                if gap > D("0.000001"):
                     counters["retrospective_snapshot_inventory_corrections"] += 1
                 book = dict(payload)
-            fillidx += 1
+            event_index += 1
+
+        # Independent market health: never let one unmarkable leg stop others.
+        for inst, quantity in list(account.quantities.items()):
+            if (
+                quantity
+                and bars.mark(inst.symbol, now, tolerance=MARK_STALE_TOLERANCE_MINUTES) is None
+            ):
+                forced_close(inst, now)
+
         if now % GRID == 0:
             if prev_book is None:
                 prev_book = dict(book)
                 counters["retrospective_initial_baseline_no_trade"] += 1
-            elif book != prev_book:
+            elif book != prev_book or pending_unpriced:
                 prev_book = dict(book)
-                prior = mark_book(now, lag=1)
-                if prior is None:
-                    counters["unknown_target_mark"] += 1
-                else:
-                    source_qty = {SOURCE_PREFIX + s: amount for s, amount in book.items() if amount}
-                    price = {k: prior[Instrument.parse(k)] for k in source_qty}
-                    try:
-                        proposed = target_from_fixed_k(
-                            source_quantities=source_qty,
-                            k=D(1),
-                            source_marks=price,
-                            follower_marks=price,
-                            follower_equity_usd=high_balance,
-                            max_gross_notional_usd=D(100000000000),
-                            max_market_notional_usd=D(100000000000),
-                            pod_loss_budget_usd=D(100000000),
-                        )
-                    except (KeyError, ValueError) as exc:
-                        counters["intent_rejected"] += 1
-                        if first_gap is None:
-                            first_gap = str(exc)
+                source_qty = {}
+                source_marks = {}
+                missing = set()
+                for symbol, quantity in sorted(book.items()):
+                    if not quantity or symbol in disabled_symbols:
                         continue
-                    desired = {
-                        Instrument.parse(k): d(v) for k, v in proposed["target_quantities"].items()
-                    }
-                    all_marked = set(desired) | {i for i, q in account.quantities.items() if q}
-                    fill_marks = {}
-                    for inst in all_marked:
-                        px = bars.mark(inst.symbol, now, lag_minutes=1)
-                        if px is None:
-                            fill_marks = None
-                            break
-                        fill_marks[inst] = px
-                    if fill_marks is None:
-                        counters["unknown_execution_mark"] += 1
-                    else:
-                        # PM03 marks before any trade and tracks realized basis/cost.
-                        current_marks = {
-                            **{
-                                inst: bars.mark(inst.symbol, now, lag_minutes=1)
-                                for inst, q in account.quantities.items()
-                                if q
-                            },
-                            **fill_marks,
-                        }
-                        current_marks = {k: v for k, v in current_marks.items() if v is not None}
-                        # Native PM03 retains flat quantity keys for audit;
-                        # they need a cached mark, never a fabricated active mark.
-                        current_marks = {**account.marks, **current_marks}
-                        account.mark(current_marks, date(now - 1))
-                        for inst in sorted(all_marked):
-                            delta = desired.get(inst, D(0)) - account.quantities.get(inst, D(0))
-                            if not delta:
-                                continue
-                            quote = MarketObservation(
-                                instrument=inst,
-                                event_at=date(now - 1),
-                                first_known_at=date(now - 1),
-                                mark=fill_marks[inst],
-                                volume_base=D(1000000000000000),
-                                quality="OHLCV_1M_PROXY",
-                                supported=True,
-                            )
-                            px, fee, _ = costs.price_and_fee(delta, quote)
-                            account.simulate_fill(
-                                inst, delta, px, fee, accepted=True, allocated={wallet.alias: delta}
-                            )
-                            counters["modeled_unit_orders"] += 1
-        # All open sources and actual simulated positions must mark continuously.
-        active = {inst for inst, q in account.quantities.items() if q}
-        if active:
-            for inst in active:
-                px = bars.mark(inst.symbol, now, tolerance=5)
-                if px is None:
-                    first_gap = {"time": date(now), "symbol": inst.symbol}
-                    counters["unmarkable_open_position"] += 1
-                    break
+                    px = bars.mark(
+                        symbol, now, lag_minutes=1, tolerance=MARK_STALE_TOLERANCE_MINUTES
+                    )
+                    if px is None:
+                        missing.add(symbol)
+                        continue
+                    native = SOURCE_PREFIX + symbol
+                    source_qty[native] = quantity
+                    source_marks[native] = px
+                if missing:
+                    counters["checkpoints_with_missing_source_marks"] += 1
+                    counters["missing_source_instrument_checkpoint_attempts"] += len(missing)
+                pending_unpriced = missing
+                proposed = target_from_fixed_k(
+                    source_quantities=source_qty,
+                    k=D(1),
+                    source_marks=source_marks,
+                    follower_marks=source_marks,
+                    follower_equity_usd=high_balance,
+                    max_gross_notional_usd=D(100000000000),
+                    max_market_notional_usd=D(100000000000),
+                    pod_loss_budget_usd=D(100000000),
+                )
+                desired = {
+                    Instrument.parse(key): d(value)
+                    for key, value in proposed["target_quantities"].items()
+                }
+                active_or_desired = set(desired) | {
+                    inst for inst, quantity in account.quantities.items() if quantity
+                }
+                fill_marks = {}
+                for inst in sorted(active_or_desired):
+                    px = bars.mark(
+                        inst.symbol, now, lag_minutes=1, tolerance=MARK_STALE_TOLERANCE_MINUTES
+                    )
+                    if px is None:
+                        if account.quantities.get(inst, D(0)):
+                            forced_close(inst, now)
+                        desired.pop(inst, None)
+                        if inst.symbol not in disabled_symbols:
+                            pending_unpriced.add(inst.symbol)
+                        counters["missing_instrument_execution_quote"] += 1
+                        continue
+                    fill_marks[inst] = px
+                account.mark({**account.marks, **fill_marks}, date(now - 1))
+                for inst in sorted(set(desired) | set(account.quantities)):
+                    delta = desired.get(inst, D(0)) - account.quantities.get(inst, D(0))
+                    if not delta:
+                        continue
+                    if inst not in fill_marks:
+                        counters["skipped_unpriced_order_intent"] += 1
+                        continue
+                    quote = MarketObservation(
+                        instrument=inst,
+                        event_at=date(now - 1),
+                        first_known_at=date(now - 1),
+                        mark=fill_marks[inst],
+                        volume_base=D(1000000000000000),
+                        quality="RETROSPECTIVE_1M_MARK_SCENARIO",
+                        supported=True,
+                    )
+                    price, fee, _ = costs.price_and_fee(delta, quote)
+                    account.simulate_fill(
+                        inst,
+                        delta,
+                        price,
+                        fee,
+                        accepted=True,
+                        allocated={wallet.alias: delta},
+                    )
+                    counters["modeled_unit_orders"] += 1
+
+        # Mark the supported holdings with past or current-minute 1m close.
+        # Only the checkpoint order decision is constrained to completed t-1.
+        for inst, qty in list(account.quantities.items()):
+            if not qty:
+                continue
+            px = bars.mark(inst.symbol, now, tolerance=MARK_STALE_TOLERANCE_MINUTES)
+            if px is None:
+                forced_close(inst, now)
+            else:
                 marks[inst] = px
-            if first_gap:
-                break
-        # Zero quantity keys retained by PM03 must also have marks for Account.mark.
-        present = set(account.quantities)
         account.mark(
-            {inst: marks.get(inst, account.marks.get(inst, D(1))) for inst in present},
+            {inst: marks.get(inst, account.marks.get(inst, D(1))) for inst in account.quantities},
             date(now + MINUTE - 1),
         )
-        equity_change = account.equity - high_balance
-        peak = max(peak, equity_change)
-        dd = max(dd, peak - equity_change)
-        min_equity = min(min_equity, equity_change)
+        change = account.equity - high_balance
+        peak = max(peak, change)
+        max_dd = max(max_dd, peak - change)
+        min_equity = min(min_equity, change)
         if now < ms(train_end):
-            train_peak = max(train_peak, equity_change)
-            train_dd = max(train_dd, train_peak - equity_change)
-            train_last = equity_change
+            train_peak = max(train_peak, change)
+            train_max_dd = max(train_max_dd, train_peak - change)
+            train_last = change
         counters["marked_minutes"] += 1
-        unit_curve.append(float(equity_change))
+        unit_curve.append(float(change))
+
+    account.verify()
     return {
         "wallet": wallet.alias,
-        "scenario": "RETROSPECTIVE_EVENT_TIME_NOT_CWSA_FIRST_KNOWN",
+        "scenario": "RETROSPECTIVE_5M_EVENT_TIME_WITH_MARKET_LOCALIZED_EXIT",
         "window_start": start.isoformat(),
         "window_end_exclusive": end.isoformat(),
         "train_end_exclusive": train_end.isoformat(),
         "unit_k": 1,
         "_unit_curve_usd": unit_curve,
-        "train_unit_max_drawdown_usd": str(train_dd),
-        "unit_full_max_drawdown_usd": str(dd),
+        "train_unit_max_drawdown_usd": str(train_max_dd),
+        "unit_full_max_drawdown_usd": str(max_dd),
         "train_unit_net_usd": str(train_last),
         "full_unit_net_usd": str(account.equity - high_balance),
         "unit_fees_usd": str(account.costs),
-        "open_position_mark_gap": first_gap,
-        "counters": dict(counters),
+        "first_unpriced_open_position": first_gap,
+        "hypothetical_forced_exits": forced_exits,
+        "market_data_staleness_minutes": MARK_STALE_TOLERANCE_MINUTES,
+        "disabled_follower_symbols_after_data_gap": sorted(disabled_symbols),
+        "source_symbols_still_unpriced_at_end": sorted(pending_unpriced),
+        "funding_not_modeled": True,
+        "market_impact_and_lot_capacity_unverified": True,
+        "hypothetical_exits_are_not_executable_fills": True,
+        "counters": {k: str(v) if isinstance(v, D) else v for k, v in counters.items()},
         "complete_train_minutes": counters["marked_minutes"]
         >= (ms(train_end) - ms(start)) // MINUTE,
         "complete_window_minutes": counters["marked_minutes"] >= (ms(end) - ms(start)) // MINUTE,
@@ -842,12 +948,26 @@ def main() -> None:
         json.dumps(
             {
                 "defaults": result["defaults"],
-                "wallets": {
-                    name: {"source": v["source"], "k": v["calibrated_k"], "unit": v["unit"]}
+                "classification": result["classification"],
+                "source_first_known_valid": result["source_first_known_valid"],
+                "trading_authorized": result["trading_authorized"],
+                "wallet_research_k": {
+                    name: v["calibrated_k"] for name, v in result["wallets"].items()
+                },
+                "per_wallet_hypothetical_forced_exits": {
+                    name: len(v["unit"]["hypothetical_forced_exits"])
+                    if v["unit"] is not None
+                    else None
                     for name, v in result["wallets"].items()
                 },
-                "missing_1m_coverage": {
-                    k: v for k, v in result["price_coverage"].items() if v["fraction"] < 0.75
+                "portfolios": {
+                    name: value["chronological_scenario"]
+                    for name, value in result["portfolios"].items()
+                },
+                "market_recovery_counts": {
+                    name: value["recovered_vike_or_reservoir_rows"]
+                    for name, value in result["price_coverage"].items()
+                    if value["recovered_vike_or_reservoir_rows"] > 0
                 },
             },
             indent=2,

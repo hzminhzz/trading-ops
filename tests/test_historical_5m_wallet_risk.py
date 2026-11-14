@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 STUDIES = Path(__file__).resolve().parents[1] / "studies"
+sys.path.insert(0, str(STUDIES))
 SPEC = importlib.util.spec_from_file_location(
     "historical_5m_wallet_risk", STUDIES / "historical_5m_wallet_risk.py"
 )
