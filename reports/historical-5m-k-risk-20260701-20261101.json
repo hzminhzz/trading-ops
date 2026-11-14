@@ -21,25 +21,25 @@
         "ACT09": null
       },
       "chronological_scenario": {
-        "common_marked_minutes": 152380,
-        "complete_requested_window": false,
+        "common_marked_minutes": 177120,
+        "complete_requested_window": true,
         "does_not_net_cross_wallet_fills": true,
         "end_requested_exclusive_utc": "2026-11-01T00:00:00+00:00",
         "first_equity_floor_breach_utc": null,
         "funding_unknown": true,
         "lot_and_venue_capacity_unverified": true,
-        "max_peak_drawdown_usd": 245.06,
-        "minimum_equity_usd": 9980.41,
+        "max_peak_drawdown_usd": 245.04,
+        "minimum_equity_usd": 9986.17,
         "missing_realized_daily_balance": true,
         "not_independent_portfolio_selection_oos": true,
-        "october_chronological_net_usd": 90.15,
-        "october_peak_drawdown_usd": 245.06,
-        "source_supported_through_utc": "2026-10-14T19:40:00+00:00",
+        "october_chronological_net_usd": 167.13,
+        "october_peak_drawdown_usd": 245.04,
+        "source_supported_through_utc": "2026-11-01T00:00:00+00:00",
         "start_utc": "2026-07-01T00:00:00+00:00",
-        "status": "PARTIAL_RETROSPECTIVE_SCENARIO",
-        "total_net_through_coverage_usd": 572.34,
-        "train_net_usd": 482.19,
-        "worst_utc_day_from_prior_day_end_usd": 108.07
+        "status": "COMPLETE_RETROSPECTIVE_SCENARIO",
+        "total_net_through_coverage_usd": 742.02,
+        "train_net_usd": 574.89,
+        "worst_utc_day_from_prior_day_end_usd": 108.05
       },
       "k_by_member": {
         "ACT04": "0.000040384748",
@@ -60,24 +60,24 @@
         "W031": null
       },
       "chronological_scenario": {
-        "common_marked_minutes": 152380,
-        "complete_requested_window": false,
+        "common_marked_minutes": 177120,
+        "complete_requested_window": true,
         "does_not_net_cross_wallet_fills": true,
         "end_requested_exclusive_utc": "2026-11-01T00:00:00+00:00",
         "first_equity_floor_breach_utc": null,
         "funding_unknown": true,
         "lot_and_venue_capacity_unverified": true,
         "max_peak_drawdown_usd": 195.96,
-        "minimum_equity_usd": 9982.58,
+        "minimum_equity_usd": 9986.17,
         "missing_realized_daily_balance": true,
         "not_independent_portfolio_selection_oos": true,
-        "october_chronological_net_usd": 14.27,
+        "october_chronological_net_usd": 19.91,
         "october_peak_drawdown_usd": 195.96,
-        "source_supported_through_utc": "2026-10-14T19:40:00+00:00",
+        "source_supported_through_utc": "2026-11-01T00:00:00+00:00",
         "start_utc": "2026-07-01T00:00:00+00:00",
-        "status": "PARTIAL_RETROSPECTIVE_SCENARIO",
-        "total_net_through_coverage_usd": 519.41,
-        "train_net_usd": 505.14,
+        "status": "COMPLETE_RETROSPECTIVE_SCENARIO",
+        "total_net_through_coverage_usd": 617.75,
+        "train_net_usd": 597.83,
         "worst_utc_day_from_prior_day_end_usd": 89.09
       },
       "k_by_member": {
@@ -99,25 +99,25 @@
         "W031": null
       },
       "chronological_scenario": {
-        "common_marked_minutes": 152380,
-        "complete_requested_window": false,
+        "common_marked_minutes": 177120,
+        "complete_requested_window": true,
         "does_not_net_cross_wallet_fills": true,
         "end_requested_exclusive_utc": "2026-11-01T00:00:00+00:00",
         "first_equity_floor_breach_utc": null,
         "funding_unknown": true,
         "lot_and_venue_capacity_unverified": true,
-        "max_peak_drawdown_usd": 272.12,
+        "max_peak_drawdown_usd": 272.1,
         "minimum_equity_usd": 9981.26,
         "missing_realized_daily_balance": true,
         "not_independent_portfolio_selection_oos": true,
-        "october_chronological_net_usd": -24.44,
-        "october_peak_drawdown_usd": 272.12,
-        "source_supported_through_utc": "2026-10-14T19:40:00+00:00",
+        "october_chronological_net_usd": -37.0,
+        "october_peak_drawdown_usd": 272.1,
+        "source_supported_through_utc": "2026-11-01T00:00:00+00:00",
         "start_utc": "2026-07-01T00:00:00+00:00",
-        "status": "PARTIAL_RETROSPECTIVE_SCENARIO",
-        "total_net_through_coverage_usd": 396.55,
+        "status": "COMPLETE_RETROSPECTIVE_SCENARIO",
+        "total_net_through_coverage_usd": 383.99,
         "train_net_usd": 420.99,
-        "worst_utc_day_from_prior_day_end_usd": 94.54
+        "worst_utc_day_from_prior_day_end_usd": 94.52
       },
       "k_by_member": {
         "ACT08": "0.001853992857",
@@ -136,324 +136,2060 @@
     "AAVE": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "AAVE.parquet",
+            "rows": 100343,
+            "sha256": "a498755eee1a3fae0a562864dd8bbcdcad0bd8378c75cf8dfd3dc5388f649ecd"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 86235,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14108
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "AERO": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "AERO.parquet",
+            "rows": 99312,
+            "sha256": "009607ec1ef62383c0c60c1befc95073ce2dc129f048482bc1ca9f366327be7e"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 85286,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14026
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 0.99999,
-      "minute_rows": 177118
+      "minute_rows": 177118,
+      "original_local_rows": 177118,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "APT": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "APT.parquet",
+            "rows": 96117,
+            "sha256": "0c8111bffea7e6bae1b4bf0ddcb3e872d69e32a1e16cd5f32a268ae70c82d46b"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 83091,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 13026
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "ARB": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "ARB.parquet",
+            "rows": 100561,
+            "sha256": "38eb9c341f0a6df26d75a5947b97e25414d2a7fa2cdd70281334d3be296c7fe3"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 86770,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 13791
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "ASTER": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {},
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 0.99999,
-      "minute_rows": 177119
+      "minute_rows": 177119,
+      "original_local_rows": 177119,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "AVAX": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "AVAX.parquet",
+            "rows": 97609,
+            "sha256": "8fcffa047b5359ab89febaef14a05898a75047b0daf27d9510a192668a4e38ab"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 83919,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 13690
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "AZTEC": {
       "days_present": 95,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 28,
+        "connected_vike_receipts": [
+          {
+            "file": "AZTEC_000.json",
+            "rows": 500,
+            "sha256": "d344245cb4f75b4e380cd5baffaeaa0cd3aff90aabbf3989412fed46f967cc16"
+          },
+          {
+            "file": "AZTEC_001.json",
+            "rows": 500,
+            "sha256": "7d917496de1d25259330c40a617fa3c6daddd39adb1e4d892cebefe17e45ee8e"
+          },
+          {
+            "file": "AZTEC_002.json",
+            "rows": 500,
+            "sha256": "b19b9337d0c87d80a38f15d719521c3006c77aea71e5f91334801581bdd4ece1"
+          },
+          {
+            "file": "AZTEC_003.json",
+            "rows": 500,
+            "sha256": "030244edf26fb514d6d639fe190708be7acd0f7e1993b32d068c6410b0d09bac"
+          },
+          {
+            "file": "AZTEC_004.json",
+            "rows": 500,
+            "sha256": "6ad00194c5691f793d2b9e7536f03b41cd6277ae6caba71809bd24bc457fceaf"
+          },
+          {
+            "file": "AZTEC_005.json",
+            "rows": 500,
+            "sha256": "e56b7b5d71a8c12b4c6ea27543e238b94066d8087b0774641b46dbc56f7f14ab"
+          },
+          {
+            "file": "AZTEC_006.json",
+            "rows": 500,
+            "sha256": "709bdfa7a88d992734b4ba2131ac5aaa7acd0d54678473a17098757cffec325a"
+          },
+          {
+            "file": "AZTEC_007.json",
+            "rows": 500,
+            "sha256": "5230de1c7a3ba14f0fe73a42d8face43d6698ae43f10985c0e9567791e81f8bd"
+          },
+          {
+            "file": "AZTEC_008.json",
+            "rows": 500,
+            "sha256": "655e991d0678d59a7e738a7498cecfd2c4429451a1c2511e25b99d347af4ef80"
+          },
+          {
+            "file": "AZTEC_009.json",
+            "rows": 500,
+            "sha256": "3735115aeae625f33c010229f9742e4a5fa08150b4e970a7554795ccd28cb777"
+          },
+          {
+            "file": "AZTEC_010.json",
+            "rows": 1000,
+            "sha256": "297d41fbac8e1b74def7bba5d226aaf59609ffa2ee6be9bdccc1f8897602f9e1"
+          },
+          {
+            "file": "AZTEC_011.json",
+            "rows": 1000,
+            "sha256": "dba10ef7ed576c7c61802aeff53af0cd3f55b35f67d2058b530c0df936fe0daa"
+          },
+          {
+            "file": "AZTEC_012.json",
+            "rows": 1000,
+            "sha256": "f054f10a36b5b266806ebc9f9da7b528ba6aef08af53736dbed33da21c776036"
+          },
+          {
+            "file": "AZTEC_013.json",
+            "rows": 1000,
+            "sha256": "9a2c893beed1de49e7a9bc894cb9726916de8a080361feace5c867ce04b3be2e"
+          },
+          {
+            "file": "AZTEC_014.json",
+            "rows": 1000,
+            "sha256": "7375b518efe3078a6d95b91fee3a4032df904f5cc39f786f631e309e04c26a39"
+          },
+          {
+            "file": "AZTEC_015.json",
+            "rows": 1000,
+            "sha256": "b5e53553e5af61e55fd58e4cf657bada9b5bf632ee7ba44be5acc90e657b76f5"
+          },
+          {
+            "file": "AZTEC_016.json",
+            "rows": 1000,
+            "sha256": "61f5bdeb9ac74bdf9dc5b5d9e12fde43ccb25278268279aa34998ddb8222726c"
+          },
+          {
+            "file": "AZTEC_017.json",
+            "rows": 1000,
+            "sha256": "a290265047124b5f321b632ec22c56f631c80bcf431039206a46a3ff85427a12"
+          },
+          {
+            "file": "AZTEC_018.json",
+            "rows": 1000,
+            "sha256": "416d4b502fd9d17634a41a852267d87415f6bb1361c6e0239b674b2fb1f72e16"
+          },
+          {
+            "file": "AZTEC_019.json",
+            "rows": 1000,
+            "sha256": "f27531d1403ae7cf20a492bad06d8fe76f39f731c26ae74120ddcf7290507901"
+          },
+          {
+            "file": "AZTEC_020.json",
+            "rows": 1000,
+            "sha256": "e8e827bbafb2f7c9e722f3d70ba8bd5fb64e56f710299bccfa19aab31888e6a5"
+          },
+          {
+            "file": "AZTEC_021.json",
+            "rows": 1000,
+            "sha256": "5910350b4bdb72979eb300ddb2ba78465307e0186b4f89b902683879ed6443a0"
+          },
+          {
+            "file": "AZTEC_022.json",
+            "rows": 1000,
+            "sha256": "e134d8052c8b0aebf36cea7aa7b80d06b31be1976ae30498ad16d4c4570e966a"
+          },
+          {
+            "file": "AZTEC_023.json",
+            "rows": 1000,
+            "sha256": "0d4637f8e4b5504b983f92b452ef2144eee431840ced076021624837434306d6"
+          },
+          {
+            "file": "AZTEC_024.json",
+            "rows": 1000,
+            "sha256": "99c41fad9655f2b61559216bc50e04bdc946f5b4a9df4e9189ff0d9437165413"
+          },
+          {
+            "file": "AZTEC_025.json",
+            "rows": 1000,
+            "sha256": "c3d850e1e7bde8e0d5da1fa868b8bb7ad8e108f96be5cb605c7c3e1175fcabf9"
+          },
+          {
+            "file": "AZTEC_026.json",
+            "rows": 1000,
+            "sha256": "70c990f94363b82734f0641c2a1cbaf5e3b59a3f4deb8edf9585abfaf9b28788"
+          },
+          {
+            "file": "AZTEC_027.json",
+            "rows": 691,
+            "sha256": "c0b524b6967c184bd4b2a99a0bb9c4129c05cadb0cff4067b6d7357d3de2891f"
+          }
+        ],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "AZTEC.parquet",
+            "rows": 86824,
+            "sha256": "433a36f1ad51de695c6211aea39d8eebdba153a19b6fe5ab3e709e3b6a70dba3"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_CONNECTED_MCP_1M_FILLED": 21559,
+          "VIKE_CONNECTED_MCP_1M_OVERLAP_LOCAL": 1132,
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 54942,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 10323
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {
+          "VIKE_CONNECTED_MCP_1M": [
+            "2026-10-14T19:35:00+00:00",
+            "2026-10-31T23:59:00+00:00"
+          ]
+        },
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-12T12:35:00+00:00",
-      "fraction": 0.7666,
-      "minute_rows": 135780
+      "fraction": 0.88832,
+      "minute_rows": 157339,
+      "original_local_rows": 135780,
+      "recovered_vike_or_reservoir_rows": 21559
     },
     "BTC": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "BTC.parquet",
+            "rows": 102220,
+            "sha256": "c0bb606eb1a59f73f5d0b6319bd55cc00df0688c87aee316b79cbb46055eb2cb"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 87823,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14397
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "CRV": {
       "days_present": 95,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "CRV.parquet",
+            "rows": 98616,
+            "sha256": "5a8674fe156de98cf843f57392f4c1601b97bc167a5217c74399867e2cf15659"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_FILLED": 23708,
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 61485,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 13423
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M": [
+            "2026-10-14T22:26:00+00:00",
+            "2026-10-31T23:59:00+00:00"
+          ]
+        },
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-12T05:30:00+00:00",
-      "fraction": 0.76996,
-      "minute_rows": 136376
+      "fraction": 0.90382,
+      "minute_rows": 160084,
+      "original_local_rows": 136376,
+      "recovered_vike_or_reservoir_rows": 23708
     },
     "DOGE": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "DOGE.parquet",
+            "rows": 99637,
+            "sha256": "f22dcfb42fc94777e808a62e7959ec3f0923dfd0c2ed48a9bd5a94c7a400a189"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 85765,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 13872
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "ENA": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "ENA.parquet",
+            "rows": 101910,
+            "sha256": "ad16f1ffa85e6a339471749dc8ab25db8aa32c64c4096a878b8972ed5df5a8cb"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 87631,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14279
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "ETH": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "ETH.parquet",
+            "rows": 102219,
+            "sha256": "2dbe84125686a732b3d3982ffbbea58b60d5c5d634644b26c798d9095b4c9521"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 87822,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14397
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "ETHFI": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "ETHFI.parquet",
+            "rows": 98359,
+            "sha256": "01a5da388aff9f1b725b467c96c78d3fbf8d1b6c73b3fe4e23f3a1be692354e9"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 84586,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 13773
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "FARTCOIN": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "FARTCOIN.parquet",
+            "rows": 99466,
+            "sha256": "17f0100ee10aafa2e622d1730d98c7ad4d20ecaee5ed88ae09fe30bf4610ae55"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 85730,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 13736
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "FET": {
       "days_present": 96,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "FET.parquet",
+            "rows": 93749,
+            "sha256": "129b7dc6623ba671c29e632ce8ce4bd88dc17a5cc5e25f4d25bb587fb54f2c20"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_FILLED": 22221,
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 58656,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 12872
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M": [
+            "2026-10-14T23:36:00+00:00",
+            "2026-10-31T23:59:00+00:00"
+          ]
+        },
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-11T19:49:00+00:00",
-      "fraction": 0.77364,
-      "minute_rows": 137027
+      "fraction": 0.8991,
+      "minute_rows": 159248,
+      "original_local_rows": 137027,
+      "recovered_vike_or_reservoir_rows": 22221
     },
     "FIL": {
       "days_present": 96,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "FIL.parquet",
+            "rows": 94647,
+            "sha256": "410271784bd05412d28d19b6ea40e50e41b18cee8c47ba0141d3624f067b8106"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_FILLED": 22894,
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 58797,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 12956
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M": [
+            "2026-10-14T23:36:00+00:00",
+            "2026-10-31T23:59:00+00:00"
+          ]
+        },
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-11T20:08:00+00:00",
-      "fraction": 0.77353,
-      "minute_rows": 137008
+      "fraction": 0.90279,
+      "minute_rows": 159902,
+      "original_local_rows": 137008,
+      "recovered_vike_or_reservoir_rows": 22894
     },
     "GMX": {
       "days_present": 95,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 21,
+        "connected_vike_receipts": [
+          {
+            "file": "GMX_000.json",
+            "rows": 1000,
+            "sha256": "268895e3203f707b545dcd3ed492b14f048836b63a057f06fd12827a0a3db55f"
+          },
+          {
+            "file": "GMX_001.json",
+            "rows": 1000,
+            "sha256": "b3360e2a943ffa069c15a451b85a26c1455a89c4e224682589e15d5eebbd4dea"
+          },
+          {
+            "file": "GMX_002.json",
+            "rows": 1000,
+            "sha256": "160201d29efb288e3532c5a8582284bea1fe07aec38df3340f7d37a819e45952"
+          },
+          {
+            "file": "GMX_003.json",
+            "rows": 1000,
+            "sha256": "45219840b69f353fa4a9f5860b1a5d2d78c7d07f3d1a970c5b58db72967ef04d"
+          },
+          {
+            "file": "GMX_004.json",
+            "rows": 1000,
+            "sha256": "6c38473038e14e93b72eb9251aee33bd16bef0ff1583b8fa1f2a71c12461c471"
+          },
+          {
+            "file": "GMX_005.json",
+            "rows": 1000,
+            "sha256": "941c835ff40de905bf80265c70d9700143aef6b9a02a03f0f3bf4b966897c28c"
+          },
+          {
+            "file": "GMX_006.json",
+            "rows": 1000,
+            "sha256": "702900c9f417f3182bdbd5dbab1bdaadc0e643b293019b2def858ccf12511347"
+          },
+          {
+            "file": "GMX_007.json",
+            "rows": 1000,
+            "sha256": "1d40227fb74518f7bf8cd85334d204f44bd53f12ca0ff05016f8eba9c4f4621a"
+          },
+          {
+            "file": "GMX_008.json",
+            "rows": 1000,
+            "sha256": "64f4207682cdc9a8866280b8fa4a09ec24e27b3441bb1a371d4a1d8c48bb4403"
+          },
+          {
+            "file": "GMX_009.json",
+            "rows": 1000,
+            "sha256": "3b2aaace74b6477831c8924ba255dfcae711d44d572bdf2b62279f81e98a0525"
+          },
+          {
+            "file": "GMX_010.json",
+            "rows": 1000,
+            "sha256": "51dd06a2437d5c9fd5d3338dbf48aa0d9c1232f4ad876883e494f124ae830198"
+          },
+          {
+            "file": "GMX_011.json",
+            "rows": 1000,
+            "sha256": "61326617811c35b15059c3a41fd3a64824d185a058babc80448f2299532291d6"
+          },
+          {
+            "file": "GMX_012.json",
+            "rows": 1000,
+            "sha256": "a24cd0d14292b8d2bd39e15d495f0fb7ad8c5e48862235e43e3f0d967633bace"
+          },
+          {
+            "file": "GMX_013.json",
+            "rows": 1000,
+            "sha256": "064d77b82304f62e53dc012779933226dcaea69cd6dfe2433f479924753ad691"
+          },
+          {
+            "file": "GMX_014.json",
+            "rows": 1000,
+            "sha256": "d8aeb6be60bd28076de4d0bcac1c1a3032e2305474c3727304c64abe581f0811"
+          },
+          {
+            "file": "GMX_015.json",
+            "rows": 1000,
+            "sha256": "78a854ba884c11416c0136273dfe0fe404f9f6a93722693da6e2f55422378ed5"
+          },
+          {
+            "file": "GMX_016.json",
+            "rows": 1000,
+            "sha256": "687f658bb9a9f24b8f8827514a7d716a60999acd1968074d4e0f44931079d1f0"
+          },
+          {
+            "file": "GMX_017.json",
+            "rows": 1000,
+            "sha256": "7dc2e5162148b65c4bc53245e356da9a1957d11c2f38bad587056dfa8ea2e310"
+          },
+          {
+            "file": "GMX_018.json",
+            "rows": 1000,
+            "sha256": "d9295c3b72f28c60d2a0c4f9c0ea3b6de4e88dfdbb0118f0fd8c4ae03d964056"
+          },
+          {
+            "file": "GMX_019.json",
+            "rows": 1000,
+            "sha256": "507463f547a342387c73cef014de9de1c40653de6570bfe125804048081af951"
+          },
+          {
+            "file": "GMX_020.json",
+            "rows": 992,
+            "sha256": "b03a91fdbc61119ddcf491397fd11f763d85475ba99cf03b0dc34bdadb6e5d9a"
+          }
+        ],
+        "legacy_vike_cache_receipt": [],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_CONNECTED_MCP_1M_FILLED": 19839,
+          "VIKE_CONNECTED_MCP_1M_OVERLAP_LOCAL": 1153
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {
+          "VIKE_CONNECTED_MCP_1M": [
+            "2026-10-14T23:36:00+00:00",
+            "2026-10-31T23:59:00+00:00"
+          ]
+        },
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-12T12:35:00+00:00",
-      "fraction": 0.76796,
-      "minute_rows": 136021
+      "fraction": 0.87997,
+      "minute_rows": 155860,
+      "original_local_rows": 136021,
+      "recovered_vike_or_reservoir_rows": 19839
     },
     "GRAM": {
       "days_present": 103,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "GRAM.parquet",
+            "rows": 94881,
+            "sha256": "8121eb2d4c598b795dcdab08a0768901b91528678d4258422be1c4c8c5e92b01"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_FILLED": 11985,
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 69628,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 13268
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M": [
+            "2026-10-23T00:00:00+00:00",
+            "2026-10-31T23:59:00+00:00"
+          ]
+        },
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-12T12:35:00+00:00",
-      "fraction": 0.83314,
-      "minute_rows": 147565
+      "fraction": 0.9008,
+      "minute_rows": 159550,
+      "original_local_rows": 147565,
+      "recovered_vike_or_reservoir_rows": 11985
     },
     "GRASS": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "GRASS.parquet",
+            "rows": 97944,
+            "sha256": "337df483ca6ebdbc6e002169bc99d5a53408b6698d6c73f80a549a186357a4ff"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 84411,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 13533
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 0.99998,
-      "minute_rows": 177116
+      "minute_rows": 177116,
+      "original_local_rows": 177116,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "HBAR": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {},
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "HYPE": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "HYPE.parquet",
+            "rows": 102216,
+            "sha256": "1cbc4fb4b24794fde165c6e6c637694ec6a5894f8a60ab5859f11457d030552d"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 87819,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14397
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "LINEA": {
       "days_present": 97,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "LINEA.parquet",
+            "rows": 87066,
+            "sha256": "04033a4265bb0c3fc9c64f62920b993019470db91b5b54617eedaf1cfb5c721e"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_FILLED": 20680,
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 55356,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 11030
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M": [
+            "2026-10-15T02:42:00+00:00",
+            "2026-10-31T23:59:00+00:00"
+          ]
+        },
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-11T21:08:00+00:00",
-      "fraction": 0.77424,
-      "minute_rows": 137134
+      "fraction": 0.891,
+      "minute_rows": 157814,
+      "original_local_rows": 137134,
+      "recovered_vike_or_reservoir_rows": 20680
     },
     "LINK": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "LINK.parquet",
+            "rows": 99500,
+            "sha256": "e667787c579657d30f4a6f13939ef2af40fd16742ef369f105a502dd9126b0bf"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 85610,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 13890
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "NEAR": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "NEAR.parquet",
+            "rows": 102197,
+            "sha256": "488c1cd50da7de2187406ad59bcf19c92fae5520b951d8f334e766db4db5bb7d"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 87811,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14386
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "NIL": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "NIL.parquet",
+            "rows": 93027,
+            "sha256": "56773ee97c4c87603dfb7404be8008e2c83546d13c065d6fe86339e0a8d38069"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 80563,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 12464
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:01:00+00:00",
       "fraction": 0.99996,
-      "minute_rows": 177113
+      "minute_rows": 177113,
+      "original_local_rows": 177113,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "ONDO": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "ONDO.parquet",
+            "rows": 99219,
+            "sha256": "f123b9aefa69a1b37790561e6bc7bcbc03d6e4c5bd7e7163abbf069b26caf7ba"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 85430,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 13789
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "PENDLE": {
       "days_present": 111,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "PENDLE.parquet",
+            "rows": 95117,
+            "sha256": "2b842a04466ce1f59e0c5e050c30045e5dbd316b6c7a70ab708d81d5a9874d3d"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_FILLED": 2839,
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 79125,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 13153
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M": [
+            "2026-10-30T00:00:00+00:00",
+            "2026-10-31T23:59:00+00:00"
+          ]
+        },
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-11T23:42:00+00:00",
-      "fraction": 0.8944,
-      "minute_rows": 158416
+      "fraction": 0.91043,
+      "minute_rows": 161255,
+      "original_local_rows": 158416,
+      "recovered_vike_or_reservoir_rows": 2839
     },
     "PENGU": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {},
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:01:00+00:00",
       "fraction": 0.99999,
-      "minute_rows": 177119
+      "minute_rows": 177119,
+      "original_local_rows": 177119,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "PONS": {
       "days_present": 62,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 2,
+        "connected_vike_receipts": [
+          {
+            "file": "PONS_000.json",
+            "rows": 1000,
+            "sha256": "72e7693183b5a52e8cb9f9b2ac92e9472b9190961c9976f7b9631a010c10f2b4"
+          },
+          {
+            "file": "PONS_001.json",
+            "rows": 210,
+            "sha256": "b2b233056ed1c04387950ad8daef378359b709990ebafe7042289f10c836eabd"
+          }
+        ],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "PONS.parquet",
+            "rows": 101823,
+            "sha256": "68f1b2a80817c9c8dcf34fe2de7a11caabb80fd64a348b697b237713b4ed55a8"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_CONNECTED_MCP_1M_OVERLAP_LOCAL": 1210,
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 87562,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14261
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-08-31T03:50:00+00:00",
       "fraction": 0.50277,
-      "minute_rows": 89050
+      "minute_rows": 89050,
+      "original_local_rows": 89050,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "PUMP": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "PUMP.parquet",
+            "rows": 102145,
+            "sha256": "514eeedac9120fd95ead5e5d7310af114159e43c58842dd505b4d89c4bfccfba"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 87771,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14374
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "SEI": {
       "days_present": 104,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 12,
+        "connected_vike_receipts": [
+          {
+            "file": "SEI_000.json",
+            "rows": 1000,
+            "sha256": "b061fff1ecde67bcca30373d20ca5855638747a741bffe0cf56b977fe3770221"
+          },
+          {
+            "file": "SEI_001.json",
+            "rows": 1000,
+            "sha256": "ef5a3ce6f1fa6f03f2ba6e2021ded7b654cf6370941492dccc0ea84efab1746c"
+          },
+          {
+            "file": "SEI_002.json",
+            "rows": 1000,
+            "sha256": "c94abc84c529e8172a18eb301734dcfdc3031ac0ba19931a2d0bc65a53c510b0"
+          },
+          {
+            "file": "SEI_003.json",
+            "rows": 1000,
+            "sha256": "025cb7ee907b61e6ac42ba33bb96c4b8ee6ff255b1c0a6b78c7bd9a03ed9ad22"
+          },
+          {
+            "file": "SEI_004.json",
+            "rows": 1000,
+            "sha256": "6237fcaebd1bcb40b4ca4bcdc172a49172d9d7af3b690bf84f329a583494368f"
+          },
+          {
+            "file": "SEI_005.json",
+            "rows": 1000,
+            "sha256": "0af9b58c0c78e9bcdfebbbe358bf714a1c06a2850b695155b0d1755032618868"
+          },
+          {
+            "file": "SEI_006.json",
+            "rows": 1000,
+            "sha256": "b30f01b6977616cd739c88821d254654ac8a96f5ffeff0ae5695ba86642b1508"
+          },
+          {
+            "file": "SEI_007.json",
+            "rows": 1000,
+            "sha256": "b66cedddc7301dcf8adfde0325eccd48e291c956359fc9ab1925ab7fe142378d"
+          },
+          {
+            "file": "SEI_008.json",
+            "rows": 1000,
+            "sha256": "92343afad9ee8c012372881429a80fd20f14c9808093fe9395becf29ee685087"
+          },
+          {
+            "file": "SEI_009.json",
+            "rows": 1000,
+            "sha256": "9d30b8db0f6c415c4de6623d34570e810715dde2ef05a48142daf56a9a2ab2ed"
+          },
+          {
+            "file": "SEI_010.json",
+            "rows": 1000,
+            "sha256": "68ddf3a531d773d98c0034f8cb1f7fd3f186fbe1ab71514474f03ef1b85aac1f"
+          },
+          {
+            "file": "SEI_011.json",
+            "rows": 309,
+            "sha256": "827218af66e00e9991b7b87374ae1f81cd1ff7be33e32ce10a7ab776dc44ffb1"
+          }
+        ],
+        "legacy_vike_cache_receipt": [],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_CONNECTED_MCP_1M_FILLED": 10034,
+          "VIKE_CONNECTED_MCP_1M_OVERLAP_LOCAL": 1275
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {
+          "VIKE_CONNECTED_MCP_1M": [
+            "2026-10-24T00:00:00+00:00",
+            "2026-10-31T23:59:00+00:00"
+          ]
+        },
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-12T12:35:00+00:00",
-      "fraction": 0.84075,
-      "minute_rows": 148914
+      "fraction": 0.8974,
+      "minute_rows": 158948,
+      "original_local_rows": 148914,
+      "recovered_vike_or_reservoir_rows": 10034
     },
     "STRK": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "STRK.parquet",
+            "rows": 98324,
+            "sha256": "1c61f5d75795893b694bd3f6c95b0ba8969ed384b58e51039569bb381ab8565e"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 84592,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 13732
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 0.99998,
-      "minute_rows": 177116
+      "minute_rows": 177116,
+      "original_local_rows": 177116,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "SUI": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "SUI.parquet",
+            "rows": 100318,
+            "sha256": "b155284b3e642b7bb757f86fa255165a78f777b8134a86f9fed89b028ca75f0f"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 86389,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 13929
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "TAO": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "TAO.parquet",
+            "rows": 99471,
+            "sha256": "ee4b43984f17756c6eaf91ed50e0e50046b691978507e80f1c02726bfcf69370"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 85879,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 13592
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 0.99999,
-      "minute_rows": 177119
+      "minute_rows": 177119,
+      "original_local_rows": 177119,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "UMA": {
       "days_present": 0,
       "expected_window_minutes": 177120,
-      "first_available_utc": null,
-      "fraction": 0.0,
-      "minute_rows": 0
+      "fallback": {
+        "connected_vike_file_count": 10,
+        "connected_vike_receipts": [
+          {
+            "file": "UMA_000.json",
+            "rows": 1000,
+            "sha256": "ac233c48a938073d82bc44f6c267b81a64256c0d75bf318ff722275def4db63f"
+          },
+          {
+            "file": "UMA_001.json",
+            "rows": 1000,
+            "sha256": "f5dcc35883b4915ddd6e4a92294cc0a28146bbba1a09ad3a5780bdeb330b890d"
+          },
+          {
+            "file": "UMA_002.json",
+            "rows": 1000,
+            "sha256": "b92d25d7bec8114272de2ff82e5f6095c92c6ed1533cedadb34a2113ac637c48"
+          },
+          {
+            "file": "UMA_003.json",
+            "rows": 1000,
+            "sha256": "bbed3b4132c8c4eed562c67e3e7a4d59c28325d4e7e93934ed5fe9a39b3cdda4"
+          },
+          {
+            "file": "UMA_004.json",
+            "rows": 1000,
+            "sha256": "06fc831d81b7ec3b9224e94b99b9caf53e5fe5ee8f8fcef39989f63c4394dcd5"
+          },
+          {
+            "file": "UMA_005.json",
+            "rows": 1000,
+            "sha256": "c5c46f55965d4b18bbffa66fc9b591325a4d12128d553448b179040040a16b25"
+          },
+          {
+            "file": "UMA_006.json",
+            "rows": 1000,
+            "sha256": "6a2aefc1db2192f4669506eff9154df79569643b3a034ee6f38de23e97a33a5f"
+          },
+          {
+            "file": "UMA_007.json",
+            "rows": 1000,
+            "sha256": "2df81376155d35f812dd576484269f76e8a5fa8ee22e3a26e3eb75113a911c8c"
+          },
+          {
+            "file": "UMA_008.json",
+            "rows": 1000,
+            "sha256": "403bcaed21a684b4a824428aabb5d3952b85da4da930a934022bba4f3e0bc1d7"
+          },
+          {
+            "file": "UMA_009.json",
+            "rows": 1000,
+            "sha256": "9ad09c7307b2a84b7f5cdff0f93054a067f61973a1aaeed87cca2e533ebd9e25"
+          }
+        ],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "UMA.parquet",
+            "rows": 80638,
+            "sha256": "04e22dc3cd3c8e788b0d1a1d101e612fd41e593b3b56f8eb8d60c601e5d0796c"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_CONNECTED_MCP_1M_FILLED": 10000,
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_FILLED": 70601,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 10037
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {
+          "VIKE_CONNECTED_MCP_1M": [
+            "2026-07-01T00:03:00+00:00",
+            "2026-07-11T23:58:00+00:00"
+          ],
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M": [
+            "2026-09-01T00:00:00+00:00",
+            "2026-10-31T23:58:00+00:00"
+          ]
+        },
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
+      "first_available_utc": "2026-07-01T00:03:00+00:00",
+      "fraction": 0.45506,
+      "minute_rows": 80601,
+      "original_local_rows": 0,
+      "recovered_vike_or_reservoir_rows": 80601
     },
     "UNI": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "UNI.parquet",
+            "rows": 101478,
+            "sha256": "a665fba0075eb28dd9295b1f99cac00b255f254b99d051dac1892d263ce2795f"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 87264,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14214
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "USELESS": {
       "days_present": 54,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "USELESS.parquet",
+            "rows": 87282,
+            "sha256": "8be2e0b6fe6326cda135a122407ff0d16197cda76c8f0221ab7a6700eba21167"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 73872,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 13410
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-09-08T16:02:00+00:00",
       "fraction": 0.43359,
-      "minute_rows": 76798
+      "minute_rows": 76798,
+      "original_local_rows": 76798,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "VVV": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "VVV.parquet",
+            "rows": 101340,
+            "sha256": "459047afe36dff76ba9c69cf92ef75a302740434b6712aae463da8ed35633d27"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 86968,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14372
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "WLD": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "WLD.parquet",
+            "rows": 101141,
+            "sha256": "927295a4c44284e59d34d63f73dc7b5ded65bdabf413879fb619795dd7bdf091"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 86962,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14179
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "XLM": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "XLM.parquet",
+            "rows": 93877,
+            "sha256": "7b68402df0bed56baea1ad607326c0900d291c9d621af0d4d07dcdc6f9ee3764"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 80880,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 12997
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 0.99999,
-      "minute_rows": 177119
+      "minute_rows": 177119,
+      "original_local_rows": 177119,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "XMR": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "XMR.parquet",
+            "rows": 101455,
+            "sha256": "14b20d987e0508bfa4d14595b99ed75ae43a2348de16627d20af3d0dbc9385e0"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 87076,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14379
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "XPL": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "XPL.parquet",
+            "rows": 101178,
+            "sha256": "5485aeb568e9ab618595268e33fc8ff497abb813b4b41397c559cede0c581f09"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 86934,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14244
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "XRP": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "XRP.parquet",
+            "rows": 101783,
+            "sha256": "e2b8a8a8d36ff0f365fd8f34f0cf079eb8c6b110730a2b3bef5e690dfeccf391"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 87449,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14334
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "ZEC": {
       "days_present": 123,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "ZEC.parquet",
+            "rows": 102222,
+            "sha256": "bacad494076bcb5b2d33f2c57fa958d7be96b83872e3bd090d6d38236f00f840"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 87825,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14397
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {},
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-01T00:00:00+00:00",
       "fraction": 1.0,
-      "minute_rows": 177120
+      "minute_rows": 177120,
+      "original_local_rows": 177120,
+      "recovered_vike_or_reservoir_rows": 0
     },
     "ZK": {
       "days_present": 95,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "ZK.parquet",
+            "rows": 91295,
+            "sha256": "2943320a977af1d2ace839a80d041a1a432548d7cdd75f36dc55dd3ce14d94ea"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_FILLED": 23068,
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 55475,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 12752
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M": [
+            "2026-10-14T17:50:00+00:00",
+            "2026-10-31T23:59:00+00:00"
+          ]
+        },
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-12T12:35:00+00:00",
-      "fraction": 0.76601,
-      "minute_rows": 135675
+      "fraction": 0.89625,
+      "minute_rows": 158743,
+      "original_local_rows": 135675,
+      "recovered_vike_or_reservoir_rows": 23068
     },
     "kPEPE": {
       "days_present": 111,
       "expected_window_minutes": 177120,
+      "fallback": {
+        "connected_vike_file_count": 0,
+        "connected_vike_receipts": [],
+        "legacy_vike_cache_receipt": [
+          {
+            "file": "kPEPE.parquet",
+            "rows": 100122,
+            "sha256": "91b0c992cd12836407b8e3f1d341a6bf4643a8cc7b1946fe133770ae94cea139"
+          }
+        ],
+        "missing_minute_not_assumed_flat": true,
+        "recovered_rows_by_source": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_FILLED": 2873,
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M_OVERLAP_LOCAL": 82961,
+          "legacy_cache_file_present": 1,
+          "out_of_window": 14288
+        },
+        "reservoir_fallback_checked": true,
+        "reservoir_local_price_cache_available": false,
+        "reservoir_s3_authenticated": false,
+        "source_first_last_utc": {
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M": [
+            "2026-10-30T00:00:00+00:00",
+            "2026-10-31T23:59:00+00:00"
+          ]
+        },
+        "sources_in_order": [
+          "ML4T_LOCAL_1M",
+          "VIKE_CONNECTED_MCP_1M",
+          "VIKE_PREVIOUS_LOCAL_CACHE_1M",
+          "HYDROMANCER_RESERVOIR_NORMALIZED_1S"
+        ]
+      },
       "first_available_utc": "2026-07-11T21:32:00+00:00",
-      "fraction": 0.89486,
-      "minute_rows": 158497
+      "fraction": 0.91108,
+      "minute_rows": 161370,
+      "original_local_rows": 158497,
+      "recovered_vike_or_reservoir_rows": 2873
     }
   },
   "schema": "historical_position_checkpoints_fixed_k_risk_half_budget_v1",
@@ -503,25 +2239,29 @@
       "train_wallet_risk_allocation_usd": "166.6666666666666666666666667",
       "unit": {
         "complete_train_minutes": true,
-        "complete_window_minutes": false,
+        "complete_window_minutes": true,
         "counters": {
-          "marked_minutes": 152621,
-          "modeled_unit_orders": 257,
+          "checkpoints_with_missing_source_marks": 3082,
+          "marked_minutes": 177120,
+          "missing_source_instrument_checkpoint_attempts": 3438,
+          "modeled_unit_orders": 273,
           "retrospective_initial_baseline_no_trade": 1,
-          "retrospective_snapshot_inventory_corrections": 239,
-          "unknown_target_mark": 13,
-          "unmarkable_open_position": 1
+          "retrospective_snapshot_inventory_corrections": 239
         },
-        "full_unit_net_usd": "6191673.0080772920000",
-        "open_position_mark_gap": {
-          "symbol": "GMX",
-          "time": "2026-10-14T23:41:00+00:00"
-        },
-        "scenario": "RETROSPECTIVE_EVENT_TIME_NOT_CWSA_FIRST_KNOWN",
+        "disabled_follower_symbols_after_data_gap": [],
+        "first_unpriced_open_position": null,
+        "full_unit_net_usd": "8550748.6101366480000",
+        "funding_not_modeled": true,
+        "hypothetical_exits_are_not_executable_fills": true,
+        "hypothetical_forced_exits": [],
+        "market_data_staleness_minutes": 30,
+        "market_impact_and_lot_capacity_unverified": true,
+        "scenario": "RETROSPECTIVE_5M_EVENT_TIME_WITH_MARKET_LOCALIZED_EXIT",
+        "source_symbols_still_unpriced_at_end": [],
         "train_end_exclusive": "2026-10-01T00:00:00+00:00",
         "train_unit_max_drawdown_usd": "2063485.272680000000",
-        "train_unit_net_usd": "6620635.4342731520000",
-        "unit_fees_usd": "47087.67267447",
+        "train_unit_net_usd": "8915981.1885587980000",
+        "unit_fees_usd": "49304.99452554",
         "unit_full_max_drawdown_usd": "2063485.272680000000",
         "unit_k": 1,
         "wallet": "ACT04",
@@ -559,23 +2299,26 @@
       "train_wallet_risk_allocation_usd": "166.6666666666666666666666667",
       "unit": {
         "complete_train_minutes": true,
-        "complete_window_minutes": false,
+        "complete_window_minutes": true,
         "counters": {
-          "marked_minutes": 152380,
-          "modeled_unit_orders": 450,
-          "retrospective_initial_baseline_no_trade": 1,
-          "unmarkable_open_position": 1
+          "marked_minutes": 177120,
+          "modeled_unit_orders": 615,
+          "retrospective_initial_baseline_no_trade": 1
         },
-        "full_unit_net_usd": "105205.83383757600",
-        "open_position_mark_gap": {
-          "symbol": "AZTEC",
-          "time": "2026-10-14T19:40:00+00:00"
-        },
-        "scenario": "RETROSPECTIVE_EVENT_TIME_NOT_CWSA_FIRST_KNOWN",
+        "disabled_follower_symbols_after_data_gap": [],
+        "first_unpriced_open_position": null,
+        "full_unit_net_usd": "153794.30519878600",
+        "funding_not_modeled": true,
+        "hypothetical_exits_are_not_executable_fills": true,
+        "hypothetical_forced_exits": [],
+        "market_data_staleness_minutes": 30,
+        "market_impact_and_lot_capacity_unverified": true,
+        "scenario": "RETROSPECTIVE_5M_EVENT_TIME_WITH_MARKET_LOCALIZED_EXIT",
+        "source_symbols_still_unpriced_at_end": [],
         "train_end_exclusive": "2026-10-01T00:00:00+00:00",
         "train_unit_max_drawdown_usd": "44948.03363929200",
         "train_unit_net_usd": "17040.42499743500",
-        "unit_fees_usd": "688.09106598",
+        "unit_fees_usd": "959.78623659",
         "unit_full_max_drawdown_usd": "140168.66557802900",
         "unit_k": 1,
         "wallet": "ACT08",
@@ -616,19 +2359,25 @@
         "complete_window_minutes": true,
         "counters": {
           "marked_minutes": 177120,
-          "modeled_unit_orders": 103,
+          "modeled_unit_orders": 174,
           "retrospective_initial_baseline_no_trade": 1,
-          "retrospective_snapshot_inventory_corrections": 20,
-          "unknown_target_mark": 68
+          "retrospective_snapshot_inventory_corrections": 20
         },
-        "full_unit_net_usd": "381101.6489215330",
-        "open_position_mark_gap": null,
-        "scenario": "RETROSPECTIVE_EVENT_TIME_NOT_CWSA_FIRST_KNOWN",
+        "disabled_follower_symbols_after_data_gap": [],
+        "first_unpriced_open_position": null,
+        "full_unit_net_usd": "331322.9659765330",
+        "funding_not_modeled": true,
+        "hypothetical_exits_are_not_executable_fills": true,
+        "hypothetical_forced_exits": [],
+        "market_data_staleness_minutes": 30,
+        "market_impact_and_lot_capacity_unverified": true,
+        "scenario": "RETROSPECTIVE_5M_EVENT_TIME_WITH_MARKET_LOCALIZED_EXIT",
+        "source_symbols_still_unpriced_at_end": [],
         "train_end_exclusive": "2026-10-01T00:00:00+00:00",
         "train_unit_max_drawdown_usd": "247473.3728250300",
         "train_unit_net_usd": "544124.8485828890",
-        "unit_fees_usd": "1626.95544867",
-        "unit_full_max_drawdown_usd": "284967.8465400200",
+        "unit_fees_usd": "2138.45667641",
+        "unit_full_max_drawdown_usd": "370287.5393258440",
         "unit_k": 1,
         "wallet": "ACT09",
         "window_end_exclusive": "2026-11-01T00:00:00+00:00",
@@ -665,25 +2414,28 @@
       "train_wallet_risk_allocation_usd": "166.6666666666666666666666667",
       "unit": {
         "complete_train_minutes": true,
-        "complete_window_minutes": false,
+        "complete_window_minutes": true,
         "counters": {
-          "marked_minutes": 165605,
-          "modeled_unit_orders": 187,
+          "marked_minutes": 177120,
+          "modeled_unit_orders": 192,
           "retrospective_initial_baseline_no_trade": 1,
-          "retrospective_snapshot_inventory_corrections": 10,
-          "unmarkable_open_position": 1
+          "retrospective_snapshot_inventory_corrections": 10
         },
-        "full_unit_net_usd": "1213.7717651992000",
-        "open_position_mark_gap": {
-          "symbol": "SEI",
-          "time": "2026-10-24T00:05:00+00:00"
-        },
-        "scenario": "RETROSPECTIVE_EVENT_TIME_NOT_CWSA_FIRST_KNOWN",
+        "disabled_follower_symbols_after_data_gap": [],
+        "first_unpriced_open_position": null,
+        "full_unit_net_usd": "-342.5908317488000",
+        "funding_not_modeled": true,
+        "hypothetical_exits_are_not_executable_fills": true,
+        "hypothetical_forced_exits": [],
+        "market_data_staleness_minutes": 30,
+        "market_impact_and_lot_capacity_unverified": true,
+        "scenario": "RETROSPECTIVE_5M_EVENT_TIME_WITH_MARKET_LOCALIZED_EXIT",
+        "source_symbols_still_unpriced_at_end": [],
         "train_end_exclusive": "2026-10-01T00:00:00+00:00",
         "train_unit_max_drawdown_usd": "2246.5788916855000",
         "train_unit_net_usd": "5558.1396727092000",
-        "unit_fees_usd": "266.23799088",
-        "unit_full_max_drawdown_usd": "6232.7699674100000",
+        "unit_fees_usd": "269.39946711",
+        "unit_full_max_drawdown_usd": "8957.3577631650000",
         "unit_k": 1,
         "wallet": "W031",
         "window_end_exclusive": "2026-11-01T00:00:00+00:00",
