@@ -151,11 +151,19 @@ def test_unavailable_single_pair_closes_its_follower_only_then_continues():
         validation={},
     )
     result = historical.replay_unit(
-        wallet, bars, start=start, train_end=start + timedelta(minutes=40), end=end
+        wallet,
+        bars,
+        start=start,
+        train_end=start + timedelta(minutes=40),
+        end=end,
+        capture_gross=True,
     )
     assert result["complete_window_minutes"] is True
     assert result["market_data_staleness_minutes"] == 30
     assert result["counters"]["marked_minutes"] == 100
+    assert len(result["_unit_curve_usd"]) == 100
+    assert len(result["_unit_gross_usd"]) == 100
+    assert max(result["_unit_gross_usd"]) > 0
     assert len(result["hypothetical_forced_exits"]) == 1
     exit_ = result["hypothetical_forced_exits"][0]
     assert exit_["symbol"] == "BTC"

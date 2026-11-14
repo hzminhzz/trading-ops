@@ -1,0 +1,4115 @@
+{
+  "classification": "RESEARCH_ONLY_NO_TRADE_RETROSPECTIVE_SCENARIO",
+  "current_protected_guardian_requires_signed_recovery": true,
+  "default_guardian_soft_daily_stop_usd": 250,
+  "default_guardian_soft_static_floor_usd": 9600,
+  "hard_daily_contract_loss_usd": 300,
+  "hard_static_contract_floor_usd": 9500,
+  "hypothetical_flatten_latency_minutes": 1,
+  "market_coverage_note": "Local 1m + connected Vike + cached Vike. Missing source market checkpoint intents remain omitted; funding and broker TCA unverified.",
+  "minimum_pause_minutes": 1440,
+  "portfolios": {
+    "regime.macro/TriadA": {
+      "base_gross_max_usd": 2019.52,
+      "members": [
+        "ACT04",
+        "ACT08",
+        "ACT09"
+      ],
+      "predeclared_multiplier_scenarios": [
+        {
+          "k_multiplier": 1.0,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 742.02,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 245.04,
+            "minimum_equity_usd": 9986.17,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.0,
+            "october_net_usd": 167.13,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": false,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 574.89,
+            "worst_utc_day_start_loss_usd": 108.05,
+            "worst_utc_intraday_peak_loss_usd": 133.86
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 742.02,
+            "max_peak_drawdown_usd": 245.04,
+            "minimum_equity_usd": 9986.17,
+            "october_net_usd": 167.13,
+            "profit_target_would_end_challenge": false,
+            "train_net_usd": 574.89,
+            "worst_utc_day_start_loss_usd": 108.05,
+            "worst_utc_intraday_peak_loss_usd": 133.86
+          }
+        },
+        {
+          "k_multiplier": 1.25,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 927.53,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 306.31,
+            "minimum_equity_usd": 9982.71,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.25,
+            "october_net_usd": 208.92,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": false,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 718.61,
+            "worst_utc_day_start_loss_usd": 135.06,
+            "worst_utc_intraday_peak_loss_usd": 167.32
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 927.53,
+            "max_peak_drawdown_usd": 306.31,
+            "minimum_equity_usd": 9982.71,
+            "october_net_usd": 208.92,
+            "profit_target_would_end_challenge": false,
+            "train_net_usd": 718.61,
+            "worst_utc_day_start_loss_usd": 135.06,
+            "worst_utc_intraday_peak_loss_usd": 167.32
+          }
+        },
+        {
+          "k_multiplier": 1.5,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-10-08T17:22:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1113.03,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 367.57,
+            "minimum_equity_usd": 9979.25,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.5,
+            "october_net_usd": 250.7,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 862.33,
+            "worst_utc_day_start_loss_usd": 162.07,
+            "worst_utc_intraday_peak_loss_usd": 200.79
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": "2026-10-08T17:22:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1113.03,
+            "max_peak_drawdown_usd": 367.57,
+            "minimum_equity_usd": 9979.25,
+            "october_net_usd": 250.7,
+            "profit_target_would_end_challenge": true,
+            "train_net_usd": 862.33,
+            "worst_utc_day_start_loss_usd": 162.07,
+            "worst_utc_intraday_peak_loss_usd": 200.79
+          }
+        },
+        {
+          "k_multiplier": 1.75,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-27T15:13:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1298.54,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 428.83,
+            "minimum_equity_usd": 9975.8,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.75,
+            "october_net_usd": 292.48,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1006.06,
+            "worst_utc_day_start_loss_usd": 189.09,
+            "worst_utc_intraday_peak_loss_usd": 234.25
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": "2026-09-27T15:13:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1298.54,
+            "max_peak_drawdown_usd": 428.83,
+            "minimum_equity_usd": 9975.8,
+            "october_net_usd": 292.48,
+            "profit_target_would_end_challenge": true,
+            "train_net_usd": 1006.06,
+            "worst_utc_day_start_loss_usd": 189.09,
+            "worst_utc_intraday_peak_loss_usd": 234.25
+          }
+        },
+        {
+          "k_multiplier": 2.0,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-23T00:18:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1367.38,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 1,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 179.34,
+                "flatten_due_at_utc": "2026-10-15T15:59:00+00:00",
+                "observed_at_utc": "2026-10-15T15:58:00+00:00",
+                "static_headroom_usd": 1680.85,
+                "trigger_equity_usd": 11180.85
+              }
+            ],
+            "halted_minutes": 1442,
+            "hypothetical_auto_resume_count": 1,
+            "hypothetical_flatten_count": 1,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 18.93,
+                "at_utc": "2026-10-15T15:59:00+00:00",
+                "executed": false,
+                "minute": 153599,
+                "modeled_gross_exited_usd": 3154.46
+              }
+            ],
+            "max_peak_drawdown_usd": 490.09,
+            "minimum_equity_usd": 9972.34,
+            "modeled_extra_flatten_cost_usd": 18.93,
+            "modeled_extra_reentry_cost_usd": 2.45,
+            "multiplier": 2.0,
+            "october_net_usd": 217.6,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1149.78,
+            "worst_utc_day_start_loss_usd": 216.1,
+            "worst_utc_intraday_peak_loss_usd": 270.26
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": "2026-09-23T00:18:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1484.04,
+            "max_peak_drawdown_usd": 490.09,
+            "minimum_equity_usd": 9972.34,
+            "october_net_usd": 334.27,
+            "profit_target_would_end_challenge": true,
+            "train_net_usd": 1149.78,
+            "worst_utc_day_start_loss_usd": 216.1,
+            "worst_utc_intraday_peak_loss_usd": 267.72
+          }
+        },
+        {
+          "k_multiplier": 2.5,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-07T13:54:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1942.03,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 2,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 53.88,
+                "flatten_due_at_utc": "2026-10-10T20:47:00+00:00",
+                "observed_at_utc": "2026-10-10T20:46:00+00:00",
+                "static_headroom_usd": 1849.55,
+                "trigger_equity_usd": 11349.55
+              },
+              {
+                "day_start_headroom_usd": 215.19,
+                "flatten_due_at_utc": "2026-10-15T15:26:00+00:00",
+                "observed_at_utc": "2026-10-15T15:25:00+00:00",
+                "static_headroom_usd": 2185.51,
+                "trigger_equity_usd": 11685.51
+              }
+            ],
+            "halted_minutes": 2889,
+            "hypothetical_auto_resume_count": 2,
+            "hypothetical_flatten_count": 2,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 19.96,
+                "at_utc": "2026-10-10T20:47:00+00:00",
+                "executed": false,
+                "minute": 146687,
+                "modeled_gross_exited_usd": 3327.12
+              },
+              {
+                "assumed_total_exit_cost_usd": 23.12,
+                "at_utc": "2026-10-15T15:26:00+00:00",
+                "executed": false,
+                "minute": 153566,
+                "modeled_gross_exited_usd": 3853.7
+              }
+            ],
+            "max_peak_drawdown_usd": 469.16,
+            "minimum_equity_usd": 9965.42,
+            "modeled_extra_flatten_cost_usd": 43.08,
+            "modeled_extra_reentry_cost_usd": 6.07,
+            "multiplier": 2.5,
+            "october_net_usd": 504.81,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1437.22,
+            "worst_utc_day_start_loss_usd": 265.55,
+            "worst_utc_intraday_peak_loss_usd": 269.53
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": "2026-09-07T13:54:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1855.05,
+            "max_peak_drawdown_usd": 612.61,
+            "minimum_equity_usd": 9965.42,
+            "october_net_usd": 417.83,
+            "profit_target_would_end_challenge": true,
+            "train_net_usd": 1437.22,
+            "worst_utc_day_start_loss_usd": 270.12,
+            "worst_utc_intraday_peak_loss_usd": 334.64
+          }
+        },
+        {
+          "k_multiplier": 3.0,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-08-21T22:00:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 2454.92,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 2,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 54.67,
+                "flatten_due_at_utc": "2026-10-10T16:02:00+00:00",
+                "observed_at_utc": "2026-10-10T16:01:00+00:00",
+                "static_headroom_usd": 2169.48,
+                "trigger_equity_usd": 11669.48
+              },
+              {
+                "day_start_headroom_usd": 247.04,
+                "flatten_due_at_utc": "2026-10-15T14:58:00+00:00",
+                "observed_at_utc": "2026-10-15T14:57:00+00:00",
+                "static_headroom_usd": 2608.05,
+                "trigger_equity_usd": 12108.05
+              }
+            ],
+            "halted_minutes": 2887,
+            "hypothetical_auto_resume_count": 2,
+            "hypothetical_flatten_count": 2,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 23.7,
+                "at_utc": "2026-10-10T16:02:00+00:00",
+                "executed": false,
+                "minute": 146402,
+                "modeled_gross_exited_usd": 3949.26
+              },
+              {
+                "assumed_total_exit_cost_usd": 27.52,
+                "at_utc": "2026-10-15T14:58:00+00:00",
+                "executed": false,
+                "minute": 153538,
+                "modeled_gross_exited_usd": 4586.26
+              }
+            ],
+            "max_peak_drawdown_usd": 526.38,
+            "minimum_equity_usd": 9958.51,
+            "modeled_extra_flatten_cost_usd": 51.21,
+            "modeled_extra_reentry_cost_usd": 7.21,
+            "multiplier": 3.0,
+            "october_net_usd": 730.25,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1724.67,
+            "worst_utc_day_start_loss_usd": 272.96,
+            "worst_utc_intraday_peak_loss_usd": 283.89
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": "2026-08-21T22:00:00+00:00",
+            "first_daily_contract_breach_utc": "2026-10-10T21:17:00+00:00",
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 2226.07,
+            "max_peak_drawdown_usd": 735.13,
+            "minimum_equity_usd": 9958.51,
+            "october_net_usd": 501.4,
+            "profit_target_would_end_challenge": true,
+            "train_net_usd": 1724.67,
+            "worst_utc_day_start_loss_usd": 324.15,
+            "worst_utc_intraday_peak_loss_usd": 401.57
+          }
+        },
+        {
+          "k_multiplier": 4.0,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-08-19T21:07:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 2128.01,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 8,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 230.12,
+                "flatten_due_at_utc": "2026-08-22T05:11:00+00:00",
+                "observed_at_utc": "2026-08-22T05:10:00+00:00",
+                "static_headroom_usd": 1754.56,
+                "trigger_equity_usd": 11254.56
+              },
+              {
+                "day_start_headroom_usd": 54.42,
+                "flatten_due_at_utc": "2026-10-10T14:31:00+00:00",
+                "observed_at_utc": "2026-10-10T14:30:00+00:00",
+                "static_headroom_usd": 2791.21,
+                "trigger_equity_usd": 12291.21
+              },
+              {
+                "day_start_headroom_usd": 49.36,
+                "flatten_due_at_utc": "2026-10-11T23:01:00+00:00",
+                "observed_at_utc": "2026-10-11T23:00:00+00:00",
+                "static_headroom_usd": 2502.95,
+                "trigger_equity_usd": 12002.95
+              },
+              {
+                "day_start_headroom_usd": 177.56,
+                "flatten_due_at_utc": "2026-10-13T04:32:00+00:00",
+                "observed_at_utc": "2026-10-13T04:31:00+00:00",
+                "static_headroom_usd": 2332.81,
+                "trigger_equity_usd": 11832.81
+              },
+              {
+                "day_start_headroom_usd": 313.49,
+                "flatten_due_at_utc": "2026-10-15T14:48:00+00:00",
+                "observed_at_utc": "2026-10-15T14:47:00+00:00",
+                "static_headroom_usd": 2563.1,
+                "trigger_equity_usd": 12063.1
+              },
+              {
+                "day_start_headroom_usd": 305.61,
+                "flatten_due_at_utc": "2026-10-18T23:58:00+00:00",
+                "observed_at_utc": "2026-10-18T23:57:00+00:00",
+                "static_headroom_usd": 2836.38,
+                "trigger_equity_usd": 12336.38
+              },
+              {
+                "day_start_headroom_usd": 142.92,
+                "flatten_due_at_utc": "2026-10-20T14:32:00+00:00",
+                "observed_at_utc": "2026-10-20T14:31:00+00:00",
+                "static_headroom_usd": 2645.55,
+                "trigger_equity_usd": 12145.55
+              },
+              {
+                "day_start_headroom_usd": 214.65,
+                "flatten_due_at_utc": "2026-10-29T16:49:00+00:00",
+                "observed_at_utc": "2026-10-29T16:48:00+00:00",
+                "static_headroom_usd": 2705.46,
+                "trigger_equity_usd": 12205.46
+              }
+            ],
+            "halted_minutes": 11551,
+            "hypothetical_auto_resume_count": 8,
+            "hypothetical_flatten_count": 8,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 10.24,
+                "at_utc": "2026-08-22T05:11:00+00:00",
+                "executed": false,
+                "minute": 75191,
+                "modeled_gross_exited_usd": 1707.12
+              },
+              {
+                "assumed_total_exit_cost_usd": 31.12,
+                "at_utc": "2026-10-10T14:31:00+00:00",
+                "executed": false,
+                "minute": 146311,
+                "modeled_gross_exited_usd": 5186.32
+              },
+              {
+                "assumed_total_exit_cost_usd": 36.18,
+                "at_utc": "2026-10-11T23:01:00+00:00",
+                "executed": false,
+                "minute": 148261,
+                "modeled_gross_exited_usd": 6030.37
+              },
+              {
+                "assumed_total_exit_cost_usd": 34.1,
+                "at_utc": "2026-10-13T04:32:00+00:00",
+                "executed": false,
+                "minute": 150032,
+                "modeled_gross_exited_usd": 5683.78
+              },
+              {
+                "assumed_total_exit_cost_usd": 36.19,
+                "at_utc": "2026-10-15T14:48:00+00:00",
+                "executed": false,
+                "minute": 153528,
+                "modeled_gross_exited_usd": 6031.32
+              },
+              {
+                "assumed_total_exit_cost_usd": 36.86,
+                "at_utc": "2026-10-18T23:58:00+00:00",
+                "executed": false,
+                "minute": 158398,
+                "modeled_gross_exited_usd": 6143.27
+              },
+              {
+                "assumed_total_exit_cost_usd": 37.45,
+                "at_utc": "2026-10-20T14:32:00+00:00",
+                "executed": false,
+                "minute": 160712,
+                "modeled_gross_exited_usd": 6241.74
+              },
+              {
+                "assumed_total_exit_cost_usd": 43.75,
+                "at_utc": "2026-10-29T16:49:00+00:00",
+                "executed": false,
+                "minute": 173809,
+                "modeled_gross_exited_usd": 7292.01
+              }
+            ],
+            "max_peak_drawdown_usd": 930.65,
+            "minimum_equity_usd": 9944.68,
+            "modeled_extra_flatten_cost_usd": 265.9,
+            "modeled_extra_reentry_cost_usd": 34.79,
+            "multiplier": 4.0,
+            "october_net_usd": -155.26,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 2283.27,
+            "worst_utc_day_start_loss_usd": 295.76,
+            "worst_utc_intraday_peak_loss_usd": 303.86
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": "2026-08-19T21:07:00+00:00",
+            "first_daily_contract_breach_utc": "2026-10-10T15:51:00+00:00",
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 2968.09,
+            "max_peak_drawdown_usd": 980.18,
+            "minimum_equity_usd": 9944.68,
+            "october_net_usd": 668.53,
+            "profit_target_would_end_challenge": true,
+            "train_net_usd": 2299.56,
+            "worst_utc_day_start_loss_usd": 432.2,
+            "worst_utc_intraday_peak_loss_usd": 535.43
+          }
+        }
+      ],
+      "stress_and_current_latched_guardian_proxies": {
+        "manual_latched_no_auto_recovery_proxy": [
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-10-08T17:22:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1113.03,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "MANUAL_ONLY_LATCH"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 367.57,
+            "minimum_equity_usd": 9979.25,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.5,
+            "october_net_usd": 250.7,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 862.33,
+            "worst_utc_day_start_loss_usd": 162.07,
+            "worst_utc_intraday_peak_loss_usd": 200.79
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-27T15:13:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1298.54,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "MANUAL_ONLY_LATCH"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 428.83,
+            "minimum_equity_usd": 9975.8,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.75,
+            "october_net_usd": 292.48,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1006.06,
+            "worst_utc_day_start_loss_usd": 189.09,
+            "worst_utc_intraday_peak_loss_usd": 234.25
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-23T00:18:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1163.64,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "MANUAL_ONLY_LATCH"
+            },
+            "guardian_trigger_count": 1,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 179.34,
+                "flatten_due_at_utc": "2026-10-15T15:59:00+00:00",
+                "observed_at_utc": "2026-10-15T15:58:00+00:00",
+                "static_headroom_usd": 1680.85,
+                "trigger_equity_usd": 11180.85
+              }
+            ],
+            "halted_minutes": 23521,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 1,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 18.93,
+                "at_utc": "2026-10-15T15:59:00+00:00",
+                "executed": false,
+                "minute": 153599,
+                "modeled_gross_exited_usd": 3154.46
+              }
+            ],
+            "max_peak_drawdown_usd": 490.09,
+            "minimum_equity_usd": 9972.34,
+            "modeled_extra_flatten_cost_usd": 18.93,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 2.0,
+            "october_net_usd": 13.86,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1149.78,
+            "worst_utc_day_start_loss_usd": 216.1,
+            "worst_utc_intraday_peak_loss_usd": 270.26
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-07T13:54:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1330.12,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "MANUAL_ONLY_LATCH"
+            },
+            "guardian_trigger_count": 1,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 53.88,
+                "flatten_due_at_utc": "2026-10-10T20:47:00+00:00",
+                "observed_at_utc": "2026-10-10T20:46:00+00:00",
+                "static_headroom_usd": 1849.55,
+                "trigger_equity_usd": 11349.55
+              }
+            ],
+            "halted_minutes": 30433,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 1,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 19.96,
+                "at_utc": "2026-10-10T20:47:00+00:00",
+                "executed": false,
+                "minute": 146687,
+                "modeled_gross_exited_usd": 3327.12
+              }
+            ],
+            "max_peak_drawdown_usd": 368.35,
+            "minimum_equity_usd": 9965.42,
+            "modeled_extra_flatten_cost_usd": 19.96,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 2.5,
+            "october_net_usd": -107.1,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1437.22,
+            "worst_utc_day_start_loss_usd": 265.55,
+            "worst_utc_intraday_peak_loss_usd": 269.53
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-08-21T22:00:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1641.85,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "MANUAL_ONLY_LATCH"
+            },
+            "guardian_trigger_count": 1,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 54.67,
+                "flatten_due_at_utc": "2026-10-10T16:02:00+00:00",
+                "observed_at_utc": "2026-10-10T16:01:00+00:00",
+                "static_headroom_usd": 2169.48,
+                "trigger_equity_usd": 11669.48
+              }
+            ],
+            "halted_minutes": 30718,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 1,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 23.7,
+                "at_utc": "2026-10-10T16:02:00+00:00",
+                "executed": false,
+                "minute": 146402,
+                "modeled_gross_exited_usd": 3949.26
+              }
+            ],
+            "max_peak_drawdown_usd": 396.32,
+            "minimum_equity_usd": 9958.51,
+            "modeled_extra_flatten_cost_usd": 23.7,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 3.0,
+            "october_net_usd": -82.82,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1724.67,
+            "worst_utc_day_start_loss_usd": 272.96,
+            "worst_utc_intraday_peak_loss_usd": 277.73
+          }
+        ],
+        "slow_10m_200bps_exit": [
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-10-08T17:22:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 958.49,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 200,
+              "flatten_delay_minutes": 10,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 200,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 20,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 1,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 198.51,
+                "flatten_due_at_utc": "2026-10-15T19:15:00+00:00",
+                "observed_at_utc": "2026-10-15T19:05:00+00:00",
+                "static_headroom_usd": 1374.64,
+                "trigger_equity_usd": 10874.64
+              }
+            ],
+            "halted_minutes": 1441,
+            "hypothetical_auto_resume_count": 1,
+            "hypothetical_flatten_count": 1,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 47.86,
+                "at_utc": "2026-10-15T19:15:00+00:00",
+                "executed": false,
+                "minute": 153795,
+                "modeled_gross_exited_usd": 2392.87
+              }
+            ],
+            "max_peak_drawdown_usd": 367.57,
+            "minimum_equity_usd": 9979.25,
+            "modeled_extra_flatten_cost_usd": 47.86,
+            "modeled_extra_reentry_cost_usd": 4.56,
+            "multiplier": 1.5,
+            "october_net_usd": 96.16,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 862.33,
+            "worst_utc_day_start_loss_usd": 162.07,
+            "worst_utc_intraday_peak_loss_usd": 242.17
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-27T15:13:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 832.16,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 200,
+              "flatten_delay_minutes": 10,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 200,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 20,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 2,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 120.97,
+                "flatten_due_at_utc": "2026-10-11T23:59:00+00:00",
+                "observed_at_utc": "2026-10-11T23:49:00+00:00",
+                "static_headroom_usd": 1282.11,
+                "trigger_equity_usd": 10782.11
+              },
+              {
+                "day_start_headroom_usd": 209.35,
+                "flatten_due_at_utc": "2026-10-15T16:03:00+00:00",
+                "observed_at_utc": "2026-10-15T15:53:00+00:00",
+                "static_headroom_usd": 1214.48,
+                "trigger_equity_usd": 10714.48
+              }
+            ],
+            "halted_minutes": 2885,
+            "hypothetical_auto_resume_count": 2,
+            "hypothetical_flatten_count": 2,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 53.38,
+                "at_utc": "2026-10-11T23:59:00+00:00",
+                "executed": false,
+                "minute": 148319,
+                "modeled_gross_exited_usd": 2668.91
+              },
+              {
+                "assumed_total_exit_cost_usd": 55.08,
+                "at_utc": "2026-10-15T16:03:00+00:00",
+                "executed": false,
+                "minute": 153603,
+                "modeled_gross_exited_usd": 2753.83
+              }
+            ],
+            "max_peak_drawdown_usd": 591.23,
+            "minimum_equity_usd": 9975.8,
+            "modeled_extra_flatten_cost_usd": 108.45,
+            "modeled_extra_reentry_cost_usd": 10.19,
+            "multiplier": 1.75,
+            "october_net_usd": -173.89,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1006.06,
+            "worst_utc_day_start_loss_usd": 240.0,
+            "worst_utc_intraday_peak_loss_usd": 263.97
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-23T00:18:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1451.34,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 200,
+              "flatten_delay_minutes": 10,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 200,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 20,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 2,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 103.1,
+                "flatten_due_at_utc": "2026-10-10T20:56:00+00:00",
+                "observed_at_utc": "2026-10-10T20:46:00+00:00",
+                "static_headroom_usd": 1579.64,
+                "trigger_equity_usd": 11079.64
+              },
+              {
+                "day_start_headroom_usd": 232.15,
+                "flatten_due_at_utc": "2026-10-15T15:35:00+00:00",
+                "observed_at_utc": "2026-10-15T15:25:00+00:00",
+                "static_headroom_usd": 1814.73,
+                "trigger_equity_usd": 11314.73
+              }
+            ],
+            "halted_minutes": 2886,
+            "hypothetical_auto_resume_count": 2,
+            "hypothetical_flatten_count": 2,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 53.09,
+                "at_utc": "2026-10-10T20:56:00+00:00",
+                "executed": false,
+                "minute": 146696,
+                "modeled_gross_exited_usd": 2654.68
+              },
+              {
+                "assumed_total_exit_cost_usd": 62.2,
+                "at_utc": "2026-10-15T15:35:00+00:00",
+                "executed": false,
+                "minute": 153575,
+                "modeled_gross_exited_usd": 3110.23
+              }
+            ],
+            "max_peak_drawdown_usd": 409.01,
+            "minimum_equity_usd": 9972.34,
+            "modeled_extra_flatten_cost_usd": 115.3,
+            "modeled_extra_reentry_cost_usd": 12.14,
+            "multiplier": 2.0,
+            "october_net_usd": 301.57,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1149.78,
+            "worst_utc_day_start_loss_usd": 242.71,
+            "worst_utc_intraday_peak_loss_usd": 276.33
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-07T13:54:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1890.81,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 200,
+              "flatten_delay_minutes": 10,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 200,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 20,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 2,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 102.15,
+                "flatten_due_at_utc": "2026-10-10T16:03:00+00:00",
+                "observed_at_utc": "2026-10-10T15:53:00+00:00",
+                "static_headroom_usd": 1897.82,
+                "trigger_equity_usd": 11397.82
+              },
+              {
+                "day_start_headroom_usd": 263.05,
+                "flatten_due_at_utc": "2026-10-15T15:04:00+00:00",
+                "observed_at_utc": "2026-10-15T14:54:00+00:00",
+                "static_headroom_usd": 2215.78,
+                "trigger_equity_usd": 11715.78
+              }
+            ],
+            "halted_minutes": 2885,
+            "hypothetical_auto_resume_count": 2,
+            "hypothetical_flatten_count": 2,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 65.78,
+                "at_utc": "2026-10-10T16:03:00+00:00",
+                "executed": false,
+                "minute": 146403,
+                "modeled_gross_exited_usd": 3289.04
+              },
+              {
+                "assumed_total_exit_cost_usd": 77.01,
+                "at_utc": "2026-10-15T15:04:00+00:00",
+                "executed": false,
+                "minute": 153544,
+                "modeled_gross_exited_usd": 3850.52
+              }
+            ],
+            "max_peak_drawdown_usd": 486.77,
+            "minimum_equity_usd": 9965.42,
+            "modeled_extra_flatten_cost_usd": 142.79,
+            "modeled_extra_reentry_cost_usd": 14.96,
+            "multiplier": 2.5,
+            "october_net_usd": 453.58,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1437.22,
+            "worst_utc_day_start_loss_usd": 271.25,
+            "worst_utc_intraday_peak_loss_usd": 311.24
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-08-21T22:00:00+00:00",
+            "first_daily_contract_breach_utc": "2026-10-11T23:35:00+00:00",
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1321.54,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 200,
+              "flatten_delay_minutes": 10,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 200,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 20,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 2,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 102.1,
+                "flatten_due_at_utc": "2026-10-10T14:48:00+00:00",
+                "observed_at_utc": "2026-10-10T14:38:00+00:00",
+                "static_headroom_usd": 2216.9,
+                "trigger_equity_usd": 11716.9
+              },
+              {
+                "day_start_headroom_usd": 94.82,
+                "flatten_due_at_utc": "2026-10-11T23:35:00+00:00",
+                "observed_at_utc": "2026-10-11T23:25:00+00:00",
+                "static_headroom_usd": 1927.89,
+                "trigger_equity_usd": 11427.89
+              }
+            ],
+            "halted_minutes": 1444,
+            "hypothetical_auto_resume_count": 1,
+            "hypothetical_flatten_count": 2,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 78.1,
+                "at_utc": "2026-10-10T14:48:00+00:00",
+                "executed": false,
+                "minute": 146328,
+                "modeled_gross_exited_usd": 3904.88
+              },
+              {
+                "assumed_total_exit_cost_usd": 91.06,
+                "at_utc": "2026-10-11T23:35:00+00:00",
+                "executed": false,
+                "minute": 148295,
+                "modeled_gross_exited_usd": 4552.83
+              }
+            ],
+            "max_peak_drawdown_usd": 716.63,
+            "minimum_equity_usd": 9958.51,
+            "modeled_extra_flatten_cost_usd": 169.15,
+            "modeled_extra_reentry_cost_usd": 8.03,
+            "multiplier": 3.0,
+            "october_net_usd": -403.13,
+            "permanent_contract_breach": true,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1724.67,
+            "worst_utc_day_start_loss_usd": 311.53,
+            "worst_utc_intraday_peak_loss_usd": 311.53
+          }
+        ],
+        "slow_5m_120bps_exit": [
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-10-08T17:22:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1113.03,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 120,
+              "flatten_delay_minutes": 5,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 220,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 16,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 367.57,
+            "minimum_equity_usd": 9979.25,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.5,
+            "october_net_usd": 250.7,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 862.33,
+            "worst_utc_day_start_loss_usd": 162.07,
+            "worst_utc_intraday_peak_loss_usd": 200.79
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-27T15:13:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1188.95,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 120,
+              "flatten_delay_minutes": 5,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 220,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 16,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 1,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 194.42,
+                "flatten_due_at_utc": "2026-10-15T16:03:00+00:00",
+                "observed_at_utc": "2026-10-15T15:58:00+00:00",
+                "static_headroom_usd": 1533.24,
+                "trigger_equity_usd": 11033.24
+              }
+            ],
+            "halted_minutes": 1443,
+            "hypothetical_auto_resume_count": 1,
+            "hypothetical_flatten_count": 1,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 33.05,
+                "at_utc": "2026-10-15T16:03:00+00:00",
+                "executed": false,
+                "minute": 153603,
+                "modeled_gross_exited_usd": 2753.83
+              }
+            ],
+            "max_peak_drawdown_usd": 428.83,
+            "minimum_equity_usd": 9975.8,
+            "modeled_extra_flatten_cost_usd": 33.05,
+            "modeled_extra_reentry_cost_usd": 4.29,
+            "multiplier": 1.75,
+            "october_net_usd": 182.89,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1006.06,
+            "worst_utc_day_start_loss_usd": 189.09,
+            "worst_utc_intraday_peak_loss_usd": 241.93
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-23T00:18:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1045.64,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 120,
+              "flatten_delay_minutes": 5,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 220,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 16,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 2,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 104.58,
+                "flatten_due_at_utc": "2026-10-11T23:36:00+00:00",
+                "observed_at_utc": "2026-10-11T23:31:00+00:00",
+                "static_headroom_usd": 1403.03,
+                "trigger_equity_usd": 10903.03
+              },
+              {
+                "day_start_headroom_usd": 211.79,
+                "flatten_due_at_utc": "2026-10-15T15:44:00+00:00",
+                "observed_at_utc": "2026-10-15T15:39:00+00:00",
+                "static_headroom_usd": 1358.66,
+                "trigger_equity_usd": 10858.66
+              }
+            ],
+            "halted_minutes": 2887,
+            "hypothetical_auto_resume_count": 2,
+            "hypothetical_flatten_count": 2,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 36.46,
+                "at_utc": "2026-10-11T23:36:00+00:00",
+                "executed": false,
+                "minute": 148296,
+                "modeled_gross_exited_usd": 3038.49
+              },
+              {
+                "assumed_total_exit_cost_usd": 37.34,
+                "at_utc": "2026-10-15T15:44:00+00:00",
+                "executed": false,
+                "minute": 153584,
+                "modeled_gross_exited_usd": 3111.57
+              }
+            ],
+            "max_peak_drawdown_usd": 592.02,
+            "minimum_equity_usd": 9972.34,
+            "modeled_extra_flatten_cost_usd": 73.8,
+            "modeled_extra_reentry_cost_usd": 9.34,
+            "multiplier": 2.0,
+            "october_net_usd": -104.14,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1149.78,
+            "worst_utc_day_start_loss_usd": 237.3,
+            "worst_utc_intraday_peak_loss_usd": 263.0
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-07T13:54:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1945.08,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 120,
+              "flatten_delay_minutes": 5,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 220,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 16,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 2,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 83.88,
+                "flatten_due_at_utc": "2026-10-10T18:25:00+00:00",
+                "observed_at_utc": "2026-10-10T18:20:00+00:00",
+                "static_headroom_usd": 1879.56,
+                "trigger_equity_usd": 11379.56
+              },
+              {
+                "day_start_headroom_usd": 238.01,
+                "flatten_due_at_utc": "2026-10-15T15:08:00+00:00",
+                "observed_at_utc": "2026-10-15T15:03:00+00:00",
+                "static_headroom_usd": 2211.91,
+                "trigger_equity_usd": 11711.91
+              }
+            ],
+            "halted_minutes": 2884,
+            "hypothetical_auto_resume_count": 2,
+            "hypothetical_flatten_count": 2,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 39.45,
+                "at_utc": "2026-10-10T18:25:00+00:00",
+                "executed": false,
+                "minute": 146545,
+                "modeled_gross_exited_usd": 3287.14
+              },
+              {
+                "assumed_total_exit_cost_usd": 46.19,
+                "at_utc": "2026-10-15T15:08:00+00:00",
+                "executed": false,
+                "minute": 153548,
+                "modeled_gross_exited_usd": 3848.98
+              }
+            ],
+            "max_peak_drawdown_usd": 465.59,
+            "minimum_equity_usd": 9965.42,
+            "modeled_extra_flatten_cost_usd": 85.63,
+            "modeled_extra_reentry_cost_usd": 12.16,
+            "multiplier": 2.5,
+            "october_net_usd": 507.86,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1437.22,
+            "worst_utc_day_start_loss_usd": 247.43,
+            "worst_utc_intraday_peak_loss_usd": 277.96
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-08-21T22:00:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1636.2,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 120,
+              "flatten_delay_minutes": 5,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 220,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 16,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 4,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 83.83,
+                "flatten_due_at_utc": "2026-10-10T15:07:00+00:00",
+                "observed_at_utc": "2026-10-10T15:02:00+00:00",
+                "static_headroom_usd": 2198.63,
+                "trigger_equity_usd": 11698.63
+              },
+              {
+                "day_start_headroom_usd": 78.04,
+                "flatten_due_at_utc": "2026-10-11T23:55:00+00:00",
+                "observed_at_utc": "2026-10-11T23:50:00+00:00",
+                "static_headroom_usd": 1926.39,
+                "trigger_equity_usd": 11426.39
+              },
+              {
+                "day_start_headroom_usd": 181.18,
+                "flatten_due_at_utc": "2026-10-13T05:28:00+00:00",
+                "observed_at_utc": "2026-10-13T05:23:00+00:00",
+                "static_headroom_usd": 1745.72,
+                "trigger_equity_usd": 11245.72
+              },
+              {
+                "day_start_headroom_usd": 278.58,
+                "flatten_due_at_utc": "2026-10-15T14:57:00+00:00",
+                "observed_at_utc": "2026-10-15T14:52:00+00:00",
+                "static_headroom_usd": 1847.25,
+                "trigger_equity_usd": 11347.25
+              }
+            ],
+            "halted_minutes": 5772,
+            "hypothetical_auto_resume_count": 4,
+            "hypothetical_flatten_count": 4,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 47.05,
+                "at_utc": "2026-10-10T15:07:00+00:00",
+                "executed": false,
+                "minute": 146347,
+                "modeled_gross_exited_usd": 3920.65
+              },
+              {
+                "assumed_total_exit_cost_usd": 54.91,
+                "at_utc": "2026-10-11T23:55:00+00:00",
+                "executed": false,
+                "minute": 148315,
+                "modeled_gross_exited_usd": 4576.04
+              },
+              {
+                "assumed_total_exit_cost_usd": 51.38,
+                "at_utc": "2026-10-13T05:28:00+00:00",
+                "executed": false,
+                "minute": 150088,
+                "modeled_gross_exited_usd": 4281.99
+              },
+              {
+                "assumed_total_exit_cost_usd": 54.98,
+                "at_utc": "2026-10-15T14:57:00+00:00",
+                "executed": false,
+                "minute": 153537,
+                "modeled_gross_exited_usd": 4581.32
+              }
+            ],
+            "max_peak_drawdown_usd": 878.73,
+            "minimum_equity_usd": 9958.51,
+            "modeled_extra_flatten_cost_usd": 208.32,
+            "modeled_extra_reentry_cost_usd": 27.32,
+            "multiplier": 3.0,
+            "october_net_usd": -88.47,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1724.67,
+            "worst_utc_day_start_loss_usd": 273.33,
+            "worst_utc_intraday_peak_loss_usd": 306.52
+          }
+        ]
+      }
+    },
+    "research.crypto/Balanced": {
+      "base_gross_max_usd": 2574.85,
+      "members": [
+        "ACT04",
+        "ACT08",
+        "W031"
+      ],
+      "predeclared_multiplier_scenarios": [
+        {
+          "k_multiplier": 1.0,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 617.75,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 195.96,
+            "minimum_equity_usd": 9986.17,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.0,
+            "october_net_usd": 19.91,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": false,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 597.83,
+            "worst_utc_day_start_loss_usd": 89.09,
+            "worst_utc_intraday_peak_loss_usd": 100.13
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 617.75,
+            "max_peak_drawdown_usd": 195.96,
+            "minimum_equity_usd": 9986.17,
+            "october_net_usd": 19.91,
+            "profit_target_would_end_challenge": false,
+            "train_net_usd": 597.83,
+            "worst_utc_day_start_loss_usd": 89.09,
+            "worst_utc_intraday_peak_loss_usd": 100.13
+          }
+        },
+        {
+          "k_multiplier": 1.25,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 772.18,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 244.95,
+            "minimum_equity_usd": 9982.71,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.25,
+            "october_net_usd": 24.89,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": false,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 747.29,
+            "worst_utc_day_start_loss_usd": 111.37,
+            "worst_utc_intraday_peak_loss_usd": 125.16
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 772.18,
+            "max_peak_drawdown_usd": 244.95,
+            "minimum_equity_usd": 9982.71,
+            "october_net_usd": 24.89,
+            "profit_target_would_end_challenge": false,
+            "train_net_usd": 747.29,
+            "worst_utc_day_start_loss_usd": 111.37,
+            "worst_utc_intraday_peak_loss_usd": 125.16
+          }
+        },
+        {
+          "k_multiplier": 1.5,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-10-18T19:35:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 926.62,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 293.95,
+            "minimum_equity_usd": 9979.25,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.5,
+            "october_net_usd": 29.87,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 896.75,
+            "worst_utc_day_start_loss_usd": 133.64,
+            "worst_utc_intraday_peak_loss_usd": 150.19
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": "2026-10-18T19:35:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 926.62,
+            "max_peak_drawdown_usd": 293.95,
+            "minimum_equity_usd": 9979.25,
+            "october_net_usd": 29.87,
+            "profit_target_would_end_challenge": true,
+            "train_net_usd": 896.75,
+            "worst_utc_day_start_loss_usd": 133.64,
+            "worst_utc_intraday_peak_loss_usd": 150.19
+          }
+        },
+        {
+          "k_multiplier": 1.75,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-27T12:35:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1081.05,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 342.94,
+            "minimum_equity_usd": 9975.8,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.75,
+            "october_net_usd": 34.85,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1046.21,
+            "worst_utc_day_start_loss_usd": 155.91,
+            "worst_utc_intraday_peak_loss_usd": 175.22
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": "2026-09-27T12:35:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1081.05,
+            "max_peak_drawdown_usd": 342.94,
+            "minimum_equity_usd": 9975.8,
+            "october_net_usd": 34.85,
+            "profit_target_would_end_challenge": true,
+            "train_net_usd": 1046.21,
+            "worst_utc_day_start_loss_usd": 155.91,
+            "worst_utc_intraday_peak_loss_usd": 175.22
+          }
+        },
+        {
+          "k_multiplier": 2.0,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-21T08:35:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1235.49,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 391.93,
+            "minimum_equity_usd": 9972.34,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 2.0,
+            "october_net_usd": 39.83,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1195.67,
+            "worst_utc_day_start_loss_usd": 178.19,
+            "worst_utc_intraday_peak_loss_usd": 200.25
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": "2026-09-21T08:35:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1235.49,
+            "max_peak_drawdown_usd": 391.93,
+            "minimum_equity_usd": 9972.34,
+            "october_net_usd": 39.83,
+            "profit_target_would_end_challenge": true,
+            "train_net_usd": 1195.67,
+            "worst_utc_day_start_loss_usd": 178.19,
+            "worst_utc_intraday_peak_loss_usd": 200.25
+          }
+        },
+        {
+          "k_multiplier": 2.5,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-19T10:27:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1276.51,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 1,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 87.95,
+                "flatten_due_at_utc": "2026-10-29T20:54:00+00:00",
+                "observed_at_utc": "2026-10-29T20:53:00+00:00",
+                "static_headroom_usd": 1804.09,
+                "trigger_equity_usd": 11304.09
+              }
+            ],
+            "halted_minutes": 1442,
+            "hypothetical_auto_resume_count": 1,
+            "hypothetical_flatten_count": 1,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 36.25,
+                "at_utc": "2026-10-29T20:54:00+00:00",
+                "executed": false,
+                "minute": 174054,
+                "modeled_gross_exited_usd": 6042.05
+              }
+            ],
+            "max_peak_drawdown_usd": 489.91,
+            "minimum_equity_usd": 9965.42,
+            "modeled_extra_flatten_cost_usd": 36.25,
+            "modeled_extra_reentry_cost_usd": 4.98,
+            "multiplier": 2.5,
+            "october_net_usd": -218.07,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1494.58,
+            "worst_utc_day_start_loss_usd": 222.73,
+            "worst_utc_intraday_peak_loss_usd": 255.08
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": "2026-09-19T10:27:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1544.36,
+            "max_peak_drawdown_usd": 489.91,
+            "minimum_equity_usd": 9965.42,
+            "october_net_usd": 49.78,
+            "profit_target_would_end_challenge": true,
+            "train_net_usd": 1494.58,
+            "worst_utc_day_start_loss_usd": 222.73,
+            "worst_utc_intraday_peak_loss_usd": 250.31
+          }
+        },
+        {
+          "k_multiplier": 3.0,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-05T16:57:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1002.51,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 3,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 52.2,
+                "flatten_due_at_utc": "2026-10-11T23:49:00+00:00",
+                "observed_at_utc": "2026-10-11T23:48:00+00:00",
+                "static_headroom_usd": 1927.41,
+                "trigger_equity_usd": 11427.41
+              },
+              {
+                "day_start_headroom_usd": 147.04,
+                "flatten_due_at_utc": "2026-10-15T15:54:00+00:00",
+                "observed_at_utc": "2026-10-15T15:53:00+00:00",
+                "static_headroom_usd": 1829.82,
+                "trigger_equity_usd": 11329.82
+              },
+              {
+                "day_start_headroom_usd": 66.26,
+                "flatten_due_at_utc": "2026-10-29T20:50:00+00:00",
+                "observed_at_utc": "2026-10-29T20:49:00+00:00",
+                "static_headroom_usd": 1586.19,
+                "trigger_equity_usd": 11086.19
+              }
+            ],
+            "halted_minutes": 4325,
+            "hypothetical_auto_resume_count": 3,
+            "hypothetical_flatten_count": 3,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 41.35,
+                "at_utc": "2026-10-11T23:49:00+00:00",
+                "executed": false,
+                "minute": 148309,
+                "modeled_gross_exited_usd": 6891.95
+              },
+              {
+                "assumed_total_exit_cost_usd": 41.08,
+                "at_utc": "2026-10-15T15:54:00+00:00",
+                "executed": false,
+                "minute": 153594,
+                "modeled_gross_exited_usd": 6847.1
+              },
+              {
+                "assumed_total_exit_cost_usd": 43.85,
+                "at_utc": "2026-10-29T20:50:00+00:00",
+                "executed": false,
+                "minute": 174050,
+                "modeled_gross_exited_usd": 7307.66
+              }
+            ],
+            "max_peak_drawdown_usd": 980.04,
+            "minimum_equity_usd": 9958.51,
+            "modeled_extra_flatten_cost_usd": 126.28,
+            "modeled_extra_reentry_cost_usd": 15.79,
+            "multiplier": 3.0,
+            "october_net_usd": -790.99,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1793.5,
+            "worst_utc_day_start_loss_usd": 291.12,
+            "worst_utc_intraday_peak_loss_usd": 334.03
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": "2026-09-05T16:57:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1853.24,
+            "max_peak_drawdown_usd": 587.89,
+            "minimum_equity_usd": 9958.51,
+            "october_net_usd": 59.74,
+            "profit_target_would_end_challenge": true,
+            "train_net_usd": 1793.5,
+            "worst_utc_day_start_loss_usd": 267.28,
+            "worst_utc_intraday_peak_loss_usd": 300.38
+          }
+        },
+        {
+          "k_multiplier": 4.0,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-08-19T21:06:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 2208.4,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 3,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 64.52,
+                "flatten_due_at_utc": "2026-10-10T16:02:00+00:00",
+                "observed_at_utc": "2026-10-10T16:01:00+00:00",
+                "static_headroom_usd": 2769.04,
+                "trigger_equity_usd": 12269.04
+              },
+              {
+                "day_start_headroom_usd": 189.08,
+                "flatten_due_at_utc": "2026-10-15T14:57:00+00:00",
+                "observed_at_utc": "2026-10-15T14:56:00+00:00",
+                "static_headroom_usd": 2973.05,
+                "trigger_equity_usd": 12473.05
+              },
+              {
+                "day_start_headroom_usd": 80.73,
+                "flatten_due_at_utc": "2026-10-29T20:47:00+00:00",
+                "observed_at_utc": "2026-10-29T20:46:00+00:00",
+                "static_headroom_usd": 2792.82,
+                "trigger_equity_usd": 12292.82
+              }
+            ],
+            "halted_minutes": 4332,
+            "hypothetical_auto_resume_count": 3,
+            "hypothetical_flatten_count": 3,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 49.81,
+                "at_utc": "2026-10-10T16:02:00+00:00",
+                "executed": false,
+                "minute": 146402,
+                "modeled_gross_exited_usd": 8301.53
+              },
+              {
+                "assumed_total_exit_cost_usd": 53.52,
+                "at_utc": "2026-10-15T14:57:00+00:00",
+                "executed": false,
+                "minute": 153537,
+                "modeled_gross_exited_usd": 8920.8
+              },
+              {
+                "assumed_total_exit_cost_usd": 56.76,
+                "at_utc": "2026-10-29T20:47:00+00:00",
+                "executed": false,
+                "minute": 174047,
+                "modeled_gross_exited_usd": 9459.98
+              }
+            ],
+            "max_peak_drawdown_usd": 609.63,
+            "minimum_equity_usd": 9944.68,
+            "modeled_extra_flatten_cost_usd": 160.09,
+            "modeled_extra_reentry_cost_usd": 21.9,
+            "multiplier": 4.0,
+            "october_net_usd": -182.94,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 2391.33,
+            "worst_utc_day_start_loss_usd": 287.9,
+            "worst_utc_intraday_peak_loss_usd": 325.83
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": "2026-08-19T21:06:00+00:00",
+            "first_daily_contract_breach_utc": "2026-10-10T21:17:00+00:00",
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 2470.98,
+            "max_peak_drawdown_usd": 783.85,
+            "minimum_equity_usd": 9944.68,
+            "october_net_usd": 79.65,
+            "profit_target_would_end_challenge": true,
+            "train_net_usd": 2391.33,
+            "worst_utc_day_start_loss_usd": 356.38,
+            "worst_utc_intraday_peak_loss_usd": 400.5
+          }
+        }
+      ],
+      "stress_and_current_latched_guardian_proxies": {
+        "manual_latched_no_auto_recovery_proxy": [
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-10-18T19:35:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 926.62,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "MANUAL_ONLY_LATCH"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 293.95,
+            "minimum_equity_usd": 9979.25,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.5,
+            "october_net_usd": 29.87,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 896.75,
+            "worst_utc_day_start_loss_usd": 133.64,
+            "worst_utc_intraday_peak_loss_usd": 150.19
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-27T12:35:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1081.05,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "MANUAL_ONLY_LATCH"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 342.94,
+            "minimum_equity_usd": 9975.8,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.75,
+            "october_net_usd": 34.85,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1046.21,
+            "worst_utc_day_start_loss_usd": 155.91,
+            "worst_utc_intraday_peak_loss_usd": 175.22
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-21T08:35:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1235.49,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "MANUAL_ONLY_LATCH"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 391.93,
+            "minimum_equity_usd": 9972.34,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 2.0,
+            "october_net_usd": 39.83,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1195.67,
+            "worst_utc_day_start_loss_usd": 178.19,
+            "worst_utc_intraday_peak_loss_usd": 200.25
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-19T10:27:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1299.33,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "MANUAL_ONLY_LATCH"
+            },
+            "guardian_trigger_count": 1,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 87.95,
+                "flatten_due_at_utc": "2026-10-29T20:54:00+00:00",
+                "observed_at_utc": "2026-10-29T20:53:00+00:00",
+                "static_headroom_usd": 1804.09,
+                "trigger_equity_usd": 11304.09
+              }
+            ],
+            "halted_minutes": 3066,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 1,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 36.25,
+                "at_utc": "2026-10-29T20:54:00+00:00",
+                "executed": false,
+                "minute": 174054,
+                "modeled_gross_exited_usd": 6042.05
+              }
+            ],
+            "max_peak_drawdown_usd": 489.91,
+            "minimum_equity_usd": 9965.42,
+            "modeled_extra_flatten_cost_usd": 36.25,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 2.5,
+            "october_net_usd": -195.25,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1494.58,
+            "worst_utc_day_start_loss_usd": 222.73,
+            "worst_utc_intraday_peak_loss_usd": 255.08
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-05T16:57:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1384.09,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "MANUAL_ONLY_LATCH"
+            },
+            "guardian_trigger_count": 1,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 52.2,
+                "flatten_due_at_utc": "2026-10-11T23:49:00+00:00",
+                "observed_at_utc": "2026-10-11T23:48:00+00:00",
+                "static_headroom_usd": 1927.41,
+                "trigger_equity_usd": 11427.41
+              }
+            ],
+            "halted_minutes": 28811,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 1,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 41.35,
+                "at_utc": "2026-10-11T23:49:00+00:00",
+                "executed": false,
+                "minute": 148309,
+                "modeled_gross_exited_usd": 6891.95
+              }
+            ],
+            "max_peak_drawdown_usd": 595.76,
+            "minimum_equity_usd": 9958.51,
+            "modeled_extra_flatten_cost_usd": 41.35,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 3.0,
+            "october_net_usd": -409.41,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1793.5,
+            "worst_utc_day_start_loss_usd": 291.12,
+            "worst_utc_intraday_peak_loss_usd": 294.71
+          }
+        ],
+        "slow_10m_200bps_exit": [
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-10-18T19:35:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 926.62,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 200,
+              "flatten_delay_minutes": 10,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 200,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 20,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 293.95,
+            "minimum_equity_usd": 9979.25,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.5,
+            "october_net_usd": 29.87,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 896.75,
+            "worst_utc_day_start_loss_usd": 133.64,
+            "worst_utc_intraday_peak_loss_usd": 150.19
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-27T12:35:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1081.05,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 200,
+              "flatten_delay_minutes": 10,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 200,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 20,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 342.94,
+            "minimum_equity_usd": 9975.8,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.75,
+            "october_net_usd": 34.85,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1046.21,
+            "worst_utc_day_start_loss_usd": 155.91,
+            "worst_utc_intraday_peak_loss_usd": 175.22
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-21T08:35:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1011.0,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 200,
+              "flatten_delay_minutes": 10,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 200,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 20,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 1,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 130.36,
+                "flatten_due_at_utc": "2026-10-29T21:03:00+00:00",
+                "observed_at_utc": "2026-10-29T20:53:00+00:00",
+                "static_headroom_usd": 1543.27,
+                "trigger_equity_usd": 11043.27
+              }
+            ],
+            "halted_minutes": 1443,
+            "hypothetical_auto_resume_count": 1,
+            "hypothetical_flatten_count": 1,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 95.02,
+                "at_utc": "2026-10-29T21:03:00+00:00",
+                "executed": false,
+                "minute": 174063,
+                "modeled_gross_exited_usd": 4750.96
+              }
+            ],
+            "max_peak_drawdown_usd": 391.93,
+            "minimum_equity_usd": 9972.34,
+            "modeled_extra_flatten_cost_usd": 95.02,
+            "modeled_extra_reentry_cost_usd": 9.95,
+            "multiplier": 2.0,
+            "october_net_usd": -184.66,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1195.67,
+            "worst_utc_day_start_loss_usd": 178.19,
+            "worst_utc_intraday_peak_loss_usd": 200.54
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-19T10:27:00+00:00",
+            "first_daily_contract_breach_utc": "2026-10-11T23:40:00+00:00",
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1084.47,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 200,
+              "flatten_delay_minutes": 10,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 200,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 20,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 1,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 102.94,
+                "flatten_due_at_utc": "2026-10-11T23:40:00+00:00",
+                "observed_at_utc": "2026-10-11T23:30:00+00:00",
+                "static_headroom_usd": 1698.96,
+                "trigger_equity_usd": 11198.96
+              }
+            ],
+            "halted_minutes": 1,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 1,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 114.63,
+                "at_utc": "2026-10-11T23:40:00+00:00",
+                "executed": false,
+                "minute": 148300,
+                "modeled_gross_exited_usd": 5731.55
+              }
+            ],
+            "max_peak_drawdown_usd": 565.4,
+            "minimum_equity_usd": 9965.42,
+            "modeled_extra_flatten_cost_usd": 114.63,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 2.5,
+            "october_net_usd": -410.11,
+            "permanent_contract_breach": true,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1494.58,
+            "worst_utc_day_start_loss_usd": 311.54,
+            "worst_utc_intraday_peak_loss_usd": 314.53
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-05T16:57:00+00:00",
+            "first_daily_contract_breach_utc": "2026-10-10T18:48:00+00:00",
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1562.7,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 200,
+              "flatten_delay_minutes": 10,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 200,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 20,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 1,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 110.7,
+                "flatten_due_at_utc": "2026-10-10T18:48:00+00:00",
+                "observed_at_utc": "2026-10-10T18:38:00+00:00",
+                "static_headroom_usd": 2189.09,
+                "trigger_equity_usd": 11689.09
+              }
+            ],
+            "halted_minutes": 1,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 1,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 125.01,
+                "at_utc": "2026-10-10T18:48:00+00:00",
+                "executed": false,
+                "minute": 146568,
+                "modeled_gross_exited_usd": 6250.42
+              }
+            ],
+            "max_peak_drawdown_usd": 417.14,
+            "minimum_equity_usd": 9958.51,
+            "modeled_extra_flatten_cost_usd": 125.01,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 3.0,
+            "october_net_usd": -230.8,
+            "permanent_contract_breach": true,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1793.5,
+            "worst_utc_day_start_loss_usd": 315.69,
+            "worst_utc_intraday_peak_loss_usd": 328.24
+          }
+        ],
+        "slow_5m_120bps_exit": [
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-10-18T19:35:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 926.62,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 120,
+              "flatten_delay_minutes": 5,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 220,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 16,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 293.95,
+            "minimum_equity_usd": 9979.25,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.5,
+            "october_net_usd": 29.87,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 896.75,
+            "worst_utc_day_start_loss_usd": 133.64,
+            "worst_utc_intraday_peak_loss_usd": 150.19
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-27T12:35:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1081.05,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 120,
+              "flatten_delay_minutes": 5,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 220,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 16,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 342.94,
+            "minimum_equity_usd": 9975.8,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.75,
+            "october_net_usd": 34.85,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1046.21,
+            "worst_utc_day_start_loss_usd": 155.91,
+            "worst_utc_intraday_peak_loss_usd": 175.22
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-21T08:35:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1235.49,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 120,
+              "flatten_delay_minutes": 5,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 220,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 16,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 391.93,
+            "minimum_equity_usd": 9972.34,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 2.0,
+            "october_net_usd": 39.83,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1195.67,
+            "worst_utc_day_start_loss_usd": 178.19,
+            "worst_utc_intraday_peak_loss_usd": 200.25
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-19T10:27:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 719.89,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 120,
+              "flatten_delay_minutes": 5,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 220,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 16,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 3,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 77.27,
+                "flatten_due_at_utc": "2026-10-11T23:55:00+00:00",
+                "observed_at_utc": "2026-10-11T23:50:00+00:00",
+                "static_headroom_usd": 1673.28,
+                "trigger_equity_usd": 11173.28
+              },
+              {
+                "day_start_headroom_usd": 167.67,
+                "flatten_due_at_utc": "2026-10-15T16:00:00+00:00",
+                "observed_at_utc": "2026-10-15T15:55:00+00:00",
+                "static_headroom_usd": 1554.41,
+                "trigger_equity_usd": 11054.41
+              },
+              {
+                "day_start_headroom_usd": 105.22,
+                "flatten_due_at_utc": "2026-10-29T20:54:00+00:00",
+                "observed_at_utc": "2026-10-29T20:49:00+00:00",
+                "static_headroom_usd": 1305.96,
+                "trigger_equity_usd": 10805.96
+              }
+            ],
+            "halted_minutes": 4324,
+            "hypothetical_auto_resume_count": 3,
+            "hypothetical_flatten_count": 3,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 69.05,
+                "at_utc": "2026-10-11T23:55:00+00:00",
+                "executed": false,
+                "minute": 148315,
+                "modeled_gross_exited_usd": 5754.08
+              },
+              {
+                "assumed_total_exit_cost_usd": 68.56,
+                "at_utc": "2026-10-15T16:00:00+00:00",
+                "executed": false,
+                "minute": 153600,
+                "modeled_gross_exited_usd": 5713.49
+              },
+              {
+                "assumed_total_exit_cost_usd": 72.5,
+                "at_utc": "2026-10-29T20:54:00+00:00",
+                "executed": false,
+                "minute": 174054,
+                "modeled_gross_exited_usd": 6042.05
+              }
+            ],
+            "max_peak_drawdown_usd": 932.23,
+            "minimum_equity_usd": 9965.42,
+            "modeled_extra_flatten_cost_usd": 210.12,
+            "modeled_extra_reentry_cost_usd": 26.33,
+            "multiplier": 2.5,
+            "october_net_usd": -774.69,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1494.58,
+            "worst_utc_day_start_loss_usd": 288.98,
+            "worst_utc_intraday_peak_loss_usd": 294.59
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-05T16:57:00+00:00",
+            "first_daily_contract_breach_utc": "2026-10-29T20:53:00+00:00",
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1369.55,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 120,
+              "flatten_delay_minutes": 5,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 220,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 16,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 3,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 92.12,
+                "flatten_due_at_utc": "2026-10-10T20:50:00+00:00",
+                "observed_at_utc": "2026-10-10T20:45:00+00:00",
+                "static_headroom_usd": 2170.51,
+                "trigger_equity_usd": 11670.51
+              },
+              {
+                "day_start_headroom_usd": 178.32,
+                "flatten_due_at_utc": "2026-10-15T15:40:00+00:00",
+                "observed_at_utc": "2026-10-15T15:35:00+00:00",
+                "static_headroom_usd": 2272.47,
+                "trigger_equity_usd": 11772.47
+              },
+              {
+                "day_start_headroom_usd": 117.75,
+                "flatten_due_at_utc": "2026-10-29T20:53:00+00:00",
+                "observed_at_utc": "2026-10-29T20:48:00+00:00",
+                "static_headroom_usd": 2029.25,
+                "trigger_equity_usd": 11529.25
+              }
+            ],
+            "halted_minutes": 2883,
+            "hypothetical_auto_resume_count": 2,
+            "hypothetical_flatten_count": 3,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 75.39,
+                "at_utc": "2026-10-10T20:50:00+00:00",
+                "executed": false,
+                "minute": 146690,
+                "modeled_gross_exited_usd": 6282.18
+              },
+              {
+                "assumed_total_exit_cost_usd": 82.1,
+                "at_utc": "2026-10-15T15:40:00+00:00",
+                "executed": false,
+                "minute": 153580,
+                "modeled_gross_exited_usd": 6841.45
+              },
+              {
+                "assumed_total_exit_cost_usd": 87.49,
+                "at_utc": "2026-10-29T20:53:00+00:00",
+                "executed": false,
+                "minute": 174053,
+                "modeled_gross_exited_usd": 7290.74
+              }
+            ],
+            "max_peak_drawdown_usd": 630.49,
+            "minimum_equity_usd": 9958.51,
+            "modeled_extra_flatten_cost_usd": 244.97,
+            "modeled_extra_reentry_cost_usd": 21.03,
+            "multiplier": 3.0,
+            "october_net_usd": -423.95,
+            "permanent_contract_breach": true,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1793.5,
+            "worst_utc_day_start_loss_usd": 341.95,
+            "worst_utc_intraday_peak_loss_usd": 387.87
+          }
+        ]
+      }
+    },
+    "research.crypto/RegimeAlt": {
+      "base_gross_max_usd": 2926.29,
+      "members": [
+        "ACT08",
+        "ACT09",
+        "W031"
+      ],
+      "predeclared_multiplier_scenarios": [
+        {
+          "k_multiplier": 1.0,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 383.99,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 272.1,
+            "minimum_equity_usd": 9981.26,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.0,
+            "october_net_usd": -37.0,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": false,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 420.99,
+            "worst_utc_day_start_loss_usd": 94.52,
+            "worst_utc_intraday_peak_loss_usd": 109.78
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 383.99,
+            "max_peak_drawdown_usd": 272.1,
+            "minimum_equity_usd": 9981.26,
+            "october_net_usd": -37.0,
+            "profit_target_would_end_challenge": false,
+            "train_net_usd": 420.99,
+            "worst_utc_day_start_loss_usd": 94.52,
+            "worst_utc_intraday_peak_loss_usd": 109.78
+          }
+        },
+        {
+          "k_multiplier": 1.25,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 479.99,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 340.13,
+            "minimum_equity_usd": 9976.57,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.25,
+            "october_net_usd": -46.24,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": false,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 526.24,
+            "worst_utc_day_start_loss_usd": 118.15,
+            "worst_utc_intraday_peak_loss_usd": 137.22
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 479.99,
+            "max_peak_drawdown_usd": 340.13,
+            "minimum_equity_usd": 9976.57,
+            "october_net_usd": -46.24,
+            "profit_target_would_end_challenge": false,
+            "train_net_usd": 526.24,
+            "worst_utc_day_start_loss_usd": 118.15,
+            "worst_utc_intraday_peak_loss_usd": 137.22
+          }
+        },
+        {
+          "k_multiplier": 1.5,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 575.99,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 408.15,
+            "minimum_equity_usd": 9971.89,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.5,
+            "october_net_usd": -55.49,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": false,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 631.49,
+            "worst_utc_day_start_loss_usd": 141.77,
+            "worst_utc_intraday_peak_loss_usd": 164.67
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 575.99,
+            "max_peak_drawdown_usd": 408.15,
+            "minimum_equity_usd": 9971.89,
+            "october_net_usd": -55.49,
+            "profit_target_would_end_challenge": false,
+            "train_net_usd": 631.49,
+            "worst_utc_day_start_loss_usd": 141.77,
+            "worst_utc_intraday_peak_loss_usd": 164.67
+          }
+        },
+        {
+          "k_multiplier": 1.75,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 671.99,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 476.18,
+            "minimum_equity_usd": 9967.2,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.75,
+            "october_net_usd": -64.74,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": false,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 736.73,
+            "worst_utc_day_start_loss_usd": 165.4,
+            "worst_utc_intraday_peak_loss_usd": 192.11
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 671.99,
+            "max_peak_drawdown_usd": 476.18,
+            "minimum_equity_usd": 9967.2,
+            "october_net_usd": -64.74,
+            "profit_target_would_end_challenge": false,
+            "train_net_usd": 736.73,
+            "worst_utc_day_start_loss_usd": 165.4,
+            "worst_utc_intraday_peak_loss_usd": 192.11
+          }
+        },
+        {
+          "k_multiplier": 2.0,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-10-05T06:03:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 767.99,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 544.2,
+            "minimum_equity_usd": 9962.52,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 2.0,
+            "october_net_usd": -73.99,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 841.98,
+            "worst_utc_day_start_loss_usd": 189.03,
+            "worst_utc_intraday_peak_loss_usd": 219.56
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": "2026-10-05T06:03:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 767.99,
+            "max_peak_drawdown_usd": 544.2,
+            "minimum_equity_usd": 9962.52,
+            "october_net_usd": -73.99,
+            "profit_target_would_end_challenge": true,
+            "train_net_usd": 841.98,
+            "worst_utc_day_start_loss_usd": 189.03,
+            "worst_utc_intraday_peak_loss_usd": 219.56
+          }
+        },
+        {
+          "k_multiplier": 2.5,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-27T12:28:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 476.85,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 2,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 153.96,
+                "flatten_due_at_utc": "2026-10-15T16:07:00+00:00",
+                "observed_at_utc": "2026-10-15T16:06:00+00:00",
+                "static_headroom_usd": 1318.32,
+                "trigger_equity_usd": 10818.32
+              },
+              {
+                "day_start_headroom_usd": 84.54,
+                "flatten_due_at_utc": "2026-10-29T20:50:00+00:00",
+                "observed_at_utc": "2026-10-29T20:49:00+00:00",
+                "static_headroom_usd": 1056.07,
+                "trigger_equity_usd": 10556.07
+              }
+            ],
+            "halted_minutes": 2885,
+            "hypothetical_auto_resume_count": 2,
+            "hypothetical_flatten_count": 2,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 33.66,
+                "at_utc": "2026-10-15T16:07:00+00:00",
+                "executed": false,
+                "minute": 153607,
+                "modeled_gross_exited_usd": 5609.7
+              },
+              {
+                "assumed_total_exit_cost_usd": 37.8,
+                "at_utc": "2026-10-29T20:50:00+00:00",
+                "executed": false,
+                "minute": 174050,
+                "modeled_gross_exited_usd": 6299.51
+              }
+            ],
+            "max_peak_drawdown_usd": 797.23,
+            "minimum_equity_usd": 9953.15,
+            "modeled_extra_flatten_cost_usd": 71.46,
+            "modeled_extra_reentry_cost_usd": 9.28,
+            "multiplier": 2.5,
+            "october_net_usd": -575.62,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1052.48,
+            "worst_utc_day_start_loss_usd": 260.69,
+            "worst_utc_intraday_peak_loss_usd": 299.86
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": "2026-09-27T12:28:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 959.99,
+            "max_peak_drawdown_usd": 680.25,
+            "minimum_equity_usd": 9953.15,
+            "october_net_usd": -92.49,
+            "profit_target_would_end_challenge": true,
+            "train_net_usd": 1052.48,
+            "worst_utc_day_start_loss_usd": 236.29,
+            "worst_utc_intraday_peak_loss_usd": 274.44
+          }
+        },
+        {
+          "k_multiplier": 3.0,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-25T22:19:00+00:00",
+            "first_daily_contract_breach_utc": "2026-10-29T20:49:00+00:00",
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 366.43,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 3,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 52.69,
+                "flatten_due_at_utc": "2026-10-11T23:26:00+00:00",
+                "observed_at_utc": "2026-10-11T23:25:00+00:00",
+                "static_headroom_usd": 1258.92,
+                "trigger_equity_usd": 10758.92
+              },
+              {
+                "day_start_headroom_usd": 171.59,
+                "flatten_due_at_utc": "2026-10-15T15:41:00+00:00",
+                "observed_at_utc": "2026-10-15T15:40:00+00:00",
+                "static_headroom_usd": 1206.78,
+                "trigger_equity_usd": 10706.78
+              },
+              {
+                "day_start_headroom_usd": 93.29,
+                "flatten_due_at_utc": "2026-10-29T20:49:00+00:00",
+                "observed_at_utc": "2026-10-29T20:48:00+00:00",
+                "static_headroom_usd": 963.13,
+                "trigger_equity_usd": 10463.13
+              }
+            ],
+            "halted_minutes": 2891,
+            "hypothetical_auto_resume_count": 2,
+            "hypothetical_flatten_count": 3,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 39.27,
+                "at_utc": "2026-10-11T23:26:00+00:00",
+                "executed": false,
+                "minute": 148286,
+                "modeled_gross_exited_usd": 6544.24
+              },
+              {
+                "assumed_total_exit_cost_usd": 40.01,
+                "at_utc": "2026-10-15T15:41:00+00:00",
+                "executed": false,
+                "minute": 153581,
+                "modeled_gross_exited_usd": 6668.66
+              },
+              {
+                "assumed_total_exit_cost_usd": 44.86,
+                "at_utc": "2026-10-29T20:49:00+00:00",
+                "executed": false,
+                "minute": 174049,
+                "modeled_gross_exited_usd": 7476.33
+              }
+            ],
+            "max_peak_drawdown_usd": 1154.63,
+            "minimum_equity_usd": 9943.78,
+            "modeled_extra_flatten_cost_usd": 124.14,
+            "modeled_extra_reentry_cost_usd": 9.6,
+            "multiplier": 3.0,
+            "october_net_usd": -896.54,
+            "permanent_contract_breach": true,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1262.97,
+            "worst_utc_day_start_loss_usd": 303.4,
+            "worst_utc_intraday_peak_loss_usd": 350.4
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": "2026-09-25T22:19:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1151.98,
+            "max_peak_drawdown_usd": 816.3,
+            "minimum_equity_usd": 9943.78,
+            "october_net_usd": -110.99,
+            "profit_target_would_end_challenge": true,
+            "train_net_usd": 1262.97,
+            "worst_utc_day_start_loss_usd": 283.55,
+            "worst_utc_intraday_peak_loss_usd": 329.33
+          }
+        },
+        {
+          "k_multiplier": 4.0,
+          "with_hypothetical_24h_guardian": {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-21T06:22:00+00:00",
+            "first_daily_contract_breach_utc": "2026-10-07T17:24:00+00:00",
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1121.64,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 3,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 81.66,
+                "flatten_due_at_utc": "2026-09-23T14:13:00+00:00",
+                "observed_at_utc": "2026-09-23T14:12:00+00:00",
+                "static_headroom_usd": 1361.86,
+                "trigger_equity_usd": 10861.86
+              },
+              {
+                "day_start_headroom_usd": 136.96,
+                "flatten_due_at_utc": "2026-10-05T19:09:00+00:00",
+                "observed_at_utc": "2026-10-05T19:08:00+00:00",
+                "static_headroom_usd": 2046.12,
+                "trigger_equity_usd": 11546.12
+              },
+              {
+                "day_start_headroom_usd": 50.86,
+                "flatten_due_at_utc": "2026-10-07T17:24:00+00:00",
+                "observed_at_utc": "2026-10-07T17:23:00+00:00",
+                "static_headroom_usd": 1685.44,
+                "trigger_equity_usd": 11185.44
+              }
+            ],
+            "halted_minutes": 2886,
+            "hypothetical_auto_resume_count": 2,
+            "hypothetical_flatten_count": 3,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 35.63,
+                "at_utc": "2026-09-23T14:13:00+00:00",
+                "executed": false,
+                "minute": 121813,
+                "modeled_gross_exited_usd": 5938.83
+              },
+              {
+                "assumed_total_exit_cost_usd": 61.73,
+                "at_utc": "2026-10-05T19:09:00+00:00",
+                "executed": false,
+                "minute": 139389,
+                "modeled_gross_exited_usd": 10287.99
+              },
+              {
+                "assumed_total_exit_cost_usd": 65.11,
+                "at_utc": "2026-10-07T17:24:00+00:00",
+                "executed": false,
+                "minute": 142164,
+                "modeled_gross_exited_usd": 10851.57
+              }
+            ],
+            "max_peak_drawdown_usd": 674.68,
+            "minimum_equity_usd": 9925.04,
+            "modeled_extra_flatten_cost_usd": 162.47,
+            "modeled_extra_reentry_cost_usd": 16.17,
+            "multiplier": 4.0,
+            "october_net_usd": -330.56,
+            "permanent_contract_breach": true,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1452.2,
+            "worst_utc_day_start_loss_usd": 312.94,
+            "worst_utc_intraday_peak_loss_usd": 329.54
+          },
+          "without_guardian": {
+            "first_10pct_profit_target_utc": "2026-09-21T06:22:00+00:00",
+            "first_daily_contract_breach_utc": "2026-10-10T21:17:00+00:00",
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 1535.98,
+            "max_peak_drawdown_usd": 1088.4,
+            "minimum_equity_usd": 9925.04,
+            "october_net_usd": -147.98,
+            "profit_target_would_end_challenge": true,
+            "train_net_usd": 1683.96,
+            "worst_utc_day_start_loss_usd": 378.07,
+            "worst_utc_intraday_peak_loss_usd": 439.11
+          }
+        }
+      ],
+      "stress_and_current_latched_guardian_proxies": {
+        "manual_latched_no_auto_recovery_proxy": [
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 575.99,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "MANUAL_ONLY_LATCH"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 408.15,
+            "minimum_equity_usd": 9971.89,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.5,
+            "october_net_usd": -55.49,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": false,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 631.49,
+            "worst_utc_day_start_loss_usd": 141.77,
+            "worst_utc_intraday_peak_loss_usd": 164.67
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 671.99,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "MANUAL_ONLY_LATCH"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 476.18,
+            "minimum_equity_usd": 9967.2,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.75,
+            "october_net_usd": -64.74,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": false,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 736.73,
+            "worst_utc_day_start_loss_usd": 165.4,
+            "worst_utc_intraday_peak_loss_usd": 192.11
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-10-05T06:03:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 767.99,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "MANUAL_ONLY_LATCH"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 544.2,
+            "minimum_equity_usd": 9962.52,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 2.0,
+            "october_net_usd": -73.99,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 841.98,
+            "worst_utc_day_start_loss_usd": 189.03,
+            "worst_utc_intraday_peak_loss_usd": 219.56
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-27T12:28:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 781.78,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "MANUAL_ONLY_LATCH"
+            },
+            "guardian_trigger_count": 1,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 153.96,
+                "flatten_due_at_utc": "2026-10-15T16:07:00+00:00",
+                "observed_at_utc": "2026-10-15T16:06:00+00:00",
+                "static_headroom_usd": 1318.32,
+                "trigger_equity_usd": 10818.32
+              }
+            ],
+            "halted_minutes": 23513,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 1,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 33.66,
+                "at_utc": "2026-10-15T16:07:00+00:00",
+                "executed": false,
+                "minute": 153607,
+                "modeled_gross_exited_usd": 5609.7
+              }
+            ],
+            "max_peak_drawdown_usd": 680.25,
+            "minimum_equity_usd": 9953.15,
+            "modeled_extra_flatten_cost_usd": 33.66,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 2.5,
+            "october_net_usd": -270.7,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1052.48,
+            "worst_utc_day_start_loss_usd": 236.29,
+            "worst_utc_intraday_peak_loss_usd": 288.06
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-25T22:19:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 718.22,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 60.0,
+              "flatten_delay_minutes": 1,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 250.0,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 8.0,
+              "resume_policy": "MANUAL_ONLY_LATCH"
+            },
+            "guardian_trigger_count": 1,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 52.69,
+                "flatten_due_at_utc": "2026-10-11T23:26:00+00:00",
+                "observed_at_utc": "2026-10-11T23:25:00+00:00",
+                "static_headroom_usd": 1258.92,
+                "trigger_equity_usd": 10758.92
+              }
+            ],
+            "halted_minutes": 28834,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 1,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 39.27,
+                "at_utc": "2026-10-11T23:26:00+00:00",
+                "executed": false,
+                "minute": 148286,
+                "modeled_gross_exited_usd": 6544.24
+              }
+            ],
+            "max_peak_drawdown_usd": 802.85,
+            "minimum_equity_usd": 9943.78,
+            "modeled_extra_flatten_cost_usd": 39.27,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 3.0,
+            "october_net_usd": -544.75,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1262.97,
+            "worst_utc_day_start_loss_usd": 288.01,
+            "worst_utc_intraday_peak_loss_usd": 293.22
+          }
+        ],
+        "slow_10m_200bps_exit": [
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 575.99,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 200,
+              "flatten_delay_minutes": 10,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 200,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 20,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 408.15,
+            "minimum_equity_usd": 9971.89,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.5,
+            "october_net_usd": -55.49,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": false,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 631.49,
+            "worst_utc_day_start_loss_usd": 141.77,
+            "worst_utc_intraday_peak_loss_usd": 164.67
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 671.99,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 200,
+              "flatten_delay_minutes": 10,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 200,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 20,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 476.18,
+            "minimum_equity_usd": 9967.2,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.75,
+            "october_net_usd": -64.74,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": false,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 736.73,
+            "worst_utc_day_start_loss_usd": 165.4,
+            "worst_utc_intraday_peak_loss_usd": 192.11
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-10-05T06:03:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 304.64,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 200,
+              "flatten_delay_minutes": 10,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 200,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 20,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 2,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 183.17,
+                "flatten_due_at_utc": "2026-10-15T16:16:00+00:00",
+                "observed_at_utc": "2026-10-15T16:06:00+00:00",
+                "static_headroom_usd": 1154.65,
+                "trigger_equity_usd": 10654.65
+              },
+              {
+                "day_start_headroom_usd": 127.64,
+                "flatten_due_at_utc": "2026-10-29T20:59:00+00:00",
+                "observed_at_utc": "2026-10-29T20:49:00+00:00",
+                "static_headroom_usd": 890.44,
+                "trigger_equity_usd": 10390.44
+              }
+            ],
+            "halted_minutes": 2887,
+            "hypothetical_auto_resume_count": 2,
+            "hypothetical_flatten_count": 2,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 89.36,
+                "at_utc": "2026-10-15T16:16:00+00:00",
+                "executed": false,
+                "minute": 153616,
+                "modeled_gross_exited_usd": 4468.19
+              },
+              {
+                "assumed_total_exit_cost_usd": 98.71,
+                "at_utc": "2026-10-29T20:59:00+00:00",
+                "executed": false,
+                "minute": 174059,
+                "modeled_gross_exited_usd": 4935.3
+              }
+            ],
+            "max_peak_drawdown_usd": 714.63,
+            "minimum_equity_usd": 9962.52,
+            "modeled_extra_flatten_cost_usd": 188.07,
+            "modeled_extra_reentry_cost_usd": 18.61,
+            "multiplier": 2.0,
+            "october_net_usd": -537.34,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 841.98,
+            "worst_utc_day_start_loss_usd": 217.93,
+            "worst_utc_intraday_peak_loss_usd": 283.95
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-27T12:28:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 444.8,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 200,
+              "flatten_delay_minutes": 10,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 200,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 20,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 3,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 104.2,
+                "flatten_due_at_utc": "2026-10-10T21:27:00+00:00",
+                "observed_at_utc": "2026-10-10T21:17:00+00:00",
+                "static_headroom_usd": 1317.91,
+                "trigger_equity_usd": 10817.91
+              },
+              {
+                "day_start_headroom_usd": 204.79,
+                "flatten_due_at_utc": "2026-10-15T15:45:00+00:00",
+                "observed_at_utc": "2026-10-15T15:35:00+00:00",
+                "static_headroom_usd": 1387.75,
+                "trigger_equity_usd": 10887.75
+              },
+              {
+                "day_start_headroom_usd": 127.74,
+                "flatten_due_at_utc": "2026-10-29T20:58:00+00:00",
+                "observed_at_utc": "2026-10-29T20:48:00+00:00",
+                "static_headroom_usd": 1101.22,
+                "trigger_equity_usd": 10601.22
+              }
+            ],
+            "halted_minutes": 4328,
+            "hypothetical_auto_resume_count": 3,
+            "hypothetical_flatten_count": 3,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 99.59,
+                "at_utc": "2026-10-10T21:27:00+00:00",
+                "executed": false,
+                "minute": 146727,
+                "modeled_gross_exited_usd": 4979.53
+              },
+              {
+                "assumed_total_exit_cost_usd": 110.6,
+                "at_utc": "2026-10-15T15:45:00+00:00",
+                "executed": false,
+                "minute": 153585,
+                "modeled_gross_exited_usd": 5530.01
+              },
+              {
+                "assumed_total_exit_cost_usd": 123.34,
+                "at_utc": "2026-10-29T20:58:00+00:00",
+                "executed": false,
+                "minute": 174058,
+                "modeled_gross_exited_usd": 6167.13
+              }
+            ],
+            "max_peak_drawdown_usd": 829.28,
+            "minimum_equity_usd": 9953.15,
+            "modeled_extra_flatten_cost_usd": 333.53,
+            "modeled_extra_reentry_cost_usd": 33.96,
+            "multiplier": 2.5,
+            "october_net_usd": -607.68,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1052.48,
+            "worst_utc_day_start_loss_usd": 287.71,
+            "worst_utc_intraday_peak_loss_usd": 317.57
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-29T12:00:00+00:00",
+            "first_daily_contract_breach_utc": "2026-10-07T17:59:00+00:00",
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 651.73,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 200,
+              "flatten_delay_minutes": 10,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 200,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 20,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 2,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 136.24,
+                "flatten_due_at_utc": "2026-09-23T14:22:00+00:00",
+                "observed_at_utc": "2026-09-23T14:12:00+00:00",
+                "static_headroom_usd": 1146.39,
+                "trigger_equity_usd": 10646.39
+              },
+              {
+                "day_start_headroom_usd": 98.84,
+                "flatten_due_at_utc": "2026-10-07T17:59:00+00:00",
+                "observed_at_utc": "2026-10-07T17:49:00+00:00",
+                "static_headroom_usd": 1314.02,
+                "trigger_equity_usd": 10814.02
+              }
+            ],
+            "halted_minutes": 1445,
+            "hypothetical_auto_resume_count": 1,
+            "hypothetical_flatten_count": 2,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 92.82,
+                "at_utc": "2026-09-23T14:22:00+00:00",
+                "executed": false,
+                "minute": 121822,
+                "modeled_gross_exited_usd": 4640.91
+              },
+              {
+                "assumed_total_exit_cost_usd": 162.66,
+                "at_utc": "2026-10-07T17:59:00+00:00",
+                "executed": false,
+                "minute": 142199,
+                "modeled_gross_exited_usd": 8133.01
+              }
+            ],
+            "max_peak_drawdown_usd": 585.0,
+            "minimum_equity_usd": 9943.78,
+            "modeled_extra_flatten_cost_usd": 255.48,
+            "modeled_extra_reentry_cost_usd": 13.42,
+            "multiplier": 3.0,
+            "october_net_usd": -326.9,
+            "permanent_contract_breach": true,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 978.64,
+            "worst_utc_day_start_loss_usd": 363.44,
+            "worst_utc_intraday_peak_loss_usd": 365.32
+          }
+        ],
+        "slow_5m_120bps_exit": [
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 575.99,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 120,
+              "flatten_delay_minutes": 5,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 220,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 16,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 408.15,
+            "minimum_equity_usd": 9971.89,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.5,
+            "october_net_usd": -55.49,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": false,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 631.49,
+            "worst_utc_day_start_loss_usd": 141.77,
+            "worst_utc_intraday_peak_loss_usd": 164.67
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": null,
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 671.99,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 120,
+              "flatten_delay_minutes": 5,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 220,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 16,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 476.18,
+            "minimum_equity_usd": 9967.2,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 1.75,
+            "october_net_usd": -64.74,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": false,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 736.73,
+            "worst_utc_day_start_loss_usd": 165.4,
+            "worst_utc_intraday_peak_loss_usd": 192.11
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-10-05T06:03:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 767.99,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 120,
+              "flatten_delay_minutes": 5,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 220,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 16,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 0,
+            "guardian_trigger_examples": [],
+            "halted_minutes": 0,
+            "hypothetical_auto_resume_count": 0,
+            "hypothetical_flatten_count": 0,
+            "hypothetical_flatten_examples": [],
+            "max_peak_drawdown_usd": 544.2,
+            "minimum_equity_usd": 9962.52,
+            "modeled_extra_flatten_cost_usd": 0.0,
+            "modeled_extra_reentry_cost_usd": 0.0,
+            "multiplier": 2.0,
+            "october_net_usd": -73.99,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 841.98,
+            "worst_utc_day_start_loss_usd": 189.03,
+            "worst_utc_intraday_peak_loss_usd": 219.56
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-27T12:28:00+00:00",
+            "first_daily_contract_breach_utc": null,
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 98.53,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 120,
+              "flatten_delay_minutes": 5,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 220,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 16,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 3,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 82.53,
+                "flatten_due_at_utc": "2026-10-11T23:41:00+00:00",
+                "observed_at_utc": "2026-10-11T23:36:00+00:00",
+                "static_headroom_usd": 1121.05,
+                "trigger_equity_usd": 10621.05
+              },
+              {
+                "day_start_headroom_usd": 177.45,
+                "flatten_due_at_utc": "2026-10-15T15:58:00+00:00",
+                "observed_at_utc": "2026-10-15T15:53:00+00:00",
+                "static_headroom_usd": 1022.8,
+                "trigger_equity_usd": 10522.8
+              },
+              {
+                "day_start_headroom_usd": 84.54,
+                "flatten_due_at_utc": "2026-10-29T20:54:00+00:00",
+                "observed_at_utc": "2026-10-29T20:49:00+00:00",
+                "static_headroom_usd": 699.42,
+                "trigger_equity_usd": 10199.42
+              }
+            ],
+            "halted_minutes": 4330,
+            "hypothetical_auto_resume_count": 3,
+            "hypothetical_flatten_count": 3,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 65.58,
+                "at_utc": "2026-10-11T23:41:00+00:00",
+                "executed": false,
+                "minute": 148301,
+                "modeled_gross_exited_usd": 5464.86
+              },
+              {
+                "assumed_total_exit_cost_usd": 67.2,
+                "at_utc": "2026-10-15T15:58:00+00:00",
+                "executed": false,
+                "minute": 153598,
+                "modeled_gross_exited_usd": 5600.34
+              },
+              {
+                "assumed_total_exit_cost_usd": 74.98,
+                "at_utc": "2026-10-29T20:54:00+00:00",
+                "executed": false,
+                "minute": 174054,
+                "modeled_gross_exited_usd": 6248.71
+              }
+            ],
+            "max_peak_drawdown_usd": 1175.55,
+            "minimum_equity_usd": 9953.15,
+            "modeled_extra_flatten_cost_usd": 207.77,
+            "modeled_extra_reentry_cost_usd": 26.3,
+            "multiplier": 2.5,
+            "october_net_usd": -953.94,
+            "permanent_contract_breach": false,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1052.48,
+            "worst_utc_day_start_loss_usd": 277.66,
+            "worst_utc_intraday_peak_loss_usd": 316.83
+          },
+          {
+            "classification": "GUARDIAN_24H_HALT_HYPOTHETICAL_OVERLAY_NOT_NATIVE_EXECUTION",
+            "does_not_reconstruct_actual_broker_or_netting": true,
+            "first_10pct_profit_target_utc": "2026-09-27T12:31:00+00:00",
+            "first_daily_contract_breach_utc": "2026-10-29T20:51:00+00:00",
+            "first_static_contract_breach_utc": null,
+            "full_net_usd": 474.69,
+            "funding_and_margin_unknown": true,
+            "guardian_proxy_policy": {
+              "adverse_close_bps": 120,
+              "flatten_delay_minutes": 5,
+              "halt_minutes": 1440,
+              "internal_daily_stop_usd": 220,
+              "internal_static_floor_usd": 9600.0,
+              "reentry_bps": 16,
+              "resume_policy": "AUTO_24H_HYPOTHETICAL"
+            },
+            "guardian_trigger_count": 4,
+            "guardian_trigger_examples": [
+              {
+                "day_start_headroom_usd": 135.28,
+                "flatten_due_at_utc": "2026-09-23T14:18:00+00:00",
+                "observed_at_utc": "2026-09-23T14:13:00+00:00",
+                "static_headroom_usd": 1145.43,
+                "trigger_equity_usd": 10645.43
+              },
+              {
+                "day_start_headroom_usd": 89.6,
+                "flatten_due_at_utc": "2026-10-10T20:36:00+00:00",
+                "observed_at_utc": "2026-10-10T20:31:00+00:00",
+                "static_headroom_usd": 1280.91,
+                "trigger_equity_usd": 10780.91
+              },
+              {
+                "day_start_headroom_usd": 204.83,
+                "flatten_due_at_utc": "2026-10-15T15:16:00+00:00",
+                "observed_at_utc": "2026-10-15T15:11:00+00:00",
+                "static_headroom_usd": 1432.95,
+                "trigger_equity_usd": 10932.95
+              },
+              {
+                "day_start_headroom_usd": 112.23,
+                "flatten_due_at_utc": "2026-10-29T20:51:00+00:00",
+                "observed_at_utc": "2026-10-29T20:46:00+00:00",
+                "static_headroom_usd": 1153.72,
+                "trigger_equity_usd": 10653.72
+              }
+            ],
+            "halted_minutes": 4334,
+            "hypothetical_auto_resume_count": 3,
+            "hypothetical_flatten_count": 4,
+            "hypothetical_flatten_examples": [
+              {
+                "assumed_total_exit_cost_usd": 55.84,
+                "at_utc": "2026-09-23T14:18:00+00:00",
+                "executed": false,
+                "minute": 121818,
+                "modeled_gross_exited_usd": 4653.17
+              },
+              {
+                "assumed_total_exit_cost_usd": 71.45,
+                "at_utc": "2026-10-10T20:36:00+00:00",
+                "executed": false,
+                "minute": 146676,
+                "modeled_gross_exited_usd": 5954.05
+              },
+              {
+                "assumed_total_exit_cost_usd": 79.33,
+                "at_utc": "2026-10-15T15:16:00+00:00",
+                "executed": false,
+                "minute": 153556,
+                "modeled_gross_exited_usd": 6610.86
+              },
+              {
+                "assumed_total_exit_cost_usd": 90.47,
+                "at_utc": "2026-10-29T20:51:00+00:00",
+                "executed": false,
+                "minute": 174051,
+                "modeled_gross_exited_usd": 7538.78
+              }
+            ],
+            "max_peak_drawdown_usd": 821.22,
+            "minimum_equity_usd": 9943.78,
+            "modeled_extra_flatten_cost_usd": 297.08,
+            "modeled_extra_reentry_cost_usd": 30.83,
+            "multiplier": 3.0,
+            "october_net_usd": -563.13,
+            "permanent_contract_breach": true,
+            "profit_target_would_end_challenge": true,
+            "resume_policy_not_current_guardian": true,
+            "train_net_usd": 1037.82,
+            "worst_utc_day_start_loss_usd": 366.8,
+            "worst_utc_intraday_peak_loss_usd": 413.8
+          }
+        ]
+      }
+    }
+  },
+  "schema": "guardian_24h_fixed_k_multiplier_retrospective_sensitivity_v1",
+  "simulated_policy_differs_from_current_guardian": true,
+  "source_first_known_valid": false,
+  "stress_multiplier_values": [
+    1.5,
+    1.75,
+    2.0,
+    2.5,
+    3.0
+  ],
+  "trading_authorized": false,
+  "train_end_exclusive_utc": "2026-10-01T00:00:00+00:00",
+  "wallets": {
+    "ACT04": {
+      "max_gross_notional_usd": 1026.18,
+      "source_first_known_valid": false,
+      "source_snapshot_disagreements": 3,
+      "train_frozen_k": "0.000040384748",
+      "train_unit_max_drawdown": "2063485.272680000000"
+    },
+    "ACT08": {
+      "max_gross_notional_usd": 1552.2,
+      "source_first_known_valid": false,
+      "source_snapshot_disagreements": 0,
+      "train_frozen_k": "0.001853992857",
+      "train_unit_max_drawdown": "44948.03363929200"
+    },
+    "ACT09": {
+      "max_gross_notional_usd": 593.16,
+      "source_first_known_valid": false,
+      "source_snapshot_disagreements": 0,
+      "train_frozen_k": "0.000336736564",
+      "train_unit_max_drawdown": "247473.3728250300"
+    },
+    "W031": {
+      "max_gross_notional_usd": 1361.84,
+      "source_first_known_valid": false,
+      "source_snapshot_disagreements": 0,
+      "train_frozen_k": "0.037093437333",
+      "train_unit_max_drawdown": "2246.5788916855000"
+    }
+  },
+  "window_end_exclusive_utc": "2026-11-01T00:00:00+00:00",
+  "window_start_utc": "2026-07-01T00:00:00+00:00"
+}
