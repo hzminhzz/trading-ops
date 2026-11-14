@@ -450,6 +450,7 @@ def replay_unit(
     start: datetime = START,
     train_end: datetime = TRAIN_END,
     end: datetime = END,
+    capture_gross: bool = False,
 ) -> dict:
     """A full-calendar, per-market-fail-closed retrospective PM03 unit replay.
 
@@ -501,6 +502,7 @@ def replay_unit(
     train_last = D(0)
     min_equity = D(0)
     unit_curve: list[float] = []
+    gross_curve: list[float] = []
     marks: dict[Instrument, D] = {}
     STALE_EXIT_HAIRCUT_BPS = D(50)
     FEE_BPS = D("4.5")
@@ -695,6 +697,8 @@ def replay_unit(
             train_last = change
         counters["marked_minutes"] += 1
         unit_curve.append(float(change))
+        if capture_gross:
+            gross_curve.append(float(account.gross()))
 
     account.verify()
     return {
@@ -705,6 +709,7 @@ def replay_unit(
         "train_end_exclusive": train_end.isoformat(),
         "unit_k": 1,
         "_unit_curve_usd": unit_curve,
+        **({"_unit_gross_usd": gross_curve} if capture_gross else {}),
         "train_unit_max_drawdown_usd": str(train_max_dd),
         "unit_full_max_drawdown_usd": str(max_dd),
         "train_unit_net_usd": str(train_last),
