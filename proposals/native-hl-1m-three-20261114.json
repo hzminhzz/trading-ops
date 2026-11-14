@@ -1,0 +1,72 @@
+{
+  "classification": "SCENARIO_ONLY_NOT_EXECUTION_QUALIFIED",
+  "daily_loss_usd": 300,
+  "initial_equity_usd": 10000,
+  "order_route": "NONE",
+  "proposals": [
+    {
+      "admission": "NO_TRADE_UNQUALIFIED",
+      "admitted_k": {
+        "ACT04": "0",
+        "ACT08": "0",
+        "ACT09": "0"
+      },
+      "members": [
+        "ACT04",
+        "ACT08",
+        "ACT09"
+      ],
+      "name": "regime.macro/TriadA",
+      "policy": "FIXED_K_NATIVE_QUANTITY",
+      "reason": "NO_POSITIVE_COMPLETE_TRAIN_CANDIDATE",
+      "research_fixed_k_0_0001_net_usd": -16.8841,
+      "research_fixed_k_0_0001_sub_min_order_fills": 142,
+      "research_fixed_k_0_0001_total_fills": 158,
+      "strict_min_order_replay_status": "SCENARIO_ONLY"
+    },
+    {
+      "admission": "NO_TRADE_UNQUALIFIED",
+      "admitted_k": {
+        "ACT04": "0",
+        "ACT08": "0",
+        "W031": "0"
+      },
+      "members": [
+        "ACT04",
+        "ACT08",
+        "W031"
+      ],
+      "name": "research.crypto/Balanced",
+      "policy": "FIXED_K_NATIVE_QUANTITY",
+      "reason": "NO_POSITIVE_COMPLETE_TRAIN_CANDIDATE",
+      "research_fixed_k_0_0001_net_usd": -16.8777,
+      "research_fixed_k_0_0001_sub_min_order_fills": 149,
+      "research_fixed_k_0_0001_total_fills": 165,
+      "strict_min_order_replay_status": "SCENARIO_ONLY"
+    },
+    {
+      "admission": "NO_TRADE_UNQUALIFIED",
+      "admitted_k": {
+        "ACT08": "0",
+        "ACT09": "0",
+        "W031": "0"
+      },
+      "members": [
+        "ACT08",
+        "ACT09",
+        "W031"
+      ],
+      "name": "research.crypto/RegimeAlt",
+      "policy": "FIXED_K_NATIVE_QUANTITY",
+      "reason": "NO_POSITIVE_COMPLETE_TRAIN_CANDIDATE",
+      "research_fixed_k_0_0001_net_usd": 2.3336,
+      "research_fixed_k_0_0001_sub_min_order_fills": 98,
+      "research_fixed_k_0_0001_total_fills": 99,
+      "strict_min_order_replay_status": "SCENARIO_ONLY"
+    }
+  ],
+  "schema": "native_local_hl_1m_three_portfolio_research_proposal_v1",
+  "static_equity_floor_usd": 9500,
+  "trading_authorized": false,
+  "true_train_oos": "NOT_AVAILABLE_RETROSPECTIVE_ROSTER_AND_SHORT_SAMPLE"
+}
