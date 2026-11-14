@@ -1,0 +1,28 @@
+# Python / tooling
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+dist/
+build/
+
+# Secrets, keys, and local configs
+.env
+.env.*
+secrets/
+*.key
+*.pem
+*.p12
+
+# Private runtime data, ledgers, and raw market/account dumps
+data/
+private/
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.db
+*.duckdb
+*.duckdb.wal
+*.parquet

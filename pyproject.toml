@@ -1,0 +1,19 @@
+[project]
+name = "trading-ops"
+version = "0.1.0"
+description = "Private daily trading operations, wallet research, and strategy analysis workspace"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "copytrade-pm[market]",
+    "duckdb>=1.2",
+]
+
+[tool.uv.sources]
+copytrade-pm = { git = "https://github.com/hzminhzz/copytrade-pm.git", rev = "404c8d173d6bcb76b466ba69e597beea6ee81dc4" }
+
+[dependency-groups]
+dev = ["pytest>=8.3", "ruff>=0.8"]
+
+[tool.ruff]
+line-length = 100
