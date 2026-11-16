@@ -1,0 +1,3219 @@
+{
+  "archive_sha256": "bd2badb79973aaf4be37aebaacafe1e484628359e947fa9e51a7ec0f84f33a55",
+  "roster_sha256": "8b61701784f8aa8576381456e484e13dd7f73f6ccab93929b478489f88b0cd02",
+  "wallets": {
+    "ACT04": {
+      "active_coin_bars": 103474,
+      "alias": "ACT04",
+      "available_coins": 14,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 12,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 39201.81,
+      "maxdd_usd": 78745.2159,
+      "net_over_dd": 1.445388,
+      "net_usd": 113817.4199,
+      "operational_eligible": true,
+      "train_fills": 7350
+    },
+    "ACT09": {
+      "active_coin_bars": 210052,
+      "alias": "ACT09",
+      "available_coins": 11,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 289338.4898,
+      "maxdd_usd": 364302.0467,
+      "net_over_dd": 0.277953,
+      "net_usd": 101258.7031,
+      "operational_eligible": true,
+      "train_fills": 24519
+    },
+    "CA-008": {
+      "active_coin_bars": 289526,
+      "alias": "CA-008",
+      "available_coins": 19,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 8,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 106989.4179,
+      "maxdd_usd": 43243.3603,
+      "net_over_dd": 2.579148,
+      "net_usd": 111531.0118,
+      "operational_eligible": true,
+      "train_fills": 1922
+    },
+    "DEX-54": {
+      "active_coin_bars": 470820,
+      "alias": "DEX-54",
+      "available_coins": 30,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 19,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 50364.6837,
+      "maxdd_usd": 48553.3882,
+      "net_over_dd": 1.327824,
+      "net_usd": 64470.3533,
+      "operational_eligible": true,
+      "train_fills": 3156
+    },
+    "EQ-001": {
+      "active_coin_bars": 52443,
+      "alias": "EQ-001",
+      "available_coins": 3,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 3,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -6985.139,
+      "maxdd_usd": 18130.7969,
+      "net_over_dd": 0.028901,
+      "net_usd": 524.0055,
+      "operational_eligible": true,
+      "train_fills": 116
+    },
+    "M06": {
+      "active_coin_bars": 613471,
+      "alias": "M06",
+      "available_coins": 31,
+      "gap": {
+        "forced_gap_exits": 11,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 11
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 137740.5337,
+      "maxdd_usd": 74173.375,
+      "net_over_dd": 2.225591,
+      "net_usd": 165079.5669,
+      "operational_eligible": true,
+      "train_fills": 62124
+    },
+    "M07": {
+      "active_coin_bars": 333779,
+      "alias": "M07",
+      "available_coins": 17,
+      "gap": {
+        "forced_gap_exits": 3,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 3
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 5968.2843,
+      "maxdd_usd": 10475.4015,
+      "net_over_dd": -0.224353,
+      "net_usd": -2350.1834,
+      "operational_eligible": true,
+      "train_fills": 2868
+    },
+    "M11": {
+      "active_coin_bars": 70357,
+      "alias": "M11",
+      "available_coins": 7,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 9780.8789,
+      "maxdd_usd": 2690.7954,
+      "net_over_dd": 4.668901,
+      "net_usd": 12563.0585,
+      "operational_eligible": true,
+      "train_fills": 362
+    },
+    "M18": {
+      "active_coin_bars": 56890,
+      "alias": "M18",
+      "available_coins": 19,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 9,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 56126.0782,
+      "maxdd_usd": 29655.0784,
+      "net_over_dd": 1.893484,
+      "net_usd": 56151.4131,
+      "operational_eligible": true,
+      "train_fills": 4184
+    },
+    "M20": {
+      "active_coin_bars": 115615,
+      "alias": "M20",
+      "available_coins": 10,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 7,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 12854.2499,
+      "maxdd_usd": 49962.3175,
+      "net_over_dd": 0.617121,
+      "net_usd": 30832.7979,
+      "operational_eligible": true,
+      "train_fills": 838
+    },
+    "M21": {
+      "active_coin_bars": 50636,
+      "alias": "M21",
+      "available_coins": 8,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 3364.0597,
+      "maxdd_usd": 14547.9009,
+      "net_over_dd": -0.033852,
+      "net_usd": -492.4819,
+      "operational_eligible": true,
+      "train_fills": 946
+    },
+    "M22": {
+      "active_coin_bars": 373897,
+      "alias": "M22",
+      "available_coins": 27,
+      "gap": {
+        "forced_gap_exits": 3,
+        "unanchored_coins": 7,
+        "unpriced_open_steps": 3
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 18976.9606,
+      "maxdd_usd": 9552.1933,
+      "net_over_dd": 2.526542,
+      "net_usd": 24134.0145,
+      "operational_eligible": true,
+      "train_fills": 3066
+    },
+    "M37": {
+      "active_coin_bars": 155037,
+      "alias": "M37",
+      "available_coins": 7,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 39987.1297,
+      "maxdd_usd": 123880.1355,
+      "net_over_dd": 0.813205,
+      "net_usd": 100739.9897,
+      "operational_eligible": true,
+      "train_fills": 6531
+    },
+    "M45": {
+      "active_coin_bars": 99043,
+      "alias": "M45",
+      "available_coins": 19,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 8,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 17673.1546,
+      "maxdd_usd": 23516.5744,
+      "net_over_dd": 0.342393,
+      "net_usd": 8051.8999,
+      "operational_eligible": true,
+      "train_fills": 3204
+    },
+    "M47": {
+      "active_coin_bars": 95464,
+      "alias": "M47",
+      "available_coins": 7,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 31603.1414,
+      "maxdd_usd": 112697.8723,
+      "net_over_dd": 0.33619,
+      "net_usd": 37887.9459,
+      "operational_eligible": true,
+      "train_fills": 2609
+    },
+    "M54": {
+      "active_coin_bars": 174884,
+      "alias": "M54",
+      "available_coins": 7,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 14643.1032,
+      "maxdd_usd": 13414.405,
+      "net_over_dd": 0.895743,
+      "net_usd": 12015.866,
+      "operational_eligible": true,
+      "train_fills": 7820
+    },
+    "S035-ENA": {
+      "active_coin_bars": 520971,
+      "alias": "S035-ENA",
+      "available_coins": 26,
+      "gap": {
+        "forced_gap_exits": 7,
+        "unanchored_coins": 12,
+        "unpriced_open_steps": 7
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 11179.2305,
+      "maxdd_usd": 29096.7059,
+      "net_over_dd": -0.255474,
+      "net_usd": -7433.4628,
+      "operational_eligible": true,
+      "train_fills": 1581
+    },
+    "VS077": {
+      "active_coin_bars": 132927,
+      "alias": "VS077",
+      "available_coins": 8,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 6,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 19691.6794,
+      "maxdd_usd": 102886.4672,
+      "net_over_dd": -0.559017,
+      "net_usd": -57515.2527,
+      "operational_eligible": true,
+      "train_fills": 1007
+    },
+    "VS083": {
+      "active_coin_bars": 390302,
+      "alias": "VS083",
+      "available_coins": 18,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 12,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 60569.9266,
+      "maxdd_usd": 20060.2041,
+      "net_over_dd": 3.239687,
+      "net_usd": 64988.7853,
+      "operational_eligible": true,
+      "train_fills": 1410
+    },
+    "W#1": {
+      "active_coin_bars": 62306,
+      "alias": "W#1",
+      "available_coins": 3,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 3,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 70840.0138,
+      "maxdd_usd": 15618.766,
+      "net_over_dd": 4.391287,
+      "net_usd": 68586.4781,
+      "operational_eligible": true,
+      "train_fills": 329
+    },
+    "W#100": {
+      "active_coin_bars": 49387,
+      "alias": "W#100",
+      "available_coins": 2,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 258.7497,
+      "maxdd_usd": 1607.1761,
+      "net_over_dd": 0.844299,
+      "net_usd": 1356.9365,
+      "operational_eligible": true,
+      "train_fills": 905
+    },
+    "W#101": {
+      "active_coin_bars": 122815,
+      "alias": "W#101",
+      "available_coins": 6,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 48180.8609,
+      "maxdd_usd": 42446.6602,
+      "net_over_dd": 0.93164,
+      "net_usd": 39545.0008,
+      "operational_eligible": true,
+      "train_fills": 3212
+    },
+    "W#103": {
+      "active_coin_bars": 459176,
+      "alias": "W#103",
+      "available_coins": 55,
+      "gap": {
+        "forced_gap_exits": 7,
+        "unanchored_coins": 29,
+        "unpriced_open_steps": 7
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 134105.7752,
+      "maxdd_usd": 78103.243,
+      "net_over_dd": 1.824061,
+      "net_usd": 142465.1004,
+      "operational_eligible": true,
+      "train_fills": 5186
+    },
+    "W#105": {
+      "active_coin_bars": 2125,
+      "alias": "W#105",
+      "available_coins": 4,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 0,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 873.6347,
+      "maxdd_usd": 928.4431,
+      "net_over_dd": 0.940967,
+      "net_usd": 873.6347,
+      "operational_eligible": true,
+      "train_fills": 647
+    },
+    "W#107": {
+      "active_coin_bars": 145773,
+      "alias": "W#107",
+      "available_coins": 9,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 3,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 5567.5484,
+      "maxdd_usd": 4200.0303,
+      "net_over_dd": 1.344496,
+      "net_usd": 5646.9257,
+      "operational_eligible": true,
+      "train_fills": 808
+    },
+    "W#110": {
+      "active_coin_bars": 136540,
+      "alias": "W#110",
+      "available_coins": 17,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -7098.9058,
+      "maxdd_usd": 19051.2331,
+      "net_over_dd": -0.422512,
+      "net_usd": -8049.3818,
+      "operational_eligible": true,
+      "train_fills": 991
+    },
+    "W#112": {
+      "active_coin_bars": 497103,
+      "alias": "W#112",
+      "available_coins": 23,
+      "gap": {
+        "forced_gap_exits": 5,
+        "unanchored_coins": 20,
+        "unpriced_open_steps": 5
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 37994.2433,
+      "maxdd_usd": 44902.0458,
+      "net_over_dd": 0.467208,
+      "net_usd": 20978.5757,
+      "operational_eligible": true,
+      "train_fills": 4929
+    },
+    "W#117": {
+      "active_coin_bars": 207463,
+      "alias": "W#117",
+      "available_coins": 13,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 13,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 32239.9266,
+      "maxdd_usd": 17666.6718,
+      "net_over_dd": 2.915959,
+      "net_usd": 51515.2859,
+      "operational_eligible": true,
+      "train_fills": 624
+    },
+    "W#12": {
+      "active_coin_bars": 430449,
+      "alias": "W#12",
+      "available_coins": 22,
+      "gap": {
+        "forced_gap_exits": 3,
+        "unanchored_coins": 16,
+        "unpriced_open_steps": 3
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 7788.6488,
+      "maxdd_usd": 9213.2648,
+      "net_over_dd": 0.378851,
+      "net_usd": 3490.4563,
+      "operational_eligible": true,
+      "train_fills": 9348
+    },
+    "W#120": {
+      "active_coin_bars": 83220,
+      "alias": "W#120",
+      "available_coins": 17,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 3,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 156.1416,
+      "maxdd_usd": 1620.0313,
+      "net_over_dd": 0.414472,
+      "net_usd": 671.4583,
+      "operational_eligible": true,
+      "train_fills": 3476
+    },
+    "W#121": {
+      "active_coin_bars": 150427,
+      "alias": "W#121",
+      "available_coins": 18,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 13,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -17298.608,
+      "maxdd_usd": 71589.2397,
+      "net_over_dd": 0.074792,
+      "net_usd": 5354.3087,
+      "operational_eligible": true,
+      "train_fills": 892
+    },
+    "W#128": {
+      "active_coin_bars": 95204,
+      "alias": "W#128",
+      "available_coins": 6,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -107000.2311,
+      "maxdd_usd": 247337.6698,
+      "net_over_dd": -0.138579,
+      "net_usd": -34275.7266,
+      "operational_eligible": true,
+      "train_fills": 7248
+    },
+    "W#13": {
+      "active_coin_bars": 39015,
+      "alias": "W#13",
+      "available_coins": 4,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 478.4795,
+      "maxdd_usd": 951.1461,
+      "net_over_dd": 0.636653,
+      "net_usd": 605.5501,
+      "operational_eligible": true,
+      "train_fills": 235
+    },
+    "W#131": {
+      "active_coin_bars": 1525550,
+      "alias": "W#131",
+      "available_coins": 96,
+      "gap": {
+        "forced_gap_exits": 39,
+        "unanchored_coins": 65,
+        "unpriced_open_steps": 39
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 26147.4599,
+      "maxdd_usd": 19113.555,
+      "net_over_dd": 0.779339,
+      "net_usd": 14895.9408,
+      "operational_eligible": true,
+      "train_fills": 10832
+    },
+    "W#134": {
+      "active_coin_bars": 741609,
+      "alias": "W#134",
+      "available_coins": 36,
+      "gap": {
+        "forced_gap_exits": 11,
+        "unanchored_coins": 22,
+        "unpriced_open_steps": 11
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 31558.9064,
+      "maxdd_usd": 63501.9076,
+      "net_over_dd": 1.104413,
+      "net_usd": 70132.3358,
+      "operational_eligible": true,
+      "train_fills": 9010
+    },
+    "W#14": {
+      "active_coin_bars": 182237,
+      "alias": "W#14",
+      "available_coins": 10,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 6,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 40587.4556,
+      "maxdd_usd": 63255.9095,
+      "net_over_dd": -0.185696,
+      "net_usd": -11746.351,
+      "operational_eligible": true,
+      "train_fills": 1502
+    },
+    "W#142": {
+      "active_coin_bars": 326789,
+      "alias": "W#142",
+      "available_coins": 16,
+      "gap": {
+        "forced_gap_exits": 3,
+        "unanchored_coins": 13,
+        "unpriced_open_steps": 3
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 44648.3691,
+      "maxdd_usd": 45473.3007,
+      "net_over_dd": 0.417481,
+      "net_usd": 18984.2185,
+      "operational_eligible": true,
+      "train_fills": 1494
+    },
+    "W#143": {
+      "active_coin_bars": 118378,
+      "alias": "W#143",
+      "available_coins": 6,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 10227.0974,
+      "maxdd_usd": 29842.0787,
+      "net_over_dd": 2.182781,
+      "net_usd": 65138.7117,
+      "operational_eligible": true,
+      "train_fills": 11711
+    },
+    "W#147": {
+      "active_coin_bars": 123489,
+      "alias": "W#147",
+      "available_coins": 16,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 6,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 259.1689,
+      "maxdd_usd": 17538.1388,
+      "net_over_dd": -0.171028,
+      "net_usd": -2999.5202,
+      "operational_eligible": true,
+      "train_fills": 3907
+    },
+    "W#148": {
+      "active_coin_bars": 158869,
+      "alias": "W#148",
+      "available_coins": 10,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 9718.6983,
+      "maxdd_usd": 7862.8516,
+      "net_over_dd": 0.568308,
+      "net_usd": 4468.5244,
+      "operational_eligible": true,
+      "train_fills": 480
+    },
+    "W#150": {
+      "active_coin_bars": 4590,
+      "alias": "W#150",
+      "available_coins": 12,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 612.4806,
+      "maxdd_usd": 328.0883,
+      "net_over_dd": 1.866816,
+      "net_usd": 612.4806,
+      "operational_eligible": true,
+      "train_fills": 160
+    },
+    "W#163": {
+      "active_coin_bars": 74446,
+      "alias": "W#163",
+      "available_coins": 11,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 11,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -6022.0874,
+      "maxdd_usd": 135290.0427,
+      "net_over_dd": -0.38544,
+      "net_usd": -52146.147,
+      "operational_eligible": true,
+      "train_fills": 6596
+    },
+    "W#165": {
+      "active_coin_bars": 234777,
+      "alias": "W#165",
+      "available_coins": 34,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 3248.8426,
+      "maxdd_usd": 10466.0785,
+      "net_over_dd": -0.621431,
+      "net_usd": -6503.9452,
+      "operational_eligible": true,
+      "train_fills": 3433
+    },
+    "W#167": {
+      "active_coin_bars": 17210,
+      "alias": "W#167",
+      "available_coins": 5,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 153.1748,
+      "maxdd_usd": 509.4152,
+      "net_over_dd": -0.048883,
+      "net_usd": -24.9016,
+      "operational_eligible": true,
+      "train_fills": 187
+    },
+    "W#169": {
+      "active_coin_bars": 258088,
+      "alias": "W#169",
+      "available_coins": 21,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 21,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 370577.8817,
+      "maxdd_usd": 539075.3537,
+      "net_over_dd": 0.364559,
+      "net_usd": 196524.5846,
+      "operational_eligible": true,
+      "train_fills": 6307
+    },
+    "W#174": {
+      "active_coin_bars": 10557,
+      "alias": "W#174",
+      "available_coins": 16,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 66.2563,
+      "maxdd_usd": 100.0536,
+      "net_over_dd": 3.494082,
+      "net_usd": 349.5954,
+      "operational_eligible": true,
+      "train_fills": 1103
+    },
+    "W#176": {
+      "active_coin_bars": 137849,
+      "alias": "W#176",
+      "available_coins": 21,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 14,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 9151.814,
+      "maxdd_usd": 17702.7975,
+      "net_over_dd": 0.195802,
+      "net_usd": 3466.2388,
+      "operational_eligible": true,
+      "train_fills": 2598
+    },
+    "W#178": {
+      "active_coin_bars": 42828,
+      "alias": "W#178",
+      "available_coins": 6,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -2.2794,
+      "maxdd_usd": 505.3028,
+      "net_over_dd": -0.087435,
+      "net_usd": -44.1811,
+      "operational_eligible": true,
+      "train_fills": 114
+    },
+    "W#179": {
+      "active_coin_bars": 83683,
+      "alias": "W#179",
+      "available_coins": 4,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 1512.8958,
+      "maxdd_usd": 2104.7535,
+      "net_over_dd": 5.288563,
+      "net_usd": 11131.1211,
+      "operational_eligible": true,
+      "train_fills": 3704
+    },
+    "W#182": {
+      "active_coin_bars": 229085,
+      "alias": "W#182",
+      "available_coins": 10,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 10,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 141327.1901,
+      "maxdd_usd": 97668.3191,
+      "net_over_dd": 0.945055,
+      "net_usd": 92301.9776,
+      "operational_eligible": true,
+      "train_fills": 2171
+    },
+    "W#183": {
+      "active_coin_bars": 160074,
+      "alias": "W#183",
+      "available_coins": 23,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 15,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 10386.6995,
+      "maxdd_usd": 8199.3918,
+      "net_over_dd": 1.052726,
+      "net_usd": 8631.7142,
+      "operational_eligible": true,
+      "train_fills": 705
+    },
+    "W#185": {
+      "active_coin_bars": 44061,
+      "alias": "W#185",
+      "available_coins": 17,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -1187.2268,
+      "maxdd_usd": 26449.2015,
+      "net_over_dd": -0.525974,
+      "net_usd": -13911.5883,
+      "operational_eligible": true,
+      "train_fills": 2965
+    },
+    "W#189": {
+      "active_coin_bars": 102146,
+      "alias": "W#189",
+      "available_coins": 4,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 556464.5457,
+      "maxdd_usd": 809016.491,
+      "net_over_dd": 0.374705,
+      "net_usd": 303142.636,
+      "operational_eligible": true,
+      "train_fills": 3032
+    },
+    "W#19": {
+      "active_coin_bars": 610883,
+      "alias": "W#19",
+      "available_coins": 35,
+      "gap": {
+        "forced_gap_exits": 8,
+        "unanchored_coins": 23,
+        "unpriced_open_steps": 8
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 189014.1146,
+      "maxdd_usd": 92270.757,
+      "net_over_dd": 1.671413,
+      "net_usd": 154222.5137,
+      "operational_eligible": true,
+      "train_fills": 3682
+    },
+    "W#190": {
+      "active_coin_bars": 20007,
+      "alias": "W#190",
+      "available_coins": 10,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 3,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 7088.5379,
+      "maxdd_usd": 13680.961,
+      "net_over_dd": 2.675094,
+      "net_usd": 36597.8595,
+      "operational_eligible": true,
+      "train_fills": 7911
+    },
+    "W#192": {
+      "active_coin_bars": 16387,
+      "alias": "W#192",
+      "available_coins": 4,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 481.1465,
+      "maxdd_usd": 1578.9248,
+      "net_over_dd": 0.546347,
+      "net_usd": 862.6406,
+      "operational_eligible": true,
+      "train_fills": 57
+    },
+    "W#196": {
+      "active_coin_bars": 57100,
+      "alias": "W#196",
+      "available_coins": 4,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 3,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -36115.2484,
+      "maxdd_usd": 88215.81,
+      "net_over_dd": -0.74697,
+      "net_usd": -65894.5218,
+      "operational_eligible": true,
+      "train_fills": 6233
+    },
+    "W#197": {
+      "active_coin_bars": 708926,
+      "alias": "W#197",
+      "available_coins": 68,
+      "gap": {
+        "forced_gap_exits": 13,
+        "unanchored_coins": 26,
+        "unpriced_open_steps": 13
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -69517.4692,
+      "maxdd_usd": 175771.8121,
+      "net_over_dd": 0.914168,
+      "net_usd": 160685.0435,
+      "operational_eligible": true,
+      "train_fills": 2096
+    },
+    "W#2": {
+      "active_coin_bars": 52732,
+      "alias": "W#2",
+      "available_coins": 5,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 1441.2573,
+      "maxdd_usd": 1125.346,
+      "net_over_dd": 0.393229,
+      "net_usd": 442.5188,
+      "operational_eligible": true,
+      "train_fills": 49
+    },
+    "W#201": {
+      "active_coin_bars": 329620,
+      "alias": "W#201",
+      "available_coins": 28,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 22,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 7569.7498,
+      "maxdd_usd": 38806.4283,
+      "net_over_dd": 1.604791,
+      "net_usd": 62276.192,
+      "operational_eligible": true,
+      "train_fills": 3767
+    },
+    "W#202": {
+      "active_coin_bars": 116432,
+      "alias": "W#202",
+      "available_coins": 6,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 3,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -632630.2231,
+      "maxdd_usd": 940409.0318,
+      "net_over_dd": -0.800709,
+      "net_usd": -752993.5326,
+      "operational_eligible": true,
+      "train_fills": 2854
+    },
+    "W#203": {
+      "active_coin_bars": 142994,
+      "alias": "W#203",
+      "available_coins": 21,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 7,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 3160.3017,
+      "maxdd_usd": 2594.2213,
+      "net_over_dd": 1.296364,
+      "net_usd": 3363.0539,
+      "operational_eligible": true,
+      "train_fills": 1109
+    },
+    "W#206": {
+      "active_coin_bars": 304084,
+      "alias": "W#206",
+      "available_coins": 17,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 12,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 38201.088,
+      "maxdd_usd": 81095.6849,
+      "net_over_dd": 0.228471,
+      "net_usd": 18528.0058,
+      "operational_eligible": true,
+      "train_fills": 4647
+    },
+    "W#209": {
+      "active_coin_bars": 547895,
+      "alias": "W#209",
+      "available_coins": 36,
+      "gap": {
+        "forced_gap_exits": 4,
+        "unanchored_coins": 7,
+        "unpriced_open_steps": 4
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 73338.6978,
+      "maxdd_usd": 49353.0569,
+      "net_over_dd": 1.455925,
+      "net_usd": 71854.3369,
+      "operational_eligible": true,
+      "train_fills": 45954
+    },
+    "W#210": {
+      "active_coin_bars": 65189,
+      "alias": "W#210",
+      "available_coins": 10,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 6,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -10708.6576,
+      "maxdd_usd": 16467.6559,
+      "net_over_dd": -0.626787,
+      "net_usd": -10321.7122,
+      "operational_eligible": true,
+      "train_fills": 226
+    },
+    "W#215": {
+      "active_coin_bars": 45776,
+      "alias": "W#215",
+      "available_coins": 7,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 6,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 3031.8927,
+      "maxdd_usd": 1613.0961,
+      "net_over_dd": 1.572514,
+      "net_usd": 2536.617,
+      "operational_eligible": true,
+      "train_fills": 287
+    },
+    "W#218": {
+      "active_coin_bars": 411330,
+      "alias": "W#218",
+      "available_coins": 26,
+      "gap": {
+        "forced_gap_exits": 4,
+        "unanchored_coins": 10,
+        "unpriced_open_steps": 4
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 23755.2115,
+      "maxdd_usd": 53540.0869,
+      "net_over_dd": -0.031645,
+      "net_usd": -1694.2557,
+      "operational_eligible": true,
+      "train_fills": 985
+    },
+    "W#220": {
+      "active_coin_bars": 190267,
+      "alias": "W#220",
+      "available_coins": 16,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 14,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 78970.0726,
+      "maxdd_usd": 71938.0743,
+      "net_over_dd": 1.630453,
+      "net_usd": 117291.6164,
+      "operational_eligible": true,
+      "train_fills": 2615
+    },
+    "W#221": {
+      "active_coin_bars": 57534,
+      "alias": "W#221",
+      "available_coins": 6,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 4795.7067,
+      "maxdd_usd": 2545.8395,
+      "net_over_dd": 1.592193,
+      "net_usd": 4053.4668,
+      "operational_eligible": true,
+      "train_fills": 157
+    },
+    "W#222": {
+      "active_coin_bars": 212858,
+      "alias": "W#222",
+      "available_coins": 18,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 16,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 662.9101,
+      "maxdd_usd": 404.9416,
+      "net_over_dd": 0.857067,
+      "net_usd": 347.0619,
+      "operational_eligible": true,
+      "train_fills": 109
+    },
+    "W#224": {
+      "active_coin_bars": 96425,
+      "alias": "W#224",
+      "available_coins": 19,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 0,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 296.128,
+      "maxdd_usd": 204.6273,
+      "net_over_dd": 1.435574,
+      "net_usd": 293.7575,
+      "operational_eligible": true,
+      "train_fills": 2048
+    },
+    "W#225": {
+      "active_coin_bars": 54945,
+      "alias": "W#225",
+      "available_coins": 3,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 9.1705,
+      "maxdd_usd": 72.7242,
+      "net_over_dd": 0.421273,
+      "net_usd": 30.6367,
+      "operational_eligible": true,
+      "train_fills": 584
+    },
+    "W#226": {
+      "active_coin_bars": 231734,
+      "alias": "W#226",
+      "available_coins": 14,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 4609.0806,
+      "maxdd_usd": 19160.7292,
+      "net_over_dd": -0.535369,
+      "net_usd": -10258.0619,
+      "operational_eligible": true,
+      "train_fills": 378
+    },
+    "W#229": {
+      "active_coin_bars": 24129,
+      "alias": "W#229",
+      "available_coins": 7,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 0,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 254.2163,
+      "maxdd_usd": 243.6,
+      "net_over_dd": 2.302469,
+      "net_usd": 560.8814,
+      "operational_eligible": true,
+      "train_fills": 808
+    },
+    "W#23": {
+      "active_coin_bars": 51308,
+      "alias": "W#23",
+      "available_coins": 8,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 7,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -1966.7966,
+      "maxdd_usd": 5226.2218,
+      "net_over_dd": 0.761931,
+      "net_usd": 3982.0221,
+      "operational_eligible": true,
+      "train_fills": 375
+    },
+    "W#230": {
+      "active_coin_bars": 61858,
+      "alias": "W#230",
+      "available_coins": 7,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 398.6308,
+      "maxdd_usd": 911.2588,
+      "net_over_dd": 0.633915,
+      "net_usd": 577.6603,
+      "operational_eligible": true,
+      "train_fills": 793
+    },
+    "W#231": {
+      "active_coin_bars": 195598,
+      "alias": "W#231",
+      "available_coins": 14,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 3,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 1499.9925,
+      "maxdd_usd": 2100.3394,
+      "net_over_dd": 0.272982,
+      "net_usd": 573.3559,
+      "operational_eligible": true,
+      "train_fills": 1845
+    },
+    "W#234": {
+      "active_coin_bars": 1776901,
+      "alias": "W#234",
+      "available_coins": 85,
+      "gap": {
+        "forced_gap_exits": 40,
+        "unanchored_coins": 22,
+        "unpriced_open_steps": 40
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 11126.3553,
+      "maxdd_usd": 9827.7417,
+      "net_over_dd": 0.665529,
+      "net_usd": 6540.6449,
+      "operational_eligible": true,
+      "train_fills": 1100
+    },
+    "W#236": {
+      "active_coin_bars": 123301,
+      "alias": "W#236",
+      "available_coins": 16,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 6,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -3113.174,
+      "maxdd_usd": 5025.6311,
+      "net_over_dd": 0.752676,
+      "net_usd": 3782.6699,
+      "operational_eligible": true,
+      "train_fills": 1665
+    },
+    "W#244": {
+      "active_coin_bars": 282627,
+      "alias": "W#244",
+      "available_coins": 17,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 13,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 51626.0491,
+      "maxdd_usd": 33231.7774,
+      "net_over_dd": 1.459479,
+      "net_usd": 48501.0768,
+      "operational_eligible": true,
+      "train_fills": 5184
+    },
+    "W#245": {
+      "active_coin_bars": 132125,
+      "alias": "W#245",
+      "available_coins": 20,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 3,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 8045.3638,
+      "maxdd_usd": 10657.8517,
+      "net_over_dd": 0.841889,
+      "net_usd": 8972.7241,
+      "operational_eligible": true,
+      "train_fills": 904
+    },
+    "W#247": {
+      "active_coin_bars": 64087,
+      "alias": "W#247",
+      "available_coins": 11,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 7907.2652,
+      "maxdd_usd": 3175.1834,
+      "net_over_dd": 2.379492,
+      "net_usd": 7555.322,
+      "operational_eligible": true,
+      "train_fills": 783
+    },
+    "W#252": {
+      "active_coin_bars": 106759,
+      "alias": "W#252",
+      "available_coins": 9,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 6666.7306,
+      "maxdd_usd": 1656.1854,
+      "net_over_dd": 4.141351,
+      "net_usd": 6858.8458,
+      "operational_eligible": true,
+      "train_fills": 164
+    },
+    "W#253": {
+      "active_coin_bars": 38029,
+      "alias": "W#253",
+      "available_coins": 14,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 12,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -9.5592,
+      "maxdd_usd": 30.3676,
+      "net_over_dd": -0.117217,
+      "net_usd": -3.5596,
+      "operational_eligible": true,
+      "train_fills": 1606
+    },
+    "W#255": {
+      "active_coin_bars": 239042,
+      "alias": "W#255",
+      "available_coins": 11,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 95992.6699,
+      "maxdd_usd": 91210.1256,
+      "net_over_dd": 1.013848,
+      "net_usd": 92473.2478,
+      "operational_eligible": true,
+      "train_fills": 5392
+    },
+    "W#257": {
+      "active_coin_bars": 144440,
+      "alias": "W#257",
+      "available_coins": 12,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 8,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 15896.3128,
+      "maxdd_usd": 7480.3021,
+      "net_over_dd": 4.881573,
+      "net_usd": 36515.6378,
+      "operational_eligible": true,
+      "train_fills": 4619
+    },
+    "W#258": {
+      "active_coin_bars": 22287,
+      "alias": "W#258",
+      "available_coins": 1,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -53.7354,
+      "maxdd_usd": 4774.411,
+      "net_over_dd": -0.007405,
+      "net_usd": -35.3537,
+      "operational_eligible": true,
+      "train_fills": 128
+    },
+    "W#26": {
+      "active_coin_bars": 186049,
+      "alias": "W#26",
+      "available_coins": 10,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 6,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 13019.3814,
+      "maxdd_usd": 10925.5063,
+      "net_over_dd": 2.542667,
+      "net_usd": 27779.9204,
+      "operational_eligible": true,
+      "train_fills": 2304
+    },
+    "W#263": {
+      "active_coin_bars": 44350,
+      "alias": "W#263",
+      "available_coins": 9,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 33881.8371,
+      "maxdd_usd": 11481.6578,
+      "net_over_dd": 2.283127,
+      "net_usd": 26214.0819,
+      "operational_eligible": true,
+      "train_fills": 2800
+    },
+    "W#264": {
+      "active_coin_bars": 24388,
+      "alias": "W#264",
+      "available_coins": 2,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 13.7731,
+      "maxdd_usd": 37.6183,
+      "net_over_dd": 2.889597,
+      "net_usd": 108.7018,
+      "operational_eligible": true,
+      "train_fills": 409
+    },
+    "W#267": {
+      "active_coin_bars": 162659,
+      "alias": "W#267",
+      "available_coins": 18,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 2327.7932,
+      "maxdd_usd": 8424.7903,
+      "net_over_dd": 0.581059,
+      "net_usd": 4895.303,
+      "operational_eligible": true,
+      "train_fills": 5479
+    },
+    "W#273": {
+      "active_coin_bars": 383819,
+      "alias": "W#273",
+      "available_coins": 29,
+      "gap": {
+        "forced_gap_exits": 5,
+        "unanchored_coins": 13,
+        "unpriced_open_steps": 5
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 21640.2389,
+      "maxdd_usd": 24771.8757,
+      "net_over_dd": 0.707151,
+      "net_usd": 17517.4528,
+      "operational_eligible": true,
+      "train_fills": 5930
+    },
+    "W#275": {
+      "active_coin_bars": 53493,
+      "alias": "W#275",
+      "available_coins": 6,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 1009.6661,
+      "maxdd_usd": 2011.1949,
+      "net_over_dd": 0.970968,
+      "net_usd": 1952.8069,
+      "operational_eligible": true,
+      "train_fills": 1039
+    },
+    "W#277": {
+      "active_coin_bars": 434762,
+      "alias": "W#277",
+      "available_coins": 34,
+      "gap": {
+        "forced_gap_exits": 4,
+        "unanchored_coins": 27,
+        "unpriced_open_steps": 4
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -2000.2102,
+      "maxdd_usd": 6522.1831,
+      "net_over_dd": -0.327393,
+      "net_usd": -2135.3162,
+      "operational_eligible": true,
+      "train_fills": 3965
+    },
+    "W#278": {
+      "active_coin_bars": 569395,
+      "alias": "W#278",
+      "available_coins": 44,
+      "gap": {
+        "forced_gap_exits": 4,
+        "unanchored_coins": 27,
+        "unpriced_open_steps": 4
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 14534.7925,
+      "maxdd_usd": 9173.6146,
+      "net_over_dd": 1.552579,
+      "net_usd": 14242.7589,
+      "operational_eligible": true,
+      "train_fills": 2705
+    },
+    "W#280": {
+      "active_coin_bars": 8265,
+      "alias": "W#280",
+      "available_coins": 14,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 7042.3459,
+      "maxdd_usd": 1520.2599,
+      "net_over_dd": 4.63233,
+      "net_usd": 7042.3459,
+      "operational_eligible": true,
+      "train_fills": 609
+    },
+    "W#283": {
+      "active_coin_bars": 70611,
+      "alias": "W#283",
+      "available_coins": 5,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 24330.6502,
+      "maxdd_usd": 7334.4719,
+      "net_over_dd": 4.505215,
+      "net_usd": 33043.3757,
+      "operational_eligible": true,
+      "train_fills": 362
+    },
+    "W#286": {
+      "active_coin_bars": 89885,
+      "alias": "W#286",
+      "available_coins": 9,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 8,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 250522.3333,
+      "maxdd_usd": 891688.973,
+      "net_over_dd": 0.708664,
+      "net_usd": 631908.2046,
+      "operational_eligible": true,
+      "train_fills": 25110
+    },
+    "W#29": {
+      "active_coin_bars": 84278,
+      "alias": "W#29",
+      "available_coins": 21,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 55849.3999,
+      "maxdd_usd": 44634.0031,
+      "net_over_dd": 2.256596,
+      "net_usd": 100720.9162,
+      "operational_eligible": true,
+      "train_fills": 7034
+    },
+    "W#291": {
+      "active_coin_bars": 148015,
+      "alias": "W#291",
+      "available_coins": 20,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 12,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 14166.3951,
+      "maxdd_usd": 6205.3153,
+      "net_over_dd": 3.128299,
+      "net_usd": 19412.0818,
+      "operational_eligible": true,
+      "train_fills": 624
+    },
+    "W#292": {
+      "active_coin_bars": 67597,
+      "alias": "W#292",
+      "available_coins": 5,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 2181.3686,
+      "maxdd_usd": 3762.2082,
+      "net_over_dd": 1.471838,
+      "net_usd": 5537.3617,
+      "operational_eligible": true,
+      "train_fills": 3707
+    },
+    "W#294": {
+      "active_coin_bars": 24288,
+      "alias": "W#294",
+      "available_coins": 3,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 71827.046,
+      "maxdd_usd": 12358.5981,
+      "net_over_dd": 5.885621,
+      "net_usd": 72738.0252,
+      "operational_eligible": true,
+      "train_fills": 313
+    },
+    "W#296": {
+      "active_coin_bars": 49253,
+      "alias": "W#296",
+      "available_coins": 7,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 0,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 242.7504,
+      "maxdd_usd": 298.0201,
+      "net_over_dd": 1.029552,
+      "net_usd": 306.8271,
+      "operational_eligible": true,
+      "train_fills": 107
+    },
+    "W#3": {
+      "active_coin_bars": 200761,
+      "alias": "W#3",
+      "available_coins": 19,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 8,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 30062.3499,
+      "maxdd_usd": 19720.1145,
+      "net_over_dd": 1.792651,
+      "net_usd": 35351.2748,
+      "operational_eligible": true,
+      "train_fills": 1225
+    },
+    "W#301": {
+      "active_coin_bars": 37488,
+      "alias": "W#301",
+      "available_coins": 2,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 55637.8467,
+      "maxdd_usd": 118407.8276,
+      "net_over_dd": 0.309241,
+      "net_usd": 36616.5299,
+      "operational_eligible": true,
+      "train_fills": 2325
+    },
+    "W#304": {
+      "active_coin_bars": 0,
+      "alias": "W#304",
+      "available_coins": 1,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 0.0,
+      "maxdd_usd": 0.0,
+      "net_over_dd": 0.0,
+      "net_usd": 0.0,
+      "operational_eligible": true,
+      "train_fills": 59
+    },
+    "W#306": {
+      "active_coin_bars": 171208,
+      "alias": "W#306",
+      "available_coins": 18,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 31696.3013,
+      "maxdd_usd": 41963.2,
+      "net_over_dd": -0.000701,
+      "net_usd": -29.4333,
+      "operational_eligible": true,
+      "train_fills": 2330
+    },
+    "W#307": {
+      "active_coin_bars": 33540,
+      "alias": "W#307",
+      "available_coins": 8,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 108.5543,
+      "maxdd_usd": 40.4053,
+      "net_over_dd": 4.28376,
+      "net_usd": 173.0864,
+      "operational_eligible": true,
+      "train_fills": 1019
+    },
+    "W#308": {
+      "active_coin_bars": 269233,
+      "alias": "W#308",
+      "available_coins": 37,
+      "gap": {
+        "forced_gap_exits": 4,
+        "unanchored_coins": 12,
+        "unpriced_open_steps": 4
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 1663.8596,
+      "maxdd_usd": 801.3954,
+      "net_over_dd": 2.026738,
+      "net_usd": 1624.2186,
+      "operational_eligible": true,
+      "train_fills": 2035
+    },
+    "W#310": {
+      "active_coin_bars": 189650,
+      "alias": "W#310",
+      "available_coins": 11,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 3613.6825,
+      "maxdd_usd": 6701.2178,
+      "net_over_dd": 0.915759,
+      "net_usd": 6136.7019,
+      "operational_eligible": true,
+      "train_fills": 511
+    },
+    "W#314": {
+      "active_coin_bars": 0,
+      "alias": "W#314",
+      "available_coins": 1,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 0.0,
+      "maxdd_usd": 0.0,
+      "net_over_dd": 0.0,
+      "net_usd": 0.0,
+      "operational_eligible": true,
+      "train_fills": 41
+    },
+    "W#315": {
+      "active_coin_bars": 55894,
+      "alias": "W#315",
+      "available_coins": 8,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 665.7086,
+      "maxdd_usd": 3079.1959,
+      "net_over_dd": 0.657791,
+      "net_usd": 2025.4661,
+      "operational_eligible": true,
+      "train_fills": 1298
+    },
+    "W#318": {
+      "active_coin_bars": 688073,
+      "alias": "W#318",
+      "available_coins": 51,
+      "gap": {
+        "forced_gap_exits": 21,
+        "unanchored_coins": 38,
+        "unpriced_open_steps": 21
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -15849.6469,
+      "maxdd_usd": 24367.1351,
+      "net_over_dd": 0.033214,
+      "net_usd": 809.3244,
+      "operational_eligible": true,
+      "train_fills": 2849
+    },
+    "W#319": {
+      "active_coin_bars": 151688,
+      "alias": "W#319",
+      "available_coins": 12,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 9,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 19005.2551,
+      "maxdd_usd": 10306.7193,
+      "net_over_dd": 1.637468,
+      "net_usd": 16876.9212,
+      "operational_eligible": true,
+      "train_fills": 886
+    },
+    "W#322": {
+      "active_coin_bars": 231592,
+      "alias": "W#322",
+      "available_coins": 15,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 14,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 48257.5171,
+      "maxdd_usd": 209315.1079,
+      "net_over_dd": -0.301844,
+      "net_usd": -63180.5883,
+      "operational_eligible": true,
+      "train_fills": 7582
+    },
+    "W#323": {
+      "active_coin_bars": 228,
+      "alias": "W#323",
+      "available_coins": 4,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -334.388,
+      "maxdd_usd": 386.4484,
+      "net_over_dd": -0.865285,
+      "net_usd": -334.388,
+      "operational_eligible": true,
+      "train_fills": 146
+    },
+    "W#328": {
+      "active_coin_bars": 93335,
+      "alias": "W#328",
+      "available_coins": 5,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 51117.5709,
+      "maxdd_usd": 41473.7762,
+      "net_over_dd": 1.211335,
+      "net_usd": 50238.6206,
+      "operational_eligible": true,
+      "train_fills": 2045
+    },
+    "W#33": {
+      "active_coin_bars": 152571,
+      "alias": "W#33",
+      "available_coins": 14,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 13,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 47416.517,
+      "maxdd_usd": 25152.3591,
+      "net_over_dd": 1.08286,
+      "net_usd": 27236.4729,
+      "operational_eligible": true,
+      "train_fills": 649
+    },
+    "W#331": {
+      "active_coin_bars": 76552,
+      "alias": "W#331",
+      "available_coins": 12,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 7045.7243,
+      "maxdd_usd": 14447.1504,
+      "net_over_dd": 0.009114,
+      "net_usd": 131.6735,
+      "operational_eligible": true,
+      "train_fills": 751
+    },
+    "W#332": {
+      "active_coin_bars": 357355,
+      "alias": "W#332",
+      "available_coins": 20,
+      "gap": {
+        "forced_gap_exits": 7,
+        "unanchored_coins": 14,
+        "unpriced_open_steps": 7
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 29520.8166,
+      "maxdd_usd": 24260.843,
+      "net_over_dd": 1.807011,
+      "net_usd": 43839.6056,
+      "operational_eligible": true,
+      "train_fills": 905
+    },
+    "W#335": {
+      "active_coin_bars": 158321,
+      "alias": "W#335",
+      "available_coins": 16,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 6,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -1929.7874,
+      "maxdd_usd": 11126.0378,
+      "net_over_dd": 0.936911,
+      "net_usd": 10424.1122,
+      "operational_eligible": true,
+      "train_fills": 542
+    },
+    "W#336": {
+      "active_coin_bars": 367853,
+      "alias": "W#336",
+      "available_coins": 22,
+      "gap": {
+        "forced_gap_exits": 5,
+        "unanchored_coins": 20,
+        "unpriced_open_steps": 5
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 36214.4705,
+      "maxdd_usd": 65893.8272,
+      "net_over_dd": -0.282377,
+      "net_usd": -18606.9135,
+      "operational_eligible": true,
+      "train_fills": 5554
+    },
+    "W#338": {
+      "active_coin_bars": 44636,
+      "alias": "W#338",
+      "available_coins": 11,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 3,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 66170.035,
+      "maxdd_usd": 21859.1907,
+      "net_over_dd": 2.930535,
+      "net_usd": 64059.1209,
+      "operational_eligible": true,
+      "train_fills": 1930
+    },
+    "W#340": {
+      "active_coin_bars": 6814,
+      "alias": "W#340",
+      "available_coins": 5,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 0,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 3502.3753,
+      "maxdd_usd": 12726.9257,
+      "net_over_dd": 0.330274,
+      "net_usd": 4203.3724,
+      "operational_eligible": true,
+      "train_fills": 154
+    },
+    "W#344": {
+      "active_coin_bars": 362374,
+      "alias": "W#344",
+      "available_coins": 22,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 9,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 19959.7212,
+      "maxdd_usd": 33096.6267,
+      "net_over_dd": 0.120823,
+      "net_usd": 3998.8494,
+      "operational_eligible": true,
+      "train_fills": 2827
+    },
+    "W#345": {
+      "active_coin_bars": 60584,
+      "alias": "W#345",
+      "available_coins": 5,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 194212.3648,
+      "maxdd_usd": 54076.6148,
+      "net_over_dd": 3.144033,
+      "net_usd": 170018.6744,
+      "operational_eligible": true,
+      "train_fills": 1064
+    },
+    "W#348": {
+      "active_coin_bars": 1417,
+      "alias": "W#348",
+      "available_coins": 10,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 4.8179,
+      "maxdd_usd": 8.1302,
+      "net_over_dd": 0.592596,
+      "net_usd": 4.8179,
+      "operational_eligible": true,
+      "train_fills": 51
+    },
+    "W#349": {
+      "active_coin_bars": 73639,
+      "alias": "W#349",
+      "available_coins": 18,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 0,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 59.5419,
+      "maxdd_usd": 268.1725,
+      "net_over_dd": -0.059735,
+      "net_usd": -16.0192,
+      "operational_eligible": true,
+      "train_fills": 644
+    },
+    "W#350": {
+      "active_coin_bars": 296882,
+      "alias": "W#350",
+      "available_coins": 12,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 6,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 27211.0981,
+      "maxdd_usd": 13173.9235,
+      "net_over_dd": 2.603433,
+      "net_usd": 34297.4283,
+      "operational_eligible": true,
+      "train_fills": 6273
+    },
+    "W#353": {
+      "active_coin_bars": 144419,
+      "alias": "W#353",
+      "available_coins": 9,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 7,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 50982.3577,
+      "maxdd_usd": 13750.5967,
+      "net_over_dd": 3.88116,
+      "net_usd": 53368.2659,
+      "operational_eligible": true,
+      "train_fills": 430
+    },
+    "W#355": {
+      "active_coin_bars": 45536,
+      "alias": "W#355",
+      "available_coins": 6,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 2902.5564,
+      "maxdd_usd": 1468.3819,
+      "net_over_dd": 1.617087,
+      "net_usd": 2374.5014,
+      "operational_eligible": true,
+      "train_fills": 231
+    },
+    "W#357": {
+      "active_coin_bars": 144742,
+      "alias": "W#357",
+      "available_coins": 15,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 7,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 15278.6296,
+      "maxdd_usd": 10191.3881,
+      "net_over_dd": 0.845656,
+      "net_usd": 8618.4101,
+      "operational_eligible": true,
+      "train_fills": 6756
+    },
+    "W#358": {
+      "active_coin_bars": 36097,
+      "alias": "W#358",
+      "available_coins": 6,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 20508.6675,
+      "maxdd_usd": 25961.7238,
+      "net_over_dd": 0.220149,
+      "net_usd": 5715.4521,
+      "operational_eligible": true,
+      "train_fills": 2021
+    },
+    "W#36": {
+      "active_coin_bars": 31894,
+      "alias": "W#36",
+      "available_coins": 7,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 24797.3892,
+      "maxdd_usd": 24178.9398,
+      "net_over_dd": 1.049067,
+      "net_usd": 25365.3289,
+      "operational_eligible": true,
+      "train_fills": 596
+    },
+    "W#360": {
+      "active_coin_bars": 27038,
+      "alias": "W#360",
+      "available_coins": 4,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 70012.5938,
+      "maxdd_usd": 23902.7169,
+      "net_over_dd": 4.440472,
+      "net_usd": 106139.3526,
+      "operational_eligible": true,
+      "train_fills": 2913
+    },
+    "W#361": {
+      "active_coin_bars": 200602,
+      "alias": "W#361",
+      "available_coins": 18,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 0,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 70.8543,
+      "maxdd_usd": 162.2987,
+      "net_over_dd": 1.068791,
+      "net_usd": 173.4635,
+      "operational_eligible": true,
+      "train_fills": 1191
+    },
+    "W#368": {
+      "active_coin_bars": 85901,
+      "alias": "W#368",
+      "available_coins": 9,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 12149.6524,
+      "maxdd_usd": 5149.6629,
+      "net_over_dd": 1.955585,
+      "net_usd": 10070.6044,
+      "operational_eligible": true,
+      "train_fills": 145
+    },
+    "W#370": {
+      "active_coin_bars": 56419,
+      "alias": "W#370",
+      "available_coins": 3,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 10.3908,
+      "maxdd_usd": 55.3345,
+      "net_over_dd": 0.623534,
+      "net_usd": 34.503,
+      "operational_eligible": true,
+      "train_fills": 583
+    },
+    "W#371": {
+      "active_coin_bars": 76116,
+      "alias": "W#371",
+      "available_coins": 18,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 9,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -827.2771,
+      "maxdd_usd": 11179.4639,
+      "net_over_dd": 0.46253,
+      "net_usd": 5170.8422,
+      "operational_eligible": true,
+      "train_fills": 3292
+    },
+    "W#375": {
+      "active_coin_bars": 183293,
+      "alias": "W#375",
+      "available_coins": 8,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 51937.3473,
+      "maxdd_usd": 35989.9528,
+      "net_over_dd": 0.535189,
+      "net_usd": 19261.4368,
+      "operational_eligible": true,
+      "train_fills": 753
+    },
+    "W#377": {
+      "active_coin_bars": 54175,
+      "alias": "W#377",
+      "available_coins": 4,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 3,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -31302.6724,
+      "maxdd_usd": 642041.8034,
+      "net_over_dd": -0.632002,
+      "net_usd": -405771.5892,
+      "operational_eligible": true,
+      "train_fills": 2280
+    },
+    "W#381": {
+      "active_coin_bars": 183949,
+      "alias": "W#381",
+      "available_coins": 12,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 197.7279,
+      "maxdd_usd": 221.418,
+      "net_over_dd": 1.318959,
+      "net_usd": 292.0412,
+      "operational_eligible": true,
+      "train_fills": 2297
+    },
+    "W#39": {
+      "active_coin_bars": 21964,
+      "alias": "W#39",
+      "available_coins": 13,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 8,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 9.2087,
+      "maxdd_usd": 16.7187,
+      "net_over_dd": 2.108245,
+      "net_usd": 35.2471,
+      "operational_eligible": true,
+      "train_fills": 592
+    },
+    "W#40": {
+      "active_coin_bars": 683301,
+      "alias": "W#40",
+      "available_coins": 36,
+      "gap": {
+        "forced_gap_exits": 7,
+        "unanchored_coins": 24,
+        "unpriced_open_steps": 7
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 18016.0191,
+      "maxdd_usd": 9240.4251,
+      "net_over_dd": 1.290728,
+      "net_usd": 11926.871,
+      "operational_eligible": true,
+      "train_fills": 4476
+    },
+    "W#45": {
+      "active_coin_bars": 213469,
+      "alias": "W#45",
+      "available_coins": 12,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 12,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 86449.3206,
+      "maxdd_usd": 104415.6259,
+      "net_over_dd": -0.087991,
+      "net_usd": -9187.6229,
+      "operational_eligible": true,
+      "train_fills": 1809
+    },
+    "W#46": {
+      "active_coin_bars": 152739,
+      "alias": "W#46",
+      "available_coins": 22,
+      "gap": {
+        "forced_gap_exits": 4,
+        "unanchored_coins": 7,
+        "unpriced_open_steps": 4
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 49534.9623,
+      "maxdd_usd": 25715.9703,
+      "net_over_dd": 2.567745,
+      "net_usd": 66032.042,
+      "operational_eligible": true,
+      "train_fills": 1255
+    },
+    "W#47": {
+      "active_coin_bars": 455894,
+      "alias": "W#47",
+      "available_coins": 30,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 28,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -23222.2809,
+      "maxdd_usd": 107989.0838,
+      "net_over_dd": -0.057532,
+      "net_usd": -6212.8322,
+      "operational_eligible": true,
+      "train_fills": 4620
+    },
+    "W#48": {
+      "active_coin_bars": 11841,
+      "alias": "W#48",
+      "available_coins": 5,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -997.1846,
+      "maxdd_usd": 5194.2905,
+      "net_over_dd": -0.191977,
+      "net_usd": -997.1846,
+      "operational_eligible": true,
+      "train_fills": 450
+    },
+    "W#49": {
+      "active_coin_bars": 171309,
+      "alias": "W#49",
+      "available_coins": 10,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 10,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 32092.7414,
+      "maxdd_usd": 28872.46,
+      "net_over_dd": 0.35367,
+      "net_usd": 10211.3324,
+      "operational_eligible": true,
+      "train_fills": 3625
+    },
+    "W#51": {
+      "active_coin_bars": 203444,
+      "alias": "W#51",
+      "available_coins": 20,
+      "gap": {
+        "forced_gap_exits": 4,
+        "unanchored_coins": 11,
+        "unpriced_open_steps": 4
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 5572.6589,
+      "maxdd_usd": 9643.883,
+      "net_over_dd": 0.697644,
+      "net_usd": 6727.9988,
+      "operational_eligible": true,
+      "train_fills": 1508
+    },
+    "W#52": {
+      "active_coin_bars": 235155,
+      "alias": "W#52",
+      "available_coins": 53,
+      "gap": {
+        "forced_gap_exits": 5,
+        "unanchored_coins": 50,
+        "unpriced_open_steps": 5
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 9475.3556,
+      "maxdd_usd": 15964.9476,
+      "net_over_dd": 0.762368,
+      "net_usd": 12171.1658,
+      "operational_eligible": true,
+      "train_fills": 2439
+    },
+    "W#55": {
+      "active_coin_bars": 115933,
+      "alias": "W#55",
+      "available_coins": 9,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 4,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 4420.7586,
+      "maxdd_usd": 2130.0725,
+      "net_over_dd": 2.311779,
+      "net_usd": 4924.2561,
+      "operational_eligible": true,
+      "train_fills": 1806
+    },
+    "W#56": {
+      "active_coin_bars": 153967,
+      "alias": "W#56",
+      "available_coins": 17,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 16,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 33945.8594,
+      "maxdd_usd": 25696.322,
+      "net_over_dd": 1.289682,
+      "net_usd": 33140.0817,
+      "operational_eligible": true,
+      "train_fills": 1657
+    },
+    "W#58": {
+      "active_coin_bars": 53824,
+      "alias": "W#58",
+      "available_coins": 4,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 21862.705,
+      "maxdd_usd": 29242.6508,
+      "net_over_dd": 1.581004,
+      "net_usd": 46232.7604,
+      "operational_eligible": true,
+      "train_fills": 6836
+    },
+    "W#59": {
+      "active_coin_bars": 764326,
+      "alias": "W#59",
+      "available_coins": 39,
+      "gap": {
+        "forced_gap_exits": 10,
+        "unanchored_coins": 23,
+        "unpriced_open_steps": 10
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -11650.8976,
+      "maxdd_usd": 15695.3895,
+      "net_over_dd": -0.574612,
+      "net_usd": -9018.7615,
+      "operational_eligible": true,
+      "train_fills": 1702
+    },
+    "W#6": {
+      "active_coin_bars": 397527,
+      "alias": "W#6",
+      "available_coins": 18,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 13,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -2591.1123,
+      "maxdd_usd": 32969.6705,
+      "net_over_dd": 0.081368,
+      "net_usd": 2682.6777,
+      "operational_eligible": true,
+      "train_fills": 5230
+    },
+    "W#60": {
+      "active_coin_bars": 281265,
+      "alias": "W#60",
+      "available_coins": 21,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 6,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 55859.2753,
+      "maxdd_usd": 70523.7933,
+      "net_over_dd": 0.375511,
+      "net_usd": 26482.4432,
+      "operational_eligible": true,
+      "train_fills": 3033
+    },
+    "W#64": {
+      "active_coin_bars": 536014,
+      "alias": "W#64",
+      "available_coins": 29,
+      "gap": {
+        "forced_gap_exits": 8,
+        "unanchored_coins": 18,
+        "unpriced_open_steps": 8
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 8476.437,
+      "maxdd_usd": 7153.2004,
+      "net_over_dd": 0.858991,
+      "net_usd": 6144.5365,
+      "operational_eligible": true,
+      "train_fills": 2313
+    },
+    "W#68": {
+      "active_coin_bars": 339187,
+      "alias": "W#68",
+      "available_coins": 25,
+      "gap": {
+        "forced_gap_exits": 4,
+        "unanchored_coins": 18,
+        "unpriced_open_steps": 4
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 13322.6272,
+      "maxdd_usd": 6992.9174,
+      "net_over_dd": 1.668552,
+      "net_usd": 11668.0474,
+      "operational_eligible": true,
+      "train_fills": 662
+    },
+    "W#70": {
+      "active_coin_bars": 773747,
+      "alias": "W#70",
+      "available_coins": 66,
+      "gap": {
+        "forced_gap_exits": 22,
+        "unanchored_coins": 7,
+        "unpriced_open_steps": 22
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 3215.3546,
+      "maxdd_usd": 6462.5376,
+      "net_over_dd": 1.500197,
+      "net_usd": 9695.0805,
+      "operational_eligible": true,
+      "train_fills": 6932
+    },
+    "W#72": {
+      "active_coin_bars": 33546,
+      "alias": "W#72",
+      "available_coins": 5,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 3,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 23583.9576,
+      "maxdd_usd": 13801.4783,
+      "net_over_dd": 0.872493,
+      "net_usd": 12041.6902,
+      "operational_eligible": true,
+      "train_fills": 119
+    },
+    "W#75": {
+      "active_coin_bars": 16492,
+      "alias": "W#75",
+      "available_coins": 5,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 3,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 628.5185,
+      "maxdd_usd": 293.2888,
+      "net_over_dd": 2.148786,
+      "net_usd": 630.215,
+      "operational_eligible": true,
+      "train_fills": 185
+    },
+    "W#8": {
+      "active_coin_bars": 571777,
+      "alias": "W#8",
+      "available_coins": 21,
+      "gap": {
+        "forced_gap_exits": 13,
+        "unanchored_coins": 14,
+        "unpriced_open_steps": 13
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 8356.9607,
+      "maxdd_usd": 16799.4548,
+      "net_over_dd": -0.204164,
+      "net_usd": -3429.8366,
+      "operational_eligible": true,
+      "train_fills": 792
+    },
+    "W#80": {
+      "active_coin_bars": 44122,
+      "alias": "W#80",
+      "available_coins": 2,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 0,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 365.9658,
+      "maxdd_usd": 156.2145,
+      "net_over_dd": 2.956969,
+      "net_usd": 461.9215,
+      "operational_eligible": true,
+      "train_fills": 941
+    },
+    "W#81": {
+      "active_coin_bars": 46518,
+      "alias": "W#81",
+      "available_coins": 5,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 12675.6088,
+      "maxdd_usd": 9199.4944,
+      "net_over_dd": 1.254244,
+      "net_usd": 11538.4096,
+      "operational_eligible": true,
+      "train_fills": 971
+    },
+    "W#86": {
+      "active_coin_bars": 297507,
+      "alias": "W#86",
+      "available_coins": 19,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 14,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 84310.59,
+      "maxdd_usd": 60578.4978,
+      "net_over_dd": 0.607777,
+      "net_usd": 36818.2066,
+      "operational_eligible": true,
+      "train_fills": 16584
+    },
+    "W#87": {
+      "active_coin_bars": 44557,
+      "alias": "W#87",
+      "available_coins": 3,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 0,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 0.0,
+      "maxdd_usd": 137.4403,
+      "net_over_dd": 1.235908,
+      "net_usd": 169.8635,
+      "operational_eligible": true,
+      "train_fills": 809
+    },
+    "W#90": {
+      "active_coin_bars": 76716,
+      "alias": "W#90",
+      "available_coins": 7,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 6,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 2409.4893,
+      "maxdd_usd": 13251.1791,
+      "net_over_dd": 1.54947,
+      "net_usd": 20532.3034,
+      "operational_eligible": true,
+      "train_fills": 868
+    },
+    "W#93": {
+      "active_coin_bars": 17194,
+      "alias": "W#93",
+      "available_coins": 13,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 75.8344,
+      "maxdd_usd": 117.8845,
+      "net_over_dd": 0.643294,
+      "net_usd": 75.8344,
+      "operational_eligible": true,
+      "train_fills": 95
+    },
+    "W#94": {
+      "active_coin_bars": 93986,
+      "alias": "W#94",
+      "available_coins": 14,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 103.5332,
+      "maxdd_usd": 31.5398,
+      "net_over_dd": 5.977755,
+      "net_usd": 188.5375,
+      "operational_eligible": true,
+      "train_fills": 286
+    },
+    "W#96": {
+      "active_coin_bars": 281090,
+      "alias": "W#96",
+      "available_coins": 17,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 9,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 25685.7765,
+      "maxdd_usd": 39632.6675,
+      "net_over_dd": -0.191014,
+      "net_usd": -7570.403,
+      "operational_eligible": true,
+      "train_fills": 1616
+    },
+    "W#97": {
+      "active_coin_bars": 693071,
+      "alias": "W#97",
+      "available_coins": 29,
+      "gap": {
+        "forced_gap_exits": 5,
+        "unanchored_coins": 28,
+        "unpriced_open_steps": 5
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 67398.1313,
+      "maxdd_usd": 82623.5245,
+      "net_over_dd": 0.767972,
+      "net_usd": 63452.5307,
+      "operational_eligible": true,
+      "train_fills": 19500
+    },
+    "W#99": {
+      "active_coin_bars": 76884,
+      "alias": "W#99",
+      "available_coins": 12,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 7,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 901.4525,
+      "maxdd_usd": 634.6815,
+      "net_over_dd": 1.114455,
+      "net_usd": 707.3237,
+      "operational_eligible": true,
+      "train_fills": 80
+    },
+    "W015": {
+      "active_coin_bars": 22750,
+      "alias": "W015",
+      "available_coins": 1,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 6581.0291,
+      "maxdd_usd": 5622.4345,
+      "net_over_dd": 1.628944,
+      "net_usd": 9158.6336,
+      "operational_eligible": true,
+      "train_fills": 47
+    },
+    "W022": {
+      "active_coin_bars": 201391,
+      "alias": "W022",
+      "available_coins": 12,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 3,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -24947.6829,
+      "maxdd_usd": 31430.6106,
+      "net_over_dd": -0.558286,
+      "net_usd": -17547.2695,
+      "operational_eligible": true,
+      "train_fills": 757
+    },
+    "W026": {
+      "active_coin_bars": 344522,
+      "alias": "W026",
+      "available_coins": 25,
+      "gap": {
+        "forced_gap_exits": 4,
+        "unanchored_coins": 16,
+        "unpriced_open_steps": 4
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 11561.8749,
+      "maxdd_usd": 18401.5861,
+      "net_over_dd": -0.295669,
+      "net_usd": -5440.7825,
+      "operational_eligible": true,
+      "train_fills": 1828
+    },
+    "W028": {
+      "active_coin_bars": 102734,
+      "alias": "W028",
+      "available_coins": 16,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 3,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 5312.1075,
+      "maxdd_usd": 3856.6147,
+      "net_over_dd": 1.553892,
+      "net_usd": 5992.7623,
+      "operational_eligible": true,
+      "train_fills": 629
+    },
+    "W030": {
+      "active_coin_bars": 154305,
+      "alias": "W030",
+      "available_coins": 10,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 8,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 13622.7677,
+      "maxdd_usd": 31446.2075,
+      "net_over_dd": -0.308355,
+      "net_usd": -9696.583,
+      "operational_eligible": true,
+      "train_fills": 1327
+    },
+    "W032": {
+      "active_coin_bars": 365633,
+      "alias": "W032",
+      "available_coins": 43,
+      "gap": {
+        "forced_gap_exits": 5,
+        "unanchored_coins": 24,
+        "unpriced_open_steps": 5
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 2161.8968,
+      "maxdd_usd": 1303.3597,
+      "net_over_dd": 2.084566,
+      "net_usd": 2716.9387,
+      "operational_eligible": true,
+      "train_fills": 698
+    },
+    "W033": {
+      "active_coin_bars": 257841,
+      "alias": "W033",
+      "available_coins": 31,
+      "gap": {
+        "forced_gap_exits": 5,
+        "unanchored_coins": 13,
+        "unpriced_open_steps": 5
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 3999.2063,
+      "maxdd_usd": 3016.5453,
+      "net_over_dd": 1.077911,
+      "net_usd": 3251.5663,
+      "operational_eligible": true,
+      "train_fills": 1663
+    },
+    "W035": {
+      "active_coin_bars": 178528,
+      "alias": "W035",
+      "available_coins": 24,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 7,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 698.7779,
+      "maxdd_usd": 871.8039,
+      "net_over_dd": 0.842445,
+      "net_usd": 734.4469,
+      "operational_eligible": true,
+      "train_fills": 437
+    },
+    "W036": {
+      "active_coin_bars": 76769,
+      "alias": "W036",
+      "available_coins": 22,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 7,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 890.3508,
+      "maxdd_usd": 1052.6589,
+      "net_over_dd": 0.644373,
+      "net_usd": 678.3053,
+      "operational_eligible": true,
+      "train_fills": 300
+    },
+    "W037": {
+      "active_coin_bars": 93081,
+      "alias": "W037",
+      "available_coins": 11,
+      "gap": {
+        "forced_gap_exits": 1,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 1
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 1254.4766,
+      "maxdd_usd": 1789.0107,
+      "net_over_dd": 1.419987,
+      "net_usd": 2540.3724,
+      "operational_eligible": true,
+      "train_fills": 288
+    },
+    "W083": {
+      "active_coin_bars": 27228,
+      "alias": "W083",
+      "available_coins": 7,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 5,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 5089.0986,
+      "maxdd_usd": 6883.1844,
+      "net_over_dd": 0.052739,
+      "net_usd": 363.0131,
+      "operational_eligible": true,
+      "train_fills": 1748
+    },
+    "W100": {
+      "active_coin_bars": 6037,
+      "alias": "W100",
+      "available_coins": 2,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 5036.9752,
+      "maxdd_usd": 3964.2635,
+      "net_over_dd": 1.270595,
+      "net_usd": 5036.9752,
+      "operational_eligible": true,
+      "train_fills": 353
+    },
+    "W111": {
+      "active_coin_bars": 27702,
+      "alias": "W111",
+      "available_coins": 7,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 3,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 2945.2978,
+      "maxdd_usd": 1141.4889,
+      "net_over_dd": 3.221014,
+      "net_usd": 3676.7521,
+      "operational_eligible": true,
+      "train_fills": 909
+    },
+    "W152": {
+      "active_coin_bars": 5760,
+      "alias": "W152",
+      "available_coins": 5,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 1,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": -5710.0418,
+      "maxdd_usd": 10310.4949,
+      "net_over_dd": -0.262365,
+      "net_usd": -2705.1124,
+      "operational_eligible": true,
+      "train_fills": 620
+    },
+    "W312": {
+      "active_coin_bars": 49841,
+      "alias": "W312",
+      "available_coins": 3,
+      "gap": {
+        "forced_gap_exits": 0,
+        "unanchored_coins": 2,
+        "unpriced_open_steps": 0
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 292.7404,
+      "maxdd_usd": 1511.7793,
+      "net_over_dd": 0.619151,
+      "net_usd": 936.0196,
+      "operational_eligible": true,
+      "train_fills": 247
+    },
+    "Whale_0x5f94": {
+      "active_coin_bars": 209090,
+      "alias": "Whale_0x5f94",
+      "available_coins": 26,
+      "gap": {
+        "forced_gap_exits": 2,
+        "unanchored_coins": 25,
+        "unpriced_open_steps": 2
+      },
+      "historical_eligible": true,
+      "last_train_month_net": 186450.0402,
+      "maxdd_usd": 189552.6963,
+      "net_over_dd": 1.385793,
+      "net_usd": 262680.8623,
+      "operational_eligible": true,
+      "train_fills": 8862
+    }
+  }
+}

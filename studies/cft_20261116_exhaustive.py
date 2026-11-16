@@ -33,7 +33,10 @@ REGISTRY = Path.home() / ".local/share/copytrade/registry/wallet_registry.sqlite
 ARCHIVE = Path.home() / ".local/share/copytrade/research"
 STORE = Path("/home/quant/dev/quant/ml4t-data/.data/store")
 VIKE = Path("/home/quant/dev/copytrade-pm/data/private/backtest_20261112/bars_vike")
-PREFIX = ROOT / "reports/2026-11-16__cft__10k__exhaustive-v3"
+HL_PREFIX = ROOT / "reports/2026-11-16__cft__10k__hyperliquid-only-v5"
+LEGACY_PREFIX = ROOT / "reports/2026-11-16__cft__10k__exhaustive-v3"
+PREFIX = HL_PREFIX
+VENUE_MODE = "hyperliquid"
 START = 1_777_593_600_000  # 2026-05-01T00:00Z
 SPLIT = START + 123 * 86_400_000  # 2026-09-01T00:00Z
 END = SPLIT + 61 * 86_400_000  # 2026-11-01T00:00Z
@@ -45,7 +48,6 @@ TRIAD_K = (0.00045, 0.00356, 0.00099)
 USER_AGENT = "OpenAI File Downloader, XaiImageApiFetch/1.0"
 MIN_TRAIN_FILLS = 15
 MAX_TRAIN_SHORTLIST = 30
-MAX_PRICE_REPLAY_SCREEN = 24
 
 
 def dump(path: Path, data: dict) -> None:
@@ -192,35 +194,68 @@ def hyperx_metrics(rec: cr.WalletRecord) -> dict:
         return {"status": "UNPROVEN", "error": type(exc).__name__}
 
 
-def summarize_wallet(rec: cr.WalletRecord, fills: dict[str, pl.DataFrame], bybit: set[str]) -> dict:
-    # Eligibility must not inspect OOS symbols: screen ONLY the pre-Sep fills.
-    train_coins={coin:df.filter(pl.col("ts")<SPLIT) for coin,df in fills.items()}
-    screen = cr.assess_bybit_symbol_screen(rec.label, train_coins, bybit)
-    all_t = np.concatenate([x["ts"].to_numpy() for x in fills.values()]) if fills else np.array([], dtype=np.int64)
+def summarize_wallet(
+    rec: cr.WalletRecord,
+    fills: dict[str, pl.DataFrame],
+    bybit: set[str] | None = None,
+) -> dict:
+    """Screen source activity using Train only.
+
+    ``bybit=None`` is the Hyperliquid-only research contract. It accepts
+    every main-DEX perp with a Train fill, without reading Bybit listings,
+    present-day source account value, or OOS activity for selection.
+    """
+    train_coins = {
+        coin: df.filter(pl.col("ts") < SPLIT)
+        for coin, df in fills.items()
+    }
+    if bybit is None:
+        mapped_coins = sorted(
+            coin for coin, df in train_coins.items() if not df.is_empty()
+        )
+        symbol_status = (
+            "HYPERLIQUID_TRAIN_AVAILABLE" if mapped_coins else "REJECT_NO_FILLS"
+        )
+        unmapped_coins: list[str] = []
+        unmapped_fill_frac = 0.0
+        unmapped_notional_frac = 0.0
+        scale_alias_candidates: list[str] = []
+    else:
+        legacy = cr.assess_bybit_symbol_screen(rec.label, train_coins, bybit)
+        mapped_coins = list(legacy.mapped_coins)
+        symbol_status = legacy.status
+        unmapped_coins = list(legacy.unmapped_coins)
+        unmapped_fill_frac = round(legacy.unmapped_fill_frac, 5)
+        unmapped_notional_frac = legacy.unmapped_notional_frac
+        scale_alias_candidates = legacy.scale_alias_candidates
+    all_t = (
+        np.concatenate([x["ts"].to_numpy() for x in fills.values()])
+        if fills else np.array([], dtype=np.int64)
+    )
     train_count = int(np.count_nonzero(all_t < SPLIT))
     oos_count = int(np.count_nonzero(all_t >= SPLIT))
     first_ms = int(all_t.min()) if len(all_t) else None
     last_train_ms = int(all_t[all_t < SPLIT].max()) if train_count else None
     last_ms = int(all_t.max()) if len(all_t) else None
     reasons = []
-    if screen.status in ("REJECT_UNMAPPED_MATERIAL", "REJECT_NO_FILLS"):
-        reasons.append(screen.status)
+    if symbol_status in ("REJECT_UNMAPPED_MATERIAL", "REJECT_NO_FILLS"):
+        reasons.append(symbol_status)
     if train_count < MIN_TRAIN_FILLS:
         reasons.append("TRAIN_FILLS_LT_15")
     if last_train_ms is not None and last_train_ms < SPLIT - 45 * 86_400_000:
         reasons.append("TRAIN_INACTIVE_45D")
     return {
-        "alias":rec.label,"configured":rec.configured,"excluded":rec.excluded,
-        "train_fills":train_count,"oos_fills":oos_count,"total_fills":int(all_t.size),
-        "first_fill_ms":first_ms,"last_train_fill_ms":last_train_ms,
-        "last_fill_ms":last_ms,"symbol_status":screen.status,
-        "mapped_coins":list(screen.mapped_coins),
-        "unmapped_coins":list(screen.unmapped_coins),
-        "unmapped_fill_frac":round(screen.unmapped_fill_frac,5),
-        "unmapped_notional_frac":screen.unmapped_notional_frac,
-        "scale_alias_candidates":screen.scale_alias_candidates,
-        "account_value_usd":None,"account_value_status":"NOT_FETCHED",
-        "hyperx":None,"reasons":reasons,
+        "alias": rec.label, "configured": rec.configured, "excluded": rec.excluded,
+        "train_fills": train_count, "oos_fills": oos_count,
+        "total_fills": int(all_t.size), "first_fill_ms": first_ms,
+        "last_train_fill_ms": last_train_ms, "last_fill_ms": last_ms,
+        "symbol_status": symbol_status, "mapped_coins": mapped_coins,
+        "unmapped_coins": unmapped_coins,
+        "unmapped_fill_frac": unmapped_fill_frac,
+        "unmapped_notional_frac": unmapped_notional_frac,
+        "scale_alias_candidates": scale_alias_candidates,
+        "account_value_usd": None, "account_value_status": "NOT_FETCHED",
+        "hyperx": None, "reasons": reasons,
     }
 
 
@@ -231,30 +266,45 @@ def prepare_screen() -> tuple[dict, dict[str, dict[str, pl.DataFrame]], list[cr.
     if inv["missing_dates"]:
         raise RuntimeError(f"MISSING_SOURCE_DAYS {inv['missing_dates'][:10]}")
     grouped = load_fills(records, paths)
-    bybit, exchange = bybit_instruments()
-    screen = [summarize_wallet(r, grouped.get(r.label, {}), bybit) for r in records]
-    requests = [r for r in records if not next(x for x in screen if x["alias"] == r.label)["reasons"]]
-    print("SYMBOL_AND_TRAIN_ELIGIBLE",len(requests),"BYBIT",len(bybit),flush=True)
-    fetched: dict[str, tuple] = {}
-    with ThreadPoolExecutor(max_workers=6) as pool:
-        futures = {pool.submit(request_wallet_record, r):r.label for r in requests}
-        for fut in as_completed(futures):
-            label = futures[fut]
-            try:
-                fetched[label] = fut.result()
-            except (OSError, TypeError, ValueError):
-                fetched[label] = (None,None,"REQUEST_FAILED")
-    for row in screen:
-        if row["alias"] in fetched:
-            av,_,err=fetched[row["alias"]]
-            row["account_value_usd"] = round(av,2) if av is not None else None
-            row["account_value_status"] = "VERIFIED" if av is not None else "UNPROVEN:" + str(err)
-            if av is not None and av < 1000:
-                row["reasons"].append("WITHDRAWN_LT_1000")
-            if av is None:
-                row["reasons"].append("ACCOUNT_VALUE_UNPROVEN")
-    survivors=[x["alias"] for x in screen if not x["reasons"]]
-    print("STATUS_ELIGIBLE",len(survivors),flush=True)
+    if VENUE_MODE == "hyperliquid":
+        # Zero Bybit or current-state API requests in historical research.
+        exchange = {"venue": "HYPERLIQUID_MAIN_DEX", "bybit_required": False}
+        screen = [summarize_wallet(r, grouped.get(r.label, {})) for r in records]
+        print("HL_TRAIN_ELIGIBLE", sum(not r["reasons"] for r in screen), flush=True)
+    else:
+        bybit, exchange = bybit_instruments()
+        screen = [
+            summarize_wallet(r, grouped.get(r.label, {}), bybit) for r in records
+        ]
+        requests = [
+            r for r in records
+            if not next(x for x in screen if x["alias"] == r.label)["reasons"]
+        ]
+        print("SYMBOL_AND_TRAIN_ELIGIBLE", len(requests), "BYBIT", len(bybit), flush=True)
+        fetched: dict[str, tuple] = {}
+        with ThreadPoolExecutor(max_workers=6) as pool:
+            futures = {
+                pool.submit(request_wallet_record, r): r.label for r in requests
+            }
+            for fut in as_completed(futures):
+                label = futures[fut]
+                try:
+                    fetched[label] = fut.result()
+                except (OSError, TypeError, ValueError):
+                    fetched[label] = (None, None, "REQUEST_FAILED")
+        for row in screen:
+            if row["alias"] in fetched:
+                av, _, err = fetched[row["alias"]]
+                row["account_value_usd"] = round(av, 2) if av is not None else None
+                row["account_value_status"] = (
+                    "VERIFIED" if av is not None else "UNPROVEN:" + str(err)
+                )
+                if av is not None and av < 1000:
+                    row["reasons"].append("WITHDRAWN_LT_1000")
+                if av is None:
+                    row["reasons"].append("ACCOUNT_VALUE_UNPROVEN")
+    survivors = [x["alias"] for x in screen if not x["reasons"]]
+    print("STATUS_ELIGIBLE", len(survivors), flush=True)
     result = {
         "study":"May-Nov 2026 CFT $10k canonical",
         "status":"RETROSPECTIVE_SCENARIO",
@@ -264,11 +314,15 @@ def prepare_screen() -> tuple[dict, dict[str, dict[str, pl.DataFrame]], list[cr.
         "roster_sha256":roster_hash,
         "roster_count":len(records),
         "source":inv,
-        "bybit":exchange,
+        "bybit": exchange if VENUE_MODE == "legacy-bybit" else None,
+        "backtest_venue": VENUE_MODE,
+        "historical_broker_screen": "NONE" if VENUE_MODE == "hyperliquid" else "CURRENT_BYBIT",
+        "market_source": "HYPERLIQUID_1M_OHLCV",
         "cost_bps_each_execution":6.5,
         "screen":screen,
         "screen_survivors":survivors,
-        "symbol_screen_basis":"TRAIN_ONLY_FILLS_BEFORE_2026_09_01",
+        "symbol_screen_basis": ("HYPERLIQUID_MAIN_DEX_TRAIN_ONLY" if VENUE_MODE == "hyperliquid"
+                                else "TRAIN_ONLY_FILLS_BEFORE_2026_09_01"),
         "pit_roster_provenance":"UNPROVEN_PRESENT_DAY_REGISTRY",
         "source_cwsa_checkpoint_provenance":"UNPROVEN_HISTORICAL_FILLS_ONLY",
     }
@@ -387,6 +441,19 @@ def cap_primary_multipliers(optimized: list[float], baseline: list[float]) -> li
     return [min(a, b) for a, b in zip(optimized, baseline)]
 
 
+def train_passable(
+    financial_rows: list[dict], *, venue_mode: str
+) -> list[dict]:
+    """Exclude current account-value/survival filters from HL Train ranking."""
+    if venue_mode not in ("hyperliquid", "legacy-bybit"):
+        raise ValueError("UNKNOWN_BACKTEST_VENUE")
+    return [
+        row for row in financial_rows
+        if row["net_usd"] > 0 and row["maxdd_usd"] > 0
+        and (venue_mode == "hyperliquid" or row["operational_eligible"])
+    ]
+
+
 def train_coverage_and_shortlist(
     inventory: dict, grouped: dict[str, dict[str, pl.DataFrame]],
     records: list[cr.WalletRecord],
@@ -446,8 +513,7 @@ def train_coverage_and_shortlist(
             "wallets": completed,
         })
         del frames
-    passable = [r for r in results if r["net_usd"] > 0
-                and r["maxdd_usd"] > 0 and r["operational_eligible"]]
+    passable = train_passable(results, venue_mode=VENUE_MODE)
     ranking = sorted(passable, key=lambda r: (r["net_over_dd"], r["net_usd"]), reverse=True)
     resilience = sorted(passable, key=lambda r: (r["last_train_month_net"], r["net_usd"]), reverse=True)
     frequency = sorted(passable, key=lambda r: (r["train_fills"], r["net_over_dd"]), reverse=True)
@@ -466,6 +532,9 @@ def train_coverage_and_shortlist(
         if row["alias"] not in shortlist:
             shortlist.append(row["alias"])
     inventory["train_price_replay_policy"] = "ALL_HISTORICALLY_ELIGIBLE_FINANCIAL_REPLAY"
+    inventory["shortlist_current_account_value_filter"] = (
+        VENUE_MODE != "hyperliquid"
+    )
     inventory["train_price_replay_advanced"] = sorted(eligible)
     inventory["train_stats"] = results
     inventory["shortlist"] = shortlist
@@ -572,6 +641,29 @@ def train_pods(tensor:pc.UnitCopy5mTensor) -> tuple[list[dict],dict]:
             if len(candidates)>=3:
                 break
     return candidates,auditing
+
+
+def oos_source_books(
+    selections: list[dict],
+    full_source: dict[str, dict[str, pl.DataFrame]],
+    train_books: dict[str, dict[str, pl.DataFrame]],
+) -> dict[str, dict[str, pl.DataFrame]]:
+    """Activate newly traded symbols only *after* Train membership and k freeze.
+
+    Hyperliquid OOS follows every main-DEX perp coin from the selected wallet,
+    including one first traded after the split. Such late symbols cannot
+    influence Train wallet screening, clustering, sizing, or selection.
+    """
+    if VENUE_MODE != "hyperliquid":
+        return train_books
+    members = {alias for row in selections for alias in row["aliases"]}
+    if not members <= set(full_source):
+        raise ValueError("FROZEN_MEMBER_MISSING_SOURCE")
+    return {
+        alias: {coin: fills for coin, fills in full_source[alias].items()
+                if cr.is_hl_perp_coin(coin)}
+        for alias in sorted(members)
+    }
 
 
 def candidate_targets(
@@ -681,7 +773,15 @@ def main() -> None:
     start=time.monotonic()
     parser=argparse.ArgumentParser()
     parser.add_argument("--through",choices=("screen","train","all","evaluate"),default="all")
+    parser.add_argument(
+        "--venue-mode", choices=("hyperliquid", "legacy-bybit"),
+        default="hyperliquid",
+        help="Hyperliquid is research default; legacy Bybit mode reproduces v3 only",
+    )
     args=parser.parse_args()
+    global VENUE_MODE, PREFIX
+    VENUE_MODE = args.venue_mode
+    PREFIX = HL_PREFIX if VENUE_MODE == "hyperliquid" else LEGACY_PREFIX
     if args.through=="evaluate":
         inventory=json.loads(PREFIX.with_name(PREFIX.name+"__inventory.json").read_text())
         freeze=json.loads(PREFIX.with_name(PREFIX.name+"__freeze.json").read_text())
@@ -690,6 +790,9 @@ def main() -> None:
             raise RuntimeError("FROZEN_ROSTER_SHA_CHANGED")
         if freeze["cutoff_ms"] != SPLIT or freeze["archive_sha256"] != inventory["source"]["archive_sha256"]:
             raise RuntimeError("FROZEN_ARCHIVE_OR_TRAIN_SPLIT_CHANGED")
+        expected = "hyperliquid" if VENUE_MODE == "hyperliquid" else None
+        if inventory.get("backtest_venue") != expected or freeze.get("backtest_venue") != expected:
+            raise RuntimeError("FROZEN_RESEARCH_VENUE_MISMATCH")
         grouped=load_fills(records,[f["path"] for f in inventory["source"]["files"]])
         shortlist=freeze["shortlist"]
         selections=freeze["frozen_portfolios"]
@@ -704,6 +807,10 @@ def main() -> None:
             records, roster_sha = cr.load_registry_universe(REGISTRY, include_aliases=TRIAD)
             if roster_sha != inventory["roster_sha256"]:
                 raise RuntimeError("CACHED_ROSTER_SHA_CHANGED")
+            if inventory.get("backtest_venue") != (
+                "hyperliquid" if VENUE_MODE == "hyperliquid" else None
+            ):
+                raise RuntimeError("CACHED_VENUE_MODE_MISMATCH")
             grouped = load_fills(records, [x["path"] for x in inventory["source"]["files"]])
         else:
             inventory, grouped, records = prepare_screen()
@@ -722,15 +829,24 @@ def main() -> None:
             "cutoff_ms":SPLIT,"roster_sha256":inventory["roster_sha256"],
             "archive_sha256":inventory["source"]["archive_sha256"],
             "bybit":inventory["bybit"],
+            "backtest_venue": ("hyperliquid" if VENUE_MODE == "hyperliquid" else None),
             "shortlist":shortlist,"train_audit":audit,
             "train_diagnostics":diags,
             "frozen_portfolios":selections,
             "cost_bps":6.5,
             "scientific_status":"RETROSPECTIVE_NO_PIT_ROSTER",
         }
-        dump(PREFIX.with_name(PREFIX.name+"__freeze.json"),freeze)
+        freeze_path = PREFIX.with_name(PREFIX.name + "__freeze.json")
+        if freeze_path.exists():
+            raise FileExistsError(
+                "RESEARCH_ALREADY_FROZEN_DO_NOT_RESELECT_USE_THROUGH_EVALUATE"
+            )
+        dump(freeze_path, freeze)
         if args.through=="train":return
     # All OOS work below this point; never adjust frozen weights based on OOS outcome.
+    # Newly traded Hyperliquid OOS symbols enter this OOS-only book now,
+    # strictly AFTER Train shortlist and frozen k are committed.
+    evaluation_books = oos_source_books(selections, grouped, eligible)
     reference=None
     if all(a in grouped for a in TRIAD):
         reference=candidate_targets(
@@ -750,8 +866,8 @@ def main() -> None:
             continue
         print("OOS_CANDIDATE",idx+1,row["aliases"],flush=True)
         train_result=evaluate_one(row,eligible,prices,TRAIN_GRID,montecarlo=False,pm03=False)
-        oos_result=evaluate_one(row,eligible,prices,OOS_GRID,montecarlo=True,pm03=idx<3)
-        ctx=candidate_targets(row["aliases"],row["train_opt_k"],eligible,prices,OOS_GRID,"new")
+        oos_result=evaluate_one(row,evaluation_books,prices,OOS_GRID,montecarlo=True,pm03=idx<3)
+        ctx=candidate_targets(row["aliases"],row["train_opt_k"],evaluation_books,prices,OOS_GRID,"new")
         result={"index":idx+1,"aliases":row["aliases"],"k":row["train_opt_k"],"baseline_k":row["train_half_risk_k"],
                     "train":train_result,"oos":oos_result,"optimization":{k:v for k,v in row.items() if k not in ("train_opt_k","train_half_risk_k","indices")}}
         if reference:
@@ -767,7 +883,7 @@ def main() -> None:
     for row in selections:
         name = " + ".join(row["aliases"])
         coins, targets, opens, marks = candidate_targets(
-            row["aliases"], row["train_opt_k"], eligible, prices, OOS_GRID, "new"
+            row["aliases"], row["train_opt_k"], evaluation_books, prices, OOS_GRID, "new"
         )
         cost_sensitivity[name] = {}
         for bps in (6.5, 10.0, 15.0):
@@ -788,11 +904,17 @@ def main() -> None:
         ref_stats["k_source"]="prop-production/bybit_executor.py static defaults, live runtime unverified"
     output={
         "status":"RETROSPECTIVE_SCENARIO",
+        "backtest_venue":VENUE_MODE,
+        "broker_execution_model": "NOT_MODELED_HYPERLIQUID_PROXY" if VENUE_MODE == "hyperliquid" else "RETROSPECTIVE_BYBIT_SCREEN",
+        "train_symbols_from_train_only":True,
+        "oos_new_symbols_loaded_after_freeze":VENUE_MODE == "hyperliquid",
         "calibration_frozen_before_oos":True,
         "roster_sha256":inventory["roster_sha256"],
         "source_archive_sha256":inventory["source"]["archive_sha256"],
         "train_window":["2026-05-01","2026-09-01"],
         "oos_window":["2026-09-01","2026-11-01"],
+        "historical_oos_already_inspected": True,
+        "prospective_oos_qualified": False,
         "screened_wallets":len(inventory["screen"]),
         "screen_eligible":len(inventory.get("screen_survivors_after_prices",[])),
         "shortlist_count":len(shortlist),
@@ -806,7 +928,9 @@ def main() -> None:
             "follower_bybit_fills":"UNPROVEN",
             "market_impact_funding":"UNPROVEN",
             "CWSA_historical_5m_snapshots":"UNPROVEN",
-            "historical_bybit_symbol_eligibility":"UNPROVEN",
+            "historical_bybit_symbol_eligibility": (
+                "OUT_OF_SCOPE_HYPERLIQUID_RESEARCH" if VENUE_MODE == "hyperliquid" else "UNPROVEN"
+            ),
             "hyperx_discovery_only":True,
             "pm03_subset":"first 7 OOS days; independent from Guardian",
         },
@@ -817,9 +941,11 @@ def main() -> None:
         "---","firm: crypto-fund-trader","account_usd: 10000","status: RESEARCH",
         "top_candidate: NOT_SCIENTIFICALLY_QUALIFIED",
         "script: studies/cft_20261116_exhaustive.py",
-        "---","","# CFT canonical 5m portfolio research — May–November 2026",
+        "---","",
+        f"# CFT-risk 5m research / {VENUE_MODE} market — May–November 2026",
         "",f"Full roster: {len(records)}; SHA256 {inventory['roster_sha256']}. Train May 1–Sep 1; OOS Sep 1–Nov 1 (exclusive).",
-        "","All figures are retrospective modeled follower net returns, not live Bybit fills or PIT portfolio selection.",
+        "","All figures are retrospective modeled Hyperliquid-source follower net returns, not live broker fills or PIT portfolio selection.",
+        f"Backtest venue = {VENUE_MODE}; challenge budget is a risk scenario only. Bybit listings and minimum order rules are NOT historical selection inputs when Hyperliquid-only.",
         "",
         "| Train rank | Members | Frozen k | Train new net/static floor DD | OOS new net/static floor DD | OOS full net/static floor DD | OOS worst daily | OOS sweeps | 90d MC 1x blended pass | Triad A conflict coin-h |",
         "|---|---|---|---:|---:|---:|---:|---:|---:|---:|",
@@ -861,8 +987,16 @@ def main() -> None:
         )
     report+=["","## Model and coverage"]
     report.append(f"- {len(inventory['source']['files'])} complete daily Reservoir archives; {inventory['source']['archive_sha256']} content digest.")
-    report.append(f"- {len(inventory['screen'])} roster wallets screened; {len(inventory.get('screen_survivors',[]))} passed initial activity/symbol/account-value checks; {len(inventory.get('train_price_replay_advanced',[]))} historically eligible for price screening, {len(inventory.get('screen_survivors_after_prices',[]))} price-replayed; {len(shortlist)} Train-shortlisted. Every price-eligible wallet was financially replayed on Train.")
-    report.append("- Symbol suitability determined from Train-only fill history; selection did not filter on OOS-only symbols. Current Bybit availability is a retrospective mapping, not a historical snapshot.")
+    screen_label = (
+        "Train activity / Hyperliquid-only symbol checks"
+        if VENUE_MODE == "hyperliquid"
+        else "Train activity / symbol / present account-value checks"
+    )
+    report.append(f"- {len(inventory['screen'])} registry wallets screened; {len(inventory.get('screen_survivors',[]))} passed {screen_label}; {len(inventory.get('train_price_replay_advanced',[]))} historically eligible for price screening, {len(inventory.get('screen_survivors_after_prices',[]))} price-replayed; {len(shortlist)} Train-shortlisted. Every price-eligible wallet was financially replayed on Train.")
+    if VENUE_MODE == "hyperliquid":
+        report.append("- Historical wallet and symbol Train eligibility uses only Hyperliquid main-DEX perp fills before cutoff; no Bybit listing/account-value lookup is performed. OOS-only coins are admitted only AFTER freeze.")
+    else:
+        report.append("- Legacy cross-venue symbol suitability uses Train-only fills and current Bybit availability; this is NOT a PIT Bybit listing.")
     report.append("- Prices: local Hyperliquid 1m OHLCV, local cached Vike fallback; trade at 1m open after 5m checkpoint and mark by checkpoint T+4 minutes, stale <=180m.")
     report.append("- Source: reconstructed Reservoir start_position + fills; pair-local stale-mark termination via canonical_replay.")
     report.append("- Test: Train-only multi-style clustering, dual-barrier sizing and frozen k; MC 5000 paths, stationary 6-day blocks, 90-day horizon.")
@@ -872,12 +1006,30 @@ def main() -> None:
         report.append(f"- Candidate {r['index']}: first-barrier {new['verdict']}, peak-DD {new['peak_to_trough_dd_usd']}, worst daily {new['worst_daily_usd']}, sweep count {new['sweeps']}; PM03 drift {pm.get('drift_usd','UNPROVEN')}; Triad A reverse intervals {r.get('triada_conflicts',{}).get('events','UNPROVEN')}.")
     if ref_stats:
         report.append(f"- Triad A reference: new-only full-window {ref_stats['new']['full_window_net_usd']}, full-target {ref_stats['full']['full_window_net_usd']}; static k source unverified live.")
-    report+=["","## Qualification and rank","- **Primary research-only:** Candidate 1 (highest OOS strict-new follower net); **alternative 1:** Candidate 2 (highest 1x modeled blended MC pass, lower OOS net); **alternative 2:** Candidate 3 (positive OOS net, lower modeled pass and greater Triad A conflict). All are research-only.","- All three have historical opposite-position overlaps with Triad A; do not run simultaneously on a reverse-trading-restricted account.","- All historically eligible wallets passed through Train financial replay, subject to documented price coverage. The 30-wallet shortlist and at most 12 structurally distinct candidate combos are bounded exploration, not global portfolio optimality.","- These are Train ranks; no candidate k or ranking used OOS until the freeze file was written.","- All three pods have native-min-lot warnings; primary k respects individual 50%-risk calibration. Bybit minimum quantity/notional and step-size order-rejection simulation remains UNPROVEN.","- If no candidate both survives OOS and has positive OOS net, no portfolio is economically qualified.","- PIT roster and live Bybit fills unavailable; research can support only RETROSPECTIVE_SCENARIO status.","- Full MC matrix, each wallet's eligibility/rejection reasons, trace hashes and all frozen parameters are in the companion JSON files.","","## Unmet qualification gates",
-"- CPCV/PBO was not executed; the candidate pool had only 12 structurally distinct optimized combinations, below the 20–40 target.",
-"- Minimum order quantity, step size, and notional filtering were not integrated into follower replay. Reported order warnings are insufficient for executable economics.",
+    explored_count = sum(
+        group.get("sized", 0) for group in freeze["train_audit"].values()
+        if isinstance(group, dict)
+    )
+    observed_best = max(
+        results, key=lambda row: row["oos"]["new"]["full_window_net_usd"]
+    )
+    shared_members = sorted(set.intersection(
+        *(set(p["aliases"]) for p in selections)
+    )) if selections else []
+    report += [
+        "", "## Qualification and Train rank",
+        "- The numbered portfolios were ranked and frozen using TRAIN ONLY; the post-hoc OOS winner is not promoted to a new pre-cutoff decision.",
+        f"- Largest already-opened historical OOS new-only net: candidate {observed_best['index']} (USD {observed_best['oos']['new']['full_window_net_usd']:+.2f}); descriptive only.",
+        f"- {len(selections)} frozen Train candidates, {explored_count} explored Train combinations. Bounded search, not global portfolio optimality.",
+        "- All candidates have historical opposite-position overlaps with Triad A. Never combine them blindly on a reverse-position-restricted account.",
+        "- Each historical eligible wallet with Train pricing underwent financial replay; the 30-wallet shortlist is Train-only.",
+        "- OOS returns did not tune any frozen candidate k or membership.",
+"- The optimizer's optional $10 notional warnings are diagnostics, not Hyperliquid execution constraints. Primary k respects individual 50%-risk calibration. Actual broker order rejection and follower fill economics remain UNPROVEN.","- If no candidate both survives OOS and has positive OOS net, no portfolio is economically qualified.","- The present-day wallet roster has no pre-September discovery proof, source first-known receipt clocks are unavailable historically, and September–October has already been inspected. This is RETROSPECTIVE_SCENARIO, not an independent prospective OOS.","- Full MC matrix, each wallet's eligibility/rejection reasons, trace hashes and all frozen parameters are in the companion JSON files.","","## Unmet qualification gates",
+f"- CPCV/PBO was not executed; the bounded Train optimizer explored {explored_count} combinations, below the 20–40 target.",
+"- Venue-specific lot quantities, step sizes, and funding were not integrated into follower replay; none is a selection gate for Hyperliquid-only backtests.",
 "- Cost sensitivities at 10 and 15 bps were tested on frozen memberships and k after OOS; they are stress tests, not new independent holdouts.",
 "- Entry-delay, leave-one-out, coin-removal and independent PIT roster stress checks remain incomplete.",
-"- The top three portfolios all include W#174 and Whale_0x5f94; their shared-member concentration limits true style diversification.",
+f"- Wallets shared by every frozen candidate: {', '.join(shared_members) or 'none'}. Shared-member risk is not proof of independence or broad style diversification.",
 "- Formal statuses: ENGINEERING_VERIFIED for the scoped research code; RETROSPECTIVE_SCENARIO for returns; SCIENTIFICALLY_QUALIFIED=false; ECONOMICALLY_QUALIFIED=false; TRADING_AUTHORIZED=false.",
 "",
 "### Three-line caveat footer","- CFT trading restrictions and account framing require independent compliance confirmation.","- Live broker execution, funding, capacity and PIT source continuity are UNPROVEN.","- No deployments, allocations, orders, service or registry writes occurred.",""]

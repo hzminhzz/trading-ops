@@ -1,0 +1,1262 @@
+{
+  "backtest_venue": "hyperliquid",
+  "broker_execution_model": "NOT_MODELED_HYPERLIQUID_PROXY",
+  "calibration_frozen_before_oos": true,
+  "cost_sensitivity": {
+    "W#1 + W#174 + W#179 + W#280": {
+      "10.0": {
+        "first_barrier": "TIMEOUT",
+        "net_usd": 552.72,
+        "peak_dd_usd": -842.54,
+        "worst_daily_usd": -358.97
+      },
+      "15.0": {
+        "first_barrier": "TIMEOUT",
+        "net_usd": 374.94,
+        "peak_dd_usd": -864.14,
+        "worst_daily_usd": -370.67
+      },
+      "6.5": {
+        "first_barrier": "TIMEOUT",
+        "net_usd": 677.17,
+        "peak_dd_usd": -827.42,
+        "worst_daily_usd": -350.77
+      }
+    },
+    "W#1 + W#174 + W#94 + Whale_0x5f94": {
+      "10.0": {
+        "first_barrier": "PASS",
+        "net_usd": 1126.68,
+        "peak_dd_usd": -293.84,
+        "worst_daily_usd": -278.79
+      },
+      "15.0": {
+        "first_barrier": "PASS",
+        "net_usd": 971.02,
+        "peak_dd_usd": -300.54,
+        "worst_daily_usd": -289.08
+      },
+      "6.5": {
+        "first_barrier": "PASS",
+        "net_usd": 1235.64,
+        "peak_dd_usd": -289.14,
+        "worst_daily_usd": -271.6
+      }
+    },
+    "W#174 + W#179 + W#257 + Whale_0x5f94": {
+      "10.0": {
+        "first_barrier": "TIMEOUT",
+        "net_usd": 635.0,
+        "peak_dd_usd": -884.11,
+        "worst_daily_usd": -368.74
+      },
+      "15.0": {
+        "first_barrier": "TIMEOUT",
+        "net_usd": 448.63,
+        "peak_dd_usd": -913.12,
+        "worst_daily_usd": -380.64
+      },
+      "6.5": {
+        "first_barrier": "TIMEOUT",
+        "net_usd": 765.46,
+        "peak_dd_usd": -868.14,
+        "worst_daily_usd": -360.41
+      }
+    },
+    "W#174 + W#257 + W#280 + W#94": {
+      "10.0": {
+        "first_barrier": "PASS",
+        "net_usd": 880.62,
+        "peak_dd_usd": -435.86,
+        "worst_daily_usd": -337.79
+      },
+      "15.0": {
+        "first_barrier": "PASS",
+        "net_usd": 700.11,
+        "peak_dd_usd": -459.73,
+        "worst_daily_usd": -348.07
+      },
+      "6.5": {
+        "first_barrier": "PASS",
+        "net_usd": 1006.98,
+        "peak_dd_usd": -419.16,
+        "worst_daily_usd": -330.59
+      }
+    }
+  },
+  "elapsed_s": 168.37,
+  "financial_replay_count": 189,
+  "frozen_candidates": 4,
+  "historical_oos_already_inspected": true,
+  "limitations": {
+    "CWSA_historical_5m_snapshots": "UNPROVEN",
+    "follower_bybit_fills": "UNPROVEN",
+    "historic_known_at_roster": "UNPROVEN",
+    "historical_bybit_symbol_eligibility": "OUT_OF_SCOPE_HYPERLIQUID_RESEARCH",
+    "hyperx_discovery_only": true,
+    "market_impact_funding": "UNPROVEN",
+    "pm03_subset": "first 7 OOS days; independent from Guardian"
+  },
+  "oos_new_symbols_loaded_after_freeze": true,
+  "oos_window": [
+    "2026-09-01",
+    "2026-11-01"
+  ],
+  "prospective_oos_qualified": false,
+  "results": [
+    {
+      "aliases": [
+        "W#174",
+        "W#257",
+        "W#280",
+        "W#94"
+      ],
+      "baseline_k": [
+        1.2493307634752053,
+        0.016710554961678583,
+        0.0822227850154582,
+        3.963240300270222
+      ],
+      "index": 1,
+      "k": [
+        1.2493307634752053,
+        0.016710554961678583,
+        0.0822227850154582,
+        3.963240300270222
+      ],
+      "oos": {
+        "full": {
+          "deferred_notional_usd": 0.0,
+          "full_window_net_usd": 854.18,
+          "full_window_peak_to_trough_dd_usd": -375.3,
+          "full_window_static_floor_dd_usd": -190.8,
+          "full_window_sweeps": 0,
+          "gap_exits": 2,
+          "mc": {
+            "1.0x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 49.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.0,
+              "p_pass": 97.38,
+              "p_timeout": 2.62
+            },
+            "1.0x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 51.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.0,
+              "p_pass": 95.36,
+              "p_timeout": 4.64
+            },
+            "1.5x/75%-Chop": {
+              "avg_sweeps": 1.14,
+              "med_days_pass": 41.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 4.1,
+              "p_pass": 74.38,
+              "p_timeout": 21.52
+            },
+            "1.5x/Blended": {
+              "avg_sweeps": 0.87,
+              "med_days_pass": 39.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 2.28,
+              "p_pass": 79.3,
+              "p_timeout": 18.42
+            },
+            "2.0x/75%-Chop": {
+              "avg_sweeps": 0.83,
+              "med_days_pass": 29.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 4.82,
+              "p_pass": 86.32,
+              "p_timeout": 8.86
+            },
+            "2.0x/Blended": {
+              "avg_sweeps": 0.64,
+              "med_days_pass": 29.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 2.94,
+              "p_pass": 90.24,
+              "p_timeout": 6.82
+            }
+          },
+          "peak_to_trough_dd_usd": -364.46,
+          "static_floor_dd_usd": -190.8,
+          "sweeps": 0,
+          "terminal_net_usd": 807.2,
+          "terminal_ts_ms": 1793279100000,
+          "unpriced_open_steps": 2,
+          "verdict": "PASS",
+          "worst_daily_usd": -307.13
+        },
+        "new": {
+          "deferred_notional_usd": 0.0,
+          "full_window_net_usd": 1006.98,
+          "full_window_peak_to_trough_dd_usd": -440.41,
+          "full_window_static_floor_dd_usd": -109.36,
+          "full_window_sweeps": 0,
+          "gap_exits": 2,
+          "mc": {
+            "1.0x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 46.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.0,
+              "p_pass": 98.94,
+              "p_timeout": 1.06
+            },
+            "1.0x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 45.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.0,
+              "p_pass": 98.94,
+              "p_timeout": 1.06
+            },
+            "1.5x/75%-Chop": {
+              "avg_sweeps": 0.94,
+              "med_days_pass": 33.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 5.74,
+              "p_pass": 82.52,
+              "p_timeout": 11.74
+            },
+            "1.5x/Blended": {
+              "avg_sweeps": 0.69,
+              "med_days_pass": 30.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 2.8,
+              "p_pass": 88.5,
+              "p_timeout": 8.7
+            },
+            "2.0x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 18.0,
+              "p_fail_daily": 40.02,
+              "p_fail_static": 0.0,
+              "p_pass": 59.98,
+              "p_timeout": 0.0
+            },
+            "2.0x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 17.0,
+              "p_fail_daily": 33.92,
+              "p_fail_static": 0.0,
+              "p_pass": 66.08,
+              "p_timeout": 0.0
+            }
+          },
+          "peak_to_trough_dd_usd": -419.16,
+          "pm03": {
+            "account_verified": true,
+            "drift_usd": -0.0,
+            "fill_count": 57,
+            "final_equity": 10043.678295989555,
+            "halted": false,
+            "net_pnl": 43.67829598955628,
+            "quantities": {
+              "BTC": 0.002219414568,
+              "ETH": 0.110178080348,
+              "HYPE": 0.0,
+              "LIT": 0.0,
+              "NEAR": 0.0,
+              "PUMP": 0.050131664885,
+              "SKR": 25180.56346541404,
+              "UNI": 0.0,
+              "XMR": 0.665824370445
+            },
+            "realized_pnl": 46.11310450907965,
+            "tier1_7d_net": 43.68,
+            "total_costs": 9.60337455,
+            "window_utc": "first 7 OOS days; no Guardian crossings"
+          },
+          "static_floor_dd_usd": -109.36,
+          "sweeps": 0,
+          "terminal_net_usd": 800.82,
+          "terminal_ts_ms": 1792607700000,
+          "unpriced_open_steps": 2,
+          "verdict": "PASS",
+          "worst_daily_usd": -330.59
+        }
+      },
+      "optimization": {
+        "aggressive_exceeds_baseline": true,
+        "aggressive_unconstrained_k": [
+          3.560560520421244,
+          0.03312355944190915,
+          0.23180378049602662,
+          4.947495523855789
+        ],
+        "aliases": [
+          "W#174",
+          "W#257",
+          "W#280",
+          "W#94"
+        ],
+        "binding_constraint": "DailyCVaR_99",
+        "feasible": true,
+        "min_lot_warnings": [
+          "W#174: q10_order=$6.47<$10"
+        ],
+        "netting_savings_usd": 0.95,
+        "size": 4,
+        "train_daily_cvar_usd": 300.0,
+        "train_net_dd": 13.5883,
+        "train_net_usd": 5020.47,
+        "train_peak_dd_usd": 369.47,
+        "train_unit_dd_usd": [
+          100.05356760149995,
+          7480.3021375804565,
+          1520.2598644220034,
+          31.539848843250116
+        ],
+        "train_worst_day_usd": 326.03
+      },
+      "train": {
+        "full": {
+          "deferred_notional_usd": 170.42,
+          "full_window_net_usd": 2522.88,
+          "full_window_peak_to_trough_dd_usd": -149.24,
+          "full_window_static_floor_dd_usd": -65.36,
+          "full_window_sweeps": 0,
+          "gap_exits": 1,
+          "peak_to_trough_dd_usd": -138.88,
+          "static_floor_dd_usd": -65.36,
+          "sweeps": 0,
+          "terminal_net_usd": 803.27,
+          "terminal_ts_ms": 1782248700000,
+          "unpriced_open_steps": 1,
+          "verdict": "PASS",
+          "worst_daily_usd": -115.0
+        },
+        "new": {
+          "deferred_notional_usd": 170.42,
+          "full_window_net_usd": 2373.83,
+          "full_window_peak_to_trough_dd_usd": -149.24,
+          "full_window_static_floor_dd_usd": -65.36,
+          "full_window_sweeps": 0,
+          "gap_exits": 1,
+          "peak_to_trough_dd_usd": -138.88,
+          "static_floor_dd_usd": -65.36,
+          "sweeps": 0,
+          "terminal_net_usd": 806.24,
+          "terminal_ts_ms": 1782397800000,
+          "unpriced_open_steps": 1,
+          "verdict": "PASS",
+          "worst_daily_usd": -115.0
+        }
+      },
+      "triada_conflicts": {
+        "coin_hours": 1293.42,
+        "events": 41,
+        "symbols": [
+          "BTC",
+          "ETH",
+          "NEAR",
+          "PONS",
+          "PUMP",
+          "UNI",
+          "XMR"
+        ]
+      }
+    },
+    {
+      "aliases": [
+        "W#1",
+        "W#174",
+        "W#179",
+        "W#280"
+      ],
+      "baseline_k": [
+        0.008003193090309692,
+        1.2493307634752053,
+        0.059389376297236035,
+        0.0822227850154582
+      ],
+      "index": 2,
+      "k": [
+        0.008003193090309692,
+        1.2493307634752053,
+        0.05436782878988844,
+        0.0822227850154582
+      ],
+      "oos": {
+        "full": {
+          "deferred_notional_usd": 0.0,
+          "full_window_net_usd": 245.41,
+          "full_window_peak_to_trough_dd_usd": -997.32,
+          "full_window_static_floor_dd_usd": -513.06,
+          "full_window_sweeps": 0,
+          "gap_exits": 2,
+          "mc": {
+            "1.0x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 53.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 13.52,
+              "p_pass": 42.04,
+              "p_timeout": 44.44
+            },
+            "1.0x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 56.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 9.52,
+              "p_pass": 42.86,
+              "p_timeout": 47.62
+            },
+            "1.5x/75%-Chop": {
+              "avg_sweeps": 1.01,
+              "med_days_pass": 27.5,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 92.14,
+              "p_pass": 5.28,
+              "p_timeout": 2.58
+            },
+            "1.5x/Blended": {
+              "avg_sweeps": 0.99,
+              "med_days_pass": 33.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 80.06,
+              "p_pass": 11.8,
+              "p_timeout": 8.14
+            },
+            "2.0x/75%-Chop": {
+              "avg_sweeps": 0.71,
+              "med_days_pass": 19.0,
+              "p_fail_daily": 22.18,
+              "p_fail_static": 63.86,
+              "p_pass": 12.8,
+              "p_timeout": 1.16
+            },
+            "2.0x/Blended": {
+              "avg_sweeps": 0.97,
+              "med_days_pass": 22.0,
+              "p_fail_daily": 18.14,
+              "p_fail_static": 58.72,
+              "p_pass": 20.52,
+              "p_timeout": 2.62
+            }
+          },
+          "peak_to_trough_dd_usd": -997.32,
+          "static_floor_dd_usd": -513.06,
+          "sweeps": 0,
+          "terminal_net_usd": 245.41,
+          "terminal_ts_ms": null,
+          "unpriced_open_steps": 2,
+          "verdict": "TIMEOUT",
+          "worst_daily_usd": -337.18
+        },
+        "new": {
+          "deferred_notional_usd": 0.0,
+          "full_window_net_usd": 677.17,
+          "full_window_peak_to_trough_dd_usd": -827.42,
+          "full_window_static_floor_dd_usd": -157.73,
+          "full_window_sweeps": 0,
+          "gap_exits": 2,
+          "mc": {
+            "1.0x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 50.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 3.18,
+              "p_pass": 73.46,
+              "p_timeout": 23.36
+            },
+            "1.0x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 51.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 1.54,
+              "p_pass": 77.66,
+              "p_timeout": 20.8
+            },
+            "1.5x/75%-Chop": {
+              "avg_sweeps": 1.2,
+              "med_days_pass": 30.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 84.24,
+              "p_pass": 10.7,
+              "p_timeout": 5.06
+            },
+            "1.5x/Blended": {
+              "avg_sweeps": 1.15,
+              "med_days_pass": 34.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 61.36,
+              "p_pass": 25.62,
+              "p_timeout": 13.02
+            },
+            "2.0x/75%-Chop": {
+              "avg_sweeps": 0.42,
+              "med_days_pass": 21.0,
+              "p_fail_daily": 44.42,
+              "p_fail_static": 34.22,
+              "p_pass": 20.78,
+              "p_timeout": 0.58
+            },
+            "2.0x/Blended": {
+              "avg_sweeps": 0.33,
+              "med_days_pass": 22.0,
+              "p_fail_daily": 41.08,
+              "p_fail_static": 22.92,
+              "p_pass": 34.7,
+              "p_timeout": 1.3
+            }
+          },
+          "peak_to_trough_dd_usd": -827.42,
+          "pm03": {
+            "account_verified": true,
+            "drift_usd": 0.0,
+            "fill_count": 162,
+            "final_equity": 10044.572112297741,
+            "halted": false,
+            "net_pnl": 44.57211229774079,
+            "quantities": {
+              "BTC": 0.0,
+              "ETH": 0.0,
+              "HYPE": 2.085006234092,
+              "LIT": 0.0,
+              "NEAR": 0.0,
+              "SKR": 25180.56346541404,
+              "SOL": 0.076658638594,
+              "UNI": 0.0,
+              "XMR": 0.0
+            },
+            "realized_pnl": 34.4643297611473,
+            "tier1_7d_net": 44.57,
+            "total_costs": 7.15146565,
+            "window_utc": "first 7 OOS days; no Guardian crossings"
+          },
+          "static_floor_dd_usd": -157.73,
+          "sweeps": 0,
+          "terminal_net_usd": 677.17,
+          "terminal_ts_ms": null,
+          "unpriced_open_steps": 2,
+          "verdict": "TIMEOUT",
+          "worst_daily_usd": -350.77
+        }
+      },
+      "optimization": {
+        "aggressive_exceeds_baseline": true,
+        "aggressive_unconstrained_k": [
+          0.015859558762622513,
+          4.376817666422555,
+          0.05436782878988844,
+          0.2301476496336853
+        ],
+        "aliases": [
+          "W#1",
+          "W#174",
+          "W#179",
+          "W#280"
+        ],
+        "binding_constraint": "DailyCVaR_99",
+        "feasible": true,
+        "min_lot_warnings": [
+          "W#174: q10_order=$7.96<$10",
+          "W#179: q10_order=$5.60<$10"
+        ],
+        "netting_savings_usd": 0.24,
+        "size": 4,
+        "train_daily_cvar_usd": 300.0,
+        "train_net_dd": 11.9118,
+        "train_net_usd": 4844.06,
+        "train_peak_dd_usd": 406.66,
+        "train_unit_dd_usd": [
+          15618.765983711008,
+          100.05356760149995,
+          2104.753540000006,
+          1520.2598644220034
+        ],
+        "train_worst_day_usd": 335.45
+      },
+      "train": {
+        "full": {
+          "deferred_notional_usd": 0.0,
+          "full_window_net_usd": 2253.2,
+          "full_window_peak_to_trough_dd_usd": -127.45,
+          "full_window_static_floor_dd_usd": -72.0,
+          "full_window_sweeps": 0,
+          "gap_exits": 0,
+          "peak_to_trough_dd_usd": -117.48,
+          "static_floor_dd_usd": -72.0,
+          "sweeps": 0,
+          "terminal_net_usd": 800.07,
+          "terminal_ts_ms": 1782413700000,
+          "unpriced_open_steps": 0,
+          "verdict": "PASS",
+          "worst_daily_usd": -96.07
+        },
+        "new": {
+          "deferred_notional_usd": 0.0,
+          "full_window_net_usd": 2170.12,
+          "full_window_peak_to_trough_dd_usd": -127.45,
+          "full_window_static_floor_dd_usd": -71.6,
+          "full_window_sweeps": 0,
+          "gap_exits": 0,
+          "peak_to_trough_dd_usd": -117.48,
+          "static_floor_dd_usd": -71.6,
+          "sweeps": 0,
+          "terminal_net_usd": 801.05,
+          "terminal_ts_ms": 1782410100000,
+          "unpriced_open_steps": 0,
+          "verdict": "PASS",
+          "worst_daily_usd": -96.07
+        }
+      },
+      "triada_conflicts": {
+        "coin_hours": 1399.67,
+        "events": 34,
+        "symbols": [
+          "BTC",
+          "ETH",
+          "NEAR",
+          "PONS",
+          "UNI",
+          "XMR"
+        ]
+      }
+    },
+    {
+      "aliases": [
+        "W#1",
+        "W#174",
+        "W#94",
+        "Whale_0x5f94"
+      ],
+      "baseline_k": [
+        0.008003193090309692,
+        1.2493307634752053,
+        3.963240300270222,
+        0.0006594472273990668
+      ],
+      "index": 3,
+      "k": [
+        0.008003193090309692,
+        1.2493307634752053,
+        3.963240300270222,
+        0.0006594472273990668
+      ],
+      "oos": {
+        "full": {
+          "deferred_notional_usd": 0.0,
+          "full_window_net_usd": 1708.73,
+          "full_window_peak_to_trough_dd_usd": -645.88,
+          "full_window_static_floor_dd_usd": -144.73,
+          "full_window_sweeps": 1,
+          "gap_exits": 0,
+          "mc": {
+            "1.0x/75%-Chop": {
+              "avg_sweeps": 0.12,
+              "med_days_pass": 26.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.02,
+              "p_pass": 99.72,
+              "p_timeout": 0.26
+            },
+            "1.0x/Blended": {
+              "avg_sweeps": 0.23,
+              "med_days_pass": 21.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.06,
+              "p_pass": 99.46,
+              "p_timeout": 0.48
+            },
+            "1.5x/75%-Chop": {
+              "avg_sweeps": 0.06,
+              "med_days_pass": 18.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.04,
+              "p_pass": 99.94,
+              "p_timeout": 0.02
+            },
+            "1.5x/Blended": {
+              "avg_sweeps": 0.09,
+              "med_days_pass": 12.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.08,
+              "p_pass": 99.92,
+              "p_timeout": 0.0
+            },
+            "2.0x/75%-Chop": {
+              "avg_sweeps": 0.05,
+              "med_days_pass": 17.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.0,
+              "p_pass": 100.0,
+              "p_timeout": 0.0
+            },
+            "2.0x/Blended": {
+              "avg_sweeps": 0.09,
+              "med_days_pass": 18.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.02,
+              "p_pass": 99.94,
+              "p_timeout": 0.04
+            }
+          },
+          "peak_to_trough_dd_usd": -326.6,
+          "static_floor_dd_usd": -144.73,
+          "sweeps": 0,
+          "terminal_net_usd": 810.42,
+          "terminal_ts_ms": 1788944400000,
+          "unpriced_open_steps": 0,
+          "verdict": "PASS",
+          "worst_daily_usd": -259.79
+        },
+        "new": {
+          "deferred_notional_usd": 0.0,
+          "full_window_net_usd": 1235.64,
+          "full_window_peak_to_trough_dd_usd": -330.36,
+          "full_window_static_floor_dd_usd": -14.72,
+          "full_window_sweeps": 0,
+          "gap_exits": 0,
+          "mc": {
+            "1.0x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 37.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.0,
+              "p_pass": 100.0,
+              "p_timeout": 0.0
+            },
+            "1.0x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 38.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.0,
+              "p_pass": 100.0,
+              "p_timeout": 0.0
+            },
+            "1.5x/75%-Chop": {
+              "avg_sweeps": 0.83,
+              "med_days_pass": 31.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 1.16,
+              "p_pass": 93.98,
+              "p_timeout": 4.86
+            },
+            "1.5x/Blended": {
+              "avg_sweeps": 0.62,
+              "med_days_pass": 31.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.36,
+              "p_pass": 95.9,
+              "p_timeout": 3.74
+            },
+            "2.0x/75%-Chop": {
+              "avg_sweeps": 0.59,
+              "med_days_pass": 23.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 1.28,
+              "p_pass": 97.72,
+              "p_timeout": 1.0
+            },
+            "2.0x/Blended": {
+              "avg_sweeps": 0.45,
+              "med_days_pass": 22.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.56,
+              "p_pass": 98.7,
+              "p_timeout": 0.74
+            }
+          },
+          "peak_to_trough_dd_usd": -289.14,
+          "pm03": {
+            "account_verified": true,
+            "drift_usd": -0.0,
+            "fill_count": 33,
+            "final_equity": 10040.669553477797,
+            "halted": false,
+            "net_pnl": 40.66955347779642,
+            "quantities": {
+              "BTC": 0.002219414568,
+              "ETH": 0.110178080348,
+              "HYPE": 0.0,
+              "JTO": 533.982116808575,
+              "NEAR": 0.0,
+              "UNI": 0.0,
+              "XMR": 0.665824370445
+            },
+            "realized_pnl": 50.43017108122952,
+            "tier1_7d_net": 40.67,
+            "total_costs": 5.5446431,
+            "window_utc": "first 7 OOS days; no Guardian crossings"
+          },
+          "static_floor_dd_usd": -14.72,
+          "sweeps": 0,
+          "terminal_net_usd": 803.15,
+          "terminal_ts_ms": 1791854100000,
+          "unpriced_open_steps": 0,
+          "verdict": "PASS",
+          "worst_daily_usd": -271.6
+        }
+      },
+      "optimization": {
+        "aggressive_exceeds_baseline": true,
+        "aggressive_unconstrained_k": [
+          0.01788188650036951,
+          4.825261462215818,
+          4.9615755491673115,
+          0.0007168961711550939
+        ],
+        "aliases": [
+          "W#1",
+          "W#174",
+          "W#94",
+          "Whale_0x5f94"
+        ],
+        "binding_constraint": "DailyCVaR_99",
+        "feasible": true,
+        "min_lot_warnings": [
+          "W#174: q10_order=$8.77<$10"
+        ],
+        "netting_savings_usd": 0.31,
+        "size": 4,
+        "train_daily_cvar_usd": 300.0,
+        "train_net_dd": 9.0421,
+        "train_net_usd": 4037.41,
+        "train_peak_dd_usd": 446.51,
+        "train_unit_dd_usd": [
+          15618.765983711008,
+          100.05356760149995,
+          31.539848843250116,
+          189552.6962680758
+        ],
+        "train_worst_day_usd": 365.71
+      },
+      "train": {
+        "full": {
+          "deferred_notional_usd": 170.42,
+          "full_window_net_usd": 1453.5,
+          "full_window_peak_to_trough_dd_usd": -730.16,
+          "full_window_static_floor_dd_usd": -101.74,
+          "full_window_sweeps": 1,
+          "gap_exits": 0,
+          "peak_to_trough_dd_usd": -219.48,
+          "static_floor_dd_usd": -101.74,
+          "sweeps": 0,
+          "terminal_net_usd": 800.93,
+          "terminal_ts_ms": 1780435800000,
+          "unpriced_open_steps": 0,
+          "verdict": "PASS",
+          "worst_daily_usd": -135.86
+        },
+        "new": {
+          "deferred_notional_usd": 170.42,
+          "full_window_net_usd": 1906.36,
+          "full_window_peak_to_trough_dd_usd": -146.82,
+          "full_window_static_floor_dd_usd": -72.92,
+          "full_window_sweeps": 0,
+          "gap_exits": 3,
+          "peak_to_trough_dd_usd": -146.82,
+          "static_floor_dd_usd": -72.92,
+          "sweeps": 0,
+          "terminal_net_usd": 800.34,
+          "terminal_ts_ms": 1785907200000,
+          "unpriced_open_steps": 3,
+          "verdict": "PASS",
+          "worst_daily_usd": -96.74
+        }
+      },
+      "triada_conflicts": {
+        "coin_hours": 2026.42,
+        "events": 51,
+        "symbols": [
+          "ETH",
+          "HYPE",
+          "NEAR",
+          "STRK",
+          "XMR",
+          "XPL"
+        ]
+      }
+    },
+    {
+      "aliases": [
+        "W#174",
+        "W#179",
+        "W#257",
+        "Whale_0x5f94"
+      ],
+      "baseline_k": [
+        1.2493307634752053,
+        0.059389376297236035,
+        0.016710554961678583,
+        0.0006594472273990668
+      ],
+      "index": 4,
+      "k": [
+        1.2493307634752053,
+        0.059389376297236035,
+        0.016710554961678583,
+        0.00041175747598955106
+      ],
+      "oos": {
+        "full": {
+          "deferred_notional_usd": 0.0,
+          "full_window_net_usd": 1095.83,
+          "full_window_peak_to_trough_dd_usd": -743.96,
+          "full_window_static_floor_dd_usd": -89.39,
+          "full_window_sweeps": 1,
+          "gap_exits": 0,
+          "mc": {
+            "1.0x/75%-Chop": {
+              "avg_sweeps": 0.95,
+              "med_days_pass": 35.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 4.9,
+              "p_pass": 82.38,
+              "p_timeout": 12.72
+            },
+            "1.0x/Blended": {
+              "avg_sweeps": 0.62,
+              "med_days_pass": 28.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 2.0,
+              "p_pass": 92.2,
+              "p_timeout": 5.8
+            },
+            "1.5x/75%-Chop": {
+              "avg_sweeps": 0.55,
+              "med_days_pass": 22.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 6.52,
+              "p_pass": 91.5,
+              "p_timeout": 1.98
+            },
+            "1.5x/Blended": {
+              "avg_sweeps": 0.35,
+              "med_days_pass": 16.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 3.42,
+              "p_pass": 96.08,
+              "p_timeout": 0.5
+            },
+            "2.0x/75%-Chop": {
+              "avg_sweeps": 0.07,
+              "med_days_pass": 17.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.02,
+              "p_pass": 99.96,
+              "p_timeout": 0.02
+            },
+            "2.0x/Blended": {
+              "avg_sweeps": 0.13,
+              "med_days_pass": 14.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.26,
+              "p_pass": 99.64,
+              "p_timeout": 0.1
+            }
+          },
+          "peak_to_trough_dd_usd": -410.62,
+          "static_floor_dd_usd": -89.39,
+          "sweeps": 0,
+          "terminal_net_usd": 801.13,
+          "terminal_ts_ms": 1789634100000,
+          "unpriced_open_steps": 0,
+          "verdict": "PASS",
+          "worst_daily_usd": -166.9
+        },
+        "new": {
+          "deferred_notional_usd": 0.0,
+          "full_window_net_usd": 765.46,
+          "full_window_peak_to_trough_dd_usd": -868.14,
+          "full_window_static_floor_dd_usd": -111.58,
+          "full_window_sweeps": 0,
+          "gap_exits": 0,
+          "mc": {
+            "1.0x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 46.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 5.38,
+              "p_pass": 79.24,
+              "p_timeout": 15.38
+            },
+            "1.0x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 50.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 3.02,
+              "p_pass": 80.92,
+              "p_timeout": 16.06
+            },
+            "1.5x/75%-Chop": {
+              "avg_sweeps": 1.15,
+              "med_days_pass": 36.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 87.12,
+              "p_pass": 6.32,
+              "p_timeout": 6.56
+            },
+            "1.5x/Blended": {
+              "avg_sweeps": 1.18,
+              "med_days_pass": 42.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 63.44,
+              "p_pass": 19.36,
+              "p_timeout": 17.2
+            },
+            "2.0x/75%-Chop": {
+              "avg_sweeps": 0.34,
+              "med_days_pass": 25.0,
+              "p_fail_daily": 47.5,
+              "p_fail_static": 36.44,
+              "p_pass": 15.34,
+              "p_timeout": 0.72
+            },
+            "2.0x/Blended": {
+              "avg_sweeps": 0.29,
+              "med_days_pass": 29.0,
+              "p_fail_daily": 46.2,
+              "p_fail_static": 23.98,
+              "p_pass": 27.78,
+              "p_timeout": 2.04
+            }
+          },
+          "peak_to_trough_dd_usd": -868.14,
+          "static_floor_dd_usd": -111.58,
+          "sweeps": 0,
+          "terminal_net_usd": 765.46,
+          "terminal_ts_ms": null,
+          "unpriced_open_steps": 0,
+          "verdict": "TIMEOUT",
+          "worst_daily_usd": -360.41
+        }
+      },
+      "optimization": {
+        "aggressive_exceeds_baseline": true,
+        "aggressive_unconstrained_k": [
+          3.9724028437398125,
+          0.09252052553635326,
+          0.03532452703173372,
+          0.00041175747598955106
+        ],
+        "aliases": [
+          "W#174",
+          "W#179",
+          "W#257",
+          "Whale_0x5f94"
+        ],
+        "binding_constraint": "DailyCVaR_99",
+        "feasible": true,
+        "min_lot_warnings": [
+          "W#174: q10_order=$7.22<$10",
+          "W#179: q10_order=$9.54<$10"
+        ],
+        "netting_savings_usd": 0.83,
+        "size": 4,
+        "train_daily_cvar_usd": 300.0,
+        "train_net_dd": 8.8237,
+        "train_net_usd": 3817.48,
+        "train_peak_dd_usd": 432.64,
+        "train_unit_dd_usd": [
+          100.05356760149995,
+          2104.753540000006,
+          7480.3021375804565,
+          189552.6962680758
+        ],
+        "train_worst_day_usd": 301.77
+      },
+      "train": {
+        "full": {
+          "deferred_notional_usd": 0.0,
+          "full_window_net_usd": 1617.52,
+          "full_window_peak_to_trough_dd_usd": -575.14,
+          "full_window_static_floor_dd_usd": -67.74,
+          "full_window_sweeps": 1,
+          "gap_exits": 0,
+          "peak_to_trough_dd_usd": -223.58,
+          "static_floor_dd_usd": -67.74,
+          "sweeps": 0,
+          "terminal_net_usd": 801.03,
+          "terminal_ts_ms": 1780390800000,
+          "unpriced_open_steps": 0,
+          "verdict": "PASS",
+          "worst_daily_usd": -103.76
+        },
+        "new": {
+          "deferred_notional_usd": 0.0,
+          "full_window_net_usd": 1816.62,
+          "full_window_peak_to_trough_dd_usd": -151.95,
+          "full_window_static_floor_dd_usd": -33.85,
+          "full_window_sweeps": 0,
+          "gap_exits": 0,
+          "peak_to_trough_dd_usd": -151.95,
+          "static_floor_dd_usd": -33.85,
+          "sweeps": 0,
+          "terminal_net_usd": 808.29,
+          "terminal_ts_ms": 1780678200000,
+          "unpriced_open_steps": 0,
+          "verdict": "PASS",
+          "worst_daily_usd": -109.45
+        }
+      },
+      "triada_conflicts": {
+        "coin_hours": 3010.08,
+        "events": 40,
+        "symbols": [
+          "BTC",
+          "HYPE",
+          "NEAR",
+          "PONS",
+          "PUMP",
+          "STRK",
+          "XMR",
+          "XPL"
+        ]
+      }
+    }
+  ],
+  "roster_sha256": "8b61701784f8aa8576381456e484e13dd7f73f6ccab93929b478489f88b0cd02",
+  "screen_eligible": 189,
+  "screened_wallets": 195,
+  "shortlist_count": 30,
+  "source_archive_sha256": "bd2badb79973aaf4be37aebaacafe1e484628359e947fa9e51a7ec0f84f33a55",
+  "status": "RETROSPECTIVE_SCENARIO",
+  "train_symbols_from_train_only": true,
+  "train_window": [
+    "2026-05-01",
+    "2026-09-01"
+  ],
+  "triada": {
+    "full": {
+      "deferred_notional_usd": 0.0,
+      "full_window_net_usd": 1075.84,
+      "full_window_peak_to_trough_dd_usd": -426.9,
+      "full_window_static_floor_dd_usd": -68.45,
+      "full_window_sweeps": 0,
+      "gap_exits": 0,
+      "mc": {
+        "1.0x/75%-Chop": {
+          "avg_sweeps": 0.0,
+          "med_days_pass": 45.0,
+          "p_fail_daily": 0.0,
+          "p_fail_static": 0.62,
+          "p_pass": 71.0,
+          "p_timeout": 28.38
+        },
+        "1.0x/Blended": {
+          "avg_sweeps": 0.0,
+          "med_days_pass": 35.0,
+          "p_fail_daily": 0.0,
+          "p_fail_static": 0.24,
+          "p_pass": 89.3,
+          "p_timeout": 10.46
+        },
+        "1.5x/75%-Chop": {
+          "avg_sweeps": 0.0,
+          "med_days_pass": 31.0,
+          "p_fail_daily": 0.0,
+          "p_fail_static": 4.38,
+          "p_pass": 83.58,
+          "p_timeout": 12.04
+        },
+        "1.5x/Blended": {
+          "avg_sweeps": 0.0,
+          "med_days_pass": 23.0,
+          "p_fail_daily": 0.0,
+          "p_fail_static": 2.34,
+          "p_pass": 94.16,
+          "p_timeout": 3.5
+        },
+        "2.0x/75%-Chop": {
+          "avg_sweeps": 0.0,
+          "med_days_pass": 22.0,
+          "p_fail_daily": 0.0,
+          "p_fail_static": 9.88,
+          "p_pass": 86.36,
+          "p_timeout": 3.76
+        },
+        "2.0x/Blended": {
+          "avg_sweeps": 0.0,
+          "med_days_pass": 16.0,
+          "p_fail_daily": 0.0,
+          "p_fail_static": 6.36,
+          "p_pass": 92.9,
+          "p_timeout": 0.74
+        }
+      },
+      "peak_to_trough_dd_usd": -426.9,
+      "static_floor_dd_usd": -68.45,
+      "sweeps": 0,
+      "terminal_net_usd": 803.02,
+      "terminal_ts_ms": 1789949700000,
+      "unpriced_open_steps": 0,
+      "verdict": "PASS",
+      "worst_daily_usd": -178.29
+    },
+    "k_source": "prop-production/bybit_executor.py static defaults, live runtime unverified",
+    "new": {
+      "deferred_notional_usd": 6.42,
+      "full_window_net_usd": 466.73,
+      "full_window_peak_to_trough_dd_usd": -137.25,
+      "full_window_static_floor_dd_usd": -17.13,
+      "full_window_sweeps": 0,
+      "gap_exits": 0,
+      "mc": {
+        "1.0x/75%-Chop": {
+          "avg_sweeps": 0.0,
+          "med_days_pass": 73.0,
+          "p_fail_daily": 0.0,
+          "p_fail_static": 0.0,
+          "p_pass": 48.96,
+          "p_timeout": 51.04
+        },
+        "1.0x/Blended": {
+          "avg_sweeps": 0.0,
+          "med_days_pass": 74.0,
+          "p_fail_daily": 0.0,
+          "p_fail_static": 0.0,
+          "p_pass": 38.74,
+          "p_timeout": 61.26
+        },
+        "1.5x/75%-Chop": {
+          "avg_sweeps": 0.0,
+          "med_days_pass": 55.0,
+          "p_fail_daily": 0.0,
+          "p_fail_static": 0.0,
+          "p_pass": 87.46,
+          "p_timeout": 12.54
+        },
+        "1.5x/Blended": {
+          "avg_sweeps": 0.0,
+          "med_days_pass": 59.0,
+          "p_fail_daily": 0.0,
+          "p_fail_static": 0.0,
+          "p_pass": 82.2,
+          "p_timeout": 17.8
+        },
+        "2.0x/75%-Chop": {
+          "avg_sweeps": 0.0,
+          "med_days_pass": 42.0,
+          "p_fail_daily": 0.0,
+          "p_fail_static": 0.0,
+          "p_pass": 96.56,
+          "p_timeout": 3.44
+        },
+        "2.0x/Blended": {
+          "avg_sweeps": 0.0,
+          "med_days_pass": 45.0,
+          "p_fail_daily": 0.0,
+          "p_fail_static": 0.0,
+          "p_pass": 93.84,
+          "p_timeout": 6.16
+        }
+      },
+      "peak_to_trough_dd_usd": -137.25,
+      "static_floor_dd_usd": -17.13,
+      "sweeps": 0,
+      "terminal_net_usd": 466.73,
+      "terminal_ts_ms": null,
+      "unpriced_open_steps": 0,
+      "verdict": "TIMEOUT",
+      "worst_daily_usd": -78.88
+    }
+  }
+}

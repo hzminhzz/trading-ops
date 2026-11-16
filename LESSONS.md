@@ -71,3 +71,11 @@ Monte Carlo (`80k–100k` paths) + Optional Stopping analysis across Vanta Class
 3. **Never use current wallet value to backtest historical selection.** In the 128-wallet Train financial ledger, 24 historically positive wallets would have been excluded by the 2026-11-16 operational gate. Train-only ranking must exclude that filter. A corrected historical PIT ranking remains blocked without pre-September cohort receipts.
 4. **Opened OOS cannot be made pristine by re-running.** September–October was repeatedly inspected. A future holdout must be frozen before its start, hashed, identity-checked, source-receipt-verified, and left unread until maturity. A 2026-11-17 to 2026-12-17 hypothesis freeze exists, but source observation is not enabled for its new members; no paper/live trading authorization follows.
 5. **Alias drift is real and digest identity matters.** During the audit, three W# fallback aliases acquired explicit registry aliases without changing the 195-wallet count. The old roster SHA omitted address identity. Prospective freezes bind native wallet IDs and address digests; historical wallet ID mapping remains explicitly provenance-limited.
+
+---
+
+## 2026-11-16 — Hyperliquid-only historical research default
+
+1. **Separate alpha research from destination-venue admission.** Historical wallet selection and follower 5m replay now use Hyperliquid main-DEX perp fills/positions and native Hyperliquid 1m candles; Bybit listings and current wallet account value are separate operational deployment checks. A Bybit historical listing test cannot prove the quality of a Hyperliquid-only research signal.
+2. **Train-only eligibility, frozen OOS expansion.** Screen symbols on pre-cutoff Hyperliquid fills, then admit newly traded OOS coins after portfolio members and k are frozen; do not use future symbols, current account value, or post-cutoff outcomes to select a wallet.
+3. **Research qualification remains distinct.** The 195-wallet current roster still lacks pre-September 2026 discovery proof, the previous September–October evaluation was already inspected, and 5m source checkpoint known-at receipts are unavailable historically. Model PnL is a retrospective scenario, not broker-executable Bybit PnL or a genuinely untouched forward holdout.
