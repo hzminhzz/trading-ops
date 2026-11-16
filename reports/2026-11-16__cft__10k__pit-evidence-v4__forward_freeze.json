@@ -1,0 +1,142 @@
+{
+  "asof_registry_count": 195,
+  "asof_registry_sha256": "a4000673c045bb70105d215d3334af5bd2d74293f01035edbb8532e347725b43",
+  "bybit_catalog_sha256": "38f6ce0722956ed006a464b5c43a67cee703cb008290aa5d0a323e5913be701a",
+  "cost_scenario_bps": [
+    6.5,
+    10,
+    15
+  ],
+  "created_at": "2026-11-16T14:52:45.781131+00:00",
+  "economically_qualified": false,
+  "execution_status": "NO_ORDERS_READ_ONLY",
+  "freeze_payload_sha256": "25f32efa649731c85a68775aa05a8bce9fe091d258f9b323bcaaffcfee419c24",
+  "holding_period_days": 30,
+  "holdout_end_exclusive": "2026-12-17T00:05:00+00:00",
+  "holdout_evaluation_allowed_after": "2026-12-17T00:05:00+00:00",
+  "holdout_start": "2026-11-17T00:05:00+00:00",
+  "instrument_history_status": "CURRENT_SNAPSHOT_NOT_HISTORICAL_RULEBOOK",
+  "policy": "NEW_POSITION_ONLY_AFTER_FROZEN_START",
+  "portfolios": [
+    {
+      "members": [
+        {
+          "alias": "W#111",
+          "alias_known_at": null,
+          "frozen_k": 0.10950609745708517,
+          "identity_sha256": "7a4c35d9fb2dd919ea5ff774015cea412fd358c8ca633a0932b72bdbea736c6f",
+          "known_at": "2026-11-04T09:36:57.574969+00:00",
+          "registry_id": 111
+        },
+        {
+          "alias": "W#174",
+          "alias_known_at": null,
+          "frozen_k": 1.2493307634752053,
+          "identity_sha256": "759a3f802637b0996654ee7f3ec6f8210c122286616cde504fb7a7e58ee6c434",
+          "known_at": "2026-11-04T09:36:57.574969+00:00",
+          "registry_id": 174
+        },
+        {
+          "alias": "W#179",
+          "alias_known_at": null,
+          "frozen_k": 0.059389376297236035,
+          "identity_sha256": "8bb87e1127c477b91d5e106c7ed5dd5df8b649694c173bf8c093262446563bf5",
+          "known_at": "2026-11-04T09:36:57.574969+00:00",
+          "registry_id": 179
+        },
+        {
+          "alias": "Whale_0x5f94",
+          "alias_known_at": "2026-11-04T09:36:57.574969+00:00",
+          "frozen_k": 0.00038211257339039977,
+          "identity_sha256": "d505878b68a81d92889946d1fc5a04d06e7d0d5f877fa7fc8f947797f950be03",
+          "known_at": "2026-11-04T09:36:57.574969+00:00",
+          "registry_id": 146
+        }
+      ],
+      "selection_qualification": "HISTORICAL_EX_POST_FROZEN_FOR_PROSPECTIVE_ONLY"
+    },
+    {
+      "members": [
+        {
+          "alias": "W#1",
+          "alias_known_at": null,
+          "frozen_k": 0.008003193090309692,
+          "identity_sha256": "c5dcf2feaf8d7ddbc5c03c1d242b0eb7134f3d50fb063839182b73396c6cd861",
+          "known_at": "2026-11-04T09:36:57.574969+00:00",
+          "registry_id": 1
+        },
+        {
+          "alias": "W#174",
+          "alias_known_at": null,
+          "frozen_k": 1.2493307634752053,
+          "identity_sha256": "759a3f802637b0996654ee7f3ec6f8210c122286616cde504fb7a7e58ee6c434",
+          "known_at": "2026-11-04T09:36:57.574969+00:00",
+          "registry_id": 174
+        },
+        {
+          "alias": "W#264",
+          "alias_known_at": null,
+          "frozen_k": 3.3228493700824533,
+          "identity_sha256": "3e7a19f4d8162ded6a559bfb66e05dc488f727ed04cde8aeddab80e2fb1ea727",
+          "known_at": "2026-11-04T09:36:57.574969+00:00",
+          "registry_id": 264
+        },
+        {
+          "alias": "Whale_0x5f94",
+          "alias_known_at": "2026-11-04T09:36:57.574969+00:00",
+          "frozen_k": 0.0006449342693386007,
+          "identity_sha256": "d505878b68a81d92889946d1fc5a04d06e7d0d5f877fa7fc8f947797f950be03",
+          "known_at": "2026-11-04T09:36:57.574969+00:00",
+          "registry_id": 146
+        }
+      ],
+      "selection_qualification": "HISTORICAL_EX_POST_FROZEN_FOR_PROSPECTIVE_ONLY"
+    },
+    {
+      "members": [
+        {
+          "alias": "W#174",
+          "alias_known_at": null,
+          "frozen_k": 1.2493307634752053,
+          "identity_sha256": "759a3f802637b0996654ee7f3ec6f8210c122286616cde504fb7a7e58ee6c434",
+          "known_at": "2026-11-04T09:36:57.574969+00:00",
+          "registry_id": 174
+        },
+        {
+          "alias": "W#252",
+          "alias_known_at": null,
+          "frozen_k": 0.07547463975812896,
+          "identity_sha256": "b70dd56b25d742b8001a7dc3c75a36919e290bae1fd474ee5d8d392928fdbb03",
+          "known_at": "2026-11-04T09:36:57.574969+00:00",
+          "registry_id": 252
+        },
+        {
+          "alias": "W#255",
+          "alias_known_at": null,
+          "frozen_k": 0.001210630168800666,
+          "identity_sha256": "08d0c7255dd180808363195bfb5893fb2c56f3fcbf22c92ee4144bbcb3fd8986",
+          "known_at": "2026-11-04T09:36:57.574969+00:00",
+          "registry_id": 255
+        },
+        {
+          "alias": "Whale_0x5f94",
+          "alias_known_at": "2026-11-04T09:36:57.574969+00:00",
+          "frozen_k": 0.0006449342693386007,
+          "identity_sha256": "d505878b68a81d92889946d1fc5a04d06e7d0d5f877fa7fc8f947797f950be03",
+          "known_at": "2026-11-04T09:36:57.574969+00:00",
+          "registry_id": 146
+        }
+      ],
+      "selection_qualification": "HISTORICAL_EX_POST_FROZEN_FOR_PROSPECTIVE_ONLY"
+    }
+  ],
+  "schema": "cft_prospective_holdout_freeze_v1",
+  "scientifically_qualified": false,
+  "selection_history": "Previously inspected May-Oct 2026 returns; FORWARD_HOLDOUT_ONLY",
+  "source_clock_requirement": "ORIGINAL_RECEIVED_AT_AND_PUBLISHED_AT_REQUIRED",
+  "source_freeze_sha256": "4f9af9e21f90d755850725a3b4bb75cf92762eb811bb4748d35a77bcf1b377f4",
+  "source_observation_status": "NOT_ENABLED_FOR_NEW_CANDIDATES",
+  "status": "FROZEN_HYPOTHESIS_NOT_SOURCE_ENABLED",
+  "trading_authorized": false,
+  "train_data_cutoff_exclusive": "2026-11-16T14:52:45.781131+00:00"
+}

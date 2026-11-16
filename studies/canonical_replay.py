@@ -459,6 +459,7 @@ def build_unit_replay_by_alias(
     activation_ms: int | None = None,
     initial_anchors: dict[str, dict[str, float]] | None = None,
     cost_bps: float = DEFAULT_COST_BPS,
+    symbol_activation_ms: dict[str, int] | None = None,
 ) -> tuple[dict[str, dict[str, pl.DataFrame]], dict[str, dict[str, int]]]:
     """Build Policy-A 5m DataFrames ready for ``pod_constructor.build_tensor_from_unit_replays``.
 
@@ -480,18 +481,29 @@ def build_unit_replay_by_alias(
             if coin not in prices_by_coin:
                 continue
             trade_open, mark_close = prices_by_coin[coin]
+            # A market launched on the follower venue after the wallet first
+            # traded cannot be copied earlier. Under strict new-only, a lead
+            # position already open at launch must close/flip before admission.
+            earliest_ms = (symbol_activation_ms or {}).get(coin)
+            effective_activation = max(
+                int(activation_ms) if activation_ms is not None else int(grid_ms[0]),
+                int(earliest_ms) if earliest_ms is not None else int(grid_ms[0]),
+            )
             recon = reconstruct_positions_on_grid(
                 coin_fills,
                 grid_ms,
                 policy=policy,
-                activation_ms=activation_ms,
+                activation_ms=effective_activation,
                 initial_anchor_pos=anchors.get(coin),
             )
+            effective_targets = recon.pos
+            if earliest_ms is not None and policy == "full":
+                effective_targets = np.where(grid_ms >= int(earliest_ms), recon.pos, 0.0)
             if recon.unanchored_pre_inventory:
                 diag["unanchored_coins"] += 1
 
             pos, delta, gross, cost, stats = replay_coin_targets_vectorized(
-                recon.pos, trade_open, mark_close, cost_bps=cost_bps
+                effective_targets, trade_open, mark_close, cost_bps=cost_bps
             )
             diag["forced_gap_exits"] += int(stats["forced_gap_exits"])
             diag["unpriced_open_steps"] += int(stats["unpriced_open_steps"])

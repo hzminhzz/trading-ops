@@ -1,0 +1,234 @@
+{
+  "bybit_catalog_sha256": "38f6ce0722956ed006a464b5c43a67cee703cb008290aa5d0a323e5913be701a",
+  "economically_qualified": false,
+  "instrument_lot_rule_history": "UNPROVEN",
+  "oos_independence": false,
+  "periods": {
+    "previously_opened_oos": [
+      "2026-09-01",
+      "2026-11-01"
+    ],
+    "train": [
+      "2026-05-01",
+      "2026-09-01"
+    ]
+  },
+  "policy": "strict_new_only; Bybit launch at coin level; local HL 1m execution",
+  "reoptimized_using_oos": false,
+  "results": [
+    {
+      "aliases": [
+        "W#111",
+        "W#174",
+        "W#179",
+        "Whale_0x5f94"
+      ],
+      "conservative_corrected_k": [
+        0.10950609745708517,
+        1.2493307634752053,
+        0.059389376297236035,
+        0.00038211257339039977
+      ],
+      "prior_frozen_k": [
+        0.10950609745708517,
+        1.2493307634752053,
+        0.059389376297236035,
+        0.00038211257339039977
+      ],
+      "results": {
+        "corrected_half_risk_k": {
+          "opened_old_oos": {
+            "first_barrier": "PASS",
+            "modeled_net_usd": 1435.71,
+            "peak_dd_usd": -254.26,
+            "static_floor_dd_usd": -13.55,
+            "sweeps": 0,
+            "worst_daily_usd": -174.69
+          },
+          "train": {
+            "first_barrier": "PASS",
+            "modeled_net_usd": 1491.42,
+            "peak_dd_usd": -134.4,
+            "static_floor_dd_usd": -66.25,
+            "sweeps": 0,
+            "worst_daily_usd": -93.37
+          }
+        },
+        "prior_k": {
+          "opened_old_oos": {
+            "first_barrier": "PASS",
+            "modeled_net_usd": 1435.71,
+            "peak_dd_usd": -254.26,
+            "static_floor_dd_usd": -13.55,
+            "sweeps": 0,
+            "worst_daily_usd": -174.69
+          },
+          "train": {
+            "first_barrier": "PASS",
+            "modeled_net_usd": 1491.42,
+            "peak_dd_usd": -134.4,
+            "static_floor_dd_usd": -66.25,
+            "sweeps": 0,
+            "worst_daily_usd": -93.37
+          }
+        }
+      },
+      "train_recalibrated_half_risk_k": [
+        0.12236029200521864,
+        1.2493307634752056,
+        0.0593893762972361,
+        0.0006449342693386021
+      ],
+      "train_unit_maxdd_after_listing_gate": [
+        1021.573240399498,
+        100.05356760149994,
+        2104.753540000004,
+        193818.20123807492
+      ]
+    },
+    {
+      "aliases": [
+        "W#1",
+        "W#174",
+        "W#264",
+        "Whale_0x5f94"
+      ],
+      "conservative_corrected_k": [
+        0.008003193090309692,
+        1.2493307634752053,
+        3.3228493700824435,
+        0.0006449342693386007
+      ],
+      "prior_frozen_k": [
+        0.008003193090309692,
+        1.2493307634752053,
+        3.3228493700824533,
+        0.0006449342693386007
+      ],
+      "results": {
+        "corrected_half_risk_k": {
+          "opened_old_oos": {
+            "first_barrier": "PASS",
+            "modeled_net_usd": 833.55,
+            "peak_dd_usd": -303.3,
+            "static_floor_dd_usd": -14.6,
+            "sweeps": 0,
+            "worst_daily_usd": -292.52
+          },
+          "train": {
+            "first_barrier": "PASS",
+            "modeled_net_usd": 1518.87,
+            "peak_dd_usd": -131.44,
+            "static_floor_dd_usd": -71.74,
+            "sweeps": 0,
+            "worst_daily_usd": -90.95
+          }
+        },
+        "prior_k": {
+          "opened_old_oos": {
+            "first_barrier": "PASS",
+            "modeled_net_usd": 833.55,
+            "peak_dd_usd": -303.3,
+            "static_floor_dd_usd": -14.6,
+            "sweeps": 0,
+            "worst_daily_usd": -292.52
+          },
+          "train": {
+            "first_barrier": "PASS",
+            "modeled_net_usd": 1518.87,
+            "peak_dd_usd": -131.44,
+            "static_floor_dd_usd": -71.74,
+            "sweeps": 0,
+            "worst_daily_usd": -90.95
+          }
+        }
+      },
+      "train_recalibrated_half_risk_k": [
+        0.008003193090309701,
+        1.2493307634752056,
+        3.3228493700824435,
+        0.0006449342693386021
+      ],
+      "train_unit_maxdd_after_listing_gate": [
+        15618.76598371099,
+        100.05356760149994,
+        37.61831671500012,
+        193818.20123807492
+      ]
+    },
+    {
+      "aliases": [
+        "W#174",
+        "W#252",
+        "W#255",
+        "Whale_0x5f94"
+      ],
+      "conservative_corrected_k": [
+        1.2493307634752053,
+        0.07547463975812894,
+        0.001210630168800666,
+        0.0006449342693386007
+      ],
+      "prior_frozen_k": [
+        1.2493307634752053,
+        0.07547463975812896,
+        0.001210630168800666,
+        0.0006449342693386007
+      ],
+      "results": {
+        "corrected_half_risk_k": {
+          "opened_old_oos": {
+            "first_barrier": "PASS",
+            "modeled_net_usd": 838.75,
+            "peak_dd_usd": -330.82,
+            "static_floor_dd_usd": -51.41,
+            "sweeps": 0,
+            "worst_daily_usd": -176.09
+          },
+          "train": {
+            "first_barrier": "PASS",
+            "modeled_net_usd": 1235.81,
+            "peak_dd_usd": -137.4,
+            "static_floor_dd_usd": -70.68,
+            "sweeps": 0,
+            "worst_daily_usd": -92.51
+          }
+        },
+        "prior_k": {
+          "opened_old_oos": {
+            "first_barrier": "PASS",
+            "modeled_net_usd": 838.75,
+            "peak_dd_usd": -330.82,
+            "static_floor_dd_usd": -51.41,
+            "sweeps": 0,
+            "worst_daily_usd": -176.09
+          },
+          "train": {
+            "first_barrier": "PASS",
+            "modeled_net_usd": 1235.81,
+            "peak_dd_usd": -137.4,
+            "static_floor_dd_usd": -70.68,
+            "sweeps": 0,
+            "worst_daily_usd": -92.51
+          }
+        }
+      },
+      "train_recalibrated_half_risk_k": [
+        1.2493307634752056,
+        0.07547463975812894,
+        0.0015395391630724598,
+        0.0006449342693386021
+      ],
+      "train_unit_maxdd_after_listing_gate": [
+        100.05356760149994,
+        1656.1854471989973,
+        81193.12778671859,
+        193818.20123807492
+      ]
+    }
+  ],
+  "scientifically_qualified": false,
+  "source_archive_sha256": "bd2badb79973aaf4be37aebaacafe1e484628359e947fa9e51a7ec0f84f33a55",
+  "source_first_known_at": "UNPROVEN_HISTORICAL",
+  "status": "RETROSPECTIVE_POSTHOC_LISTING_SENSITIVITY"
+}

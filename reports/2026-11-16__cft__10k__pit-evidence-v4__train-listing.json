@@ -1,0 +1,3123 @@
+{
+  "affected_wallets": {
+    "CA-008": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 28,
+          "first_fill_ms": 1784522014535,
+          "last_fill_ms": 1785960360893,
+          "postdelist": 0,
+          "prelaunch": 24,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 153,
+          "first_fill_ms": 1782180633686,
+          "last_fill_ms": 1787852903101,
+          "postdelist": 153,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PURR": {
+          "fills": 82,
+          "first_fill_ms": 1779361940285,
+          "last_fill_ms": 1783445781039,
+          "postdelist": 0,
+          "prelaunch": 82,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 1922,
+      "postdelist": 153,
+      "prelaunch": 106,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "DEX-54": {
+      "coins": {
+        "PUMP": {
+          "fills": 68,
+          "first_fill_ms": 1777649719669,
+          "last_fill_ms": 1787933893155,
+          "postdelist": 68,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kPEPE": {
+          "fills": 15,
+          "first_fill_ms": 1787592648766,
+          "last_fill_ms": 1787880136438,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 15
+        }
+      },
+      "fills": 3156,
+      "postdelist": 68,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 15
+    },
+    "M06": {
+      "coins": {
+        "PUMP": {
+          "fills": 359,
+          "first_fill_ms": 1781445110718,
+          "last_fill_ms": 1784065361018,
+          "postdelist": 359,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 62124,
+      "postdelist": 359,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "M18": {
+      "coins": {
+        "PUMP": {
+          "fills": 23,
+          "first_fill_ms": 1788134239238,
+          "last_fill_ms": 1788134822409,
+          "postdelist": 23,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 4184,
+      "postdelist": 23,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "M21": {
+      "coins": {
+        "PONS": {
+          "fills": 35,
+          "first_fill_ms": 1788167505019,
+          "last_fill_ms": 1788185722985,
+          "postdelist": 0,
+          "prelaunch": 24,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 5,
+          "first_fill_ms": 1788167662710,
+          "last_fill_ms": 1788185726943,
+          "postdelist": 5,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 946,
+      "postdelist": 5,
+      "prelaunch": 24,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "M22": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 597,
+          "first_fill_ms": 1783918357447,
+          "last_fill_ms": 1787928127458,
+          "postdelist": 0,
+          "prelaunch": 418,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 117,
+          "first_fill_ms": 1779641056794,
+          "last_fill_ms": 1785160951836,
+          "postdelist": 117,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kPEPE": {
+          "fills": 11,
+          "first_fill_ms": 1785119621376,
+          "last_fill_ms": 1785160960009,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 11
+        }
+      },
+      "fills": 3066,
+      "postdelist": 117,
+      "prelaunch": 418,
+      "unknown_launch": 0,
+      "unknown_market": 11
+    },
+    "M45": {
+      "coins": {
+        "PUMP": {
+          "fills": 65,
+          "first_fill_ms": 1787388113167,
+          "last_fill_ms": 1787422559354,
+          "postdelist": 65,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 3204,
+      "postdelist": 65,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "VS083": {
+      "coins": {
+        "PUMP": {
+          "fills": 93,
+          "first_fill_ms": 1780363675259,
+          "last_fill_ms": 1787964627835,
+          "postdelist": 93,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kSHIB": {
+          "fills": 14,
+          "first_fill_ms": 1778357179086,
+          "last_fill_ms": 1778360255880,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 14
+        }
+      },
+      "fills": 1410,
+      "postdelist": 93,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 14
+    },
+    "W#103": {
+      "coins": {
+        "PUMP": {
+          "fills": 240,
+          "first_fill_ms": 1783903705628,
+          "last_fill_ms": 1788134701975,
+          "postdelist": 240,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 5186,
+      "postdelist": 240,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#105": {
+      "coins": {
+        "PUMP": {
+          "fills": 16,
+          "first_fill_ms": 1787309449671,
+          "last_fill_ms": 1787313128699,
+          "postdelist": 16,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 647,
+      "postdelist": 16,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#110": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 252,
+          "first_fill_ms": 1784046068540,
+          "last_fill_ms": 1786046604766,
+          "postdelist": 0,
+          "prelaunch": 204,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 991,
+      "postdelist": 0,
+      "prelaunch": 204,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#111": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 32,
+          "first_fill_ms": 1783748344889,
+          "last_fill_ms": 1784475471479,
+          "postdelist": 0,
+          "prelaunch": 32,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PURR": {
+          "fills": 71,
+          "first_fill_ms": 1780559999779,
+          "last_fill_ms": 1787376589788,
+          "postdelist": 0,
+          "prelaunch": 9,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 909,
+      "postdelist": 0,
+      "prelaunch": 41,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#112": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 61,
+          "first_fill_ms": 1784150541520,
+          "last_fill_ms": 1784534258963,
+          "postdelist": 0,
+          "prelaunch": 61,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 226,
+          "first_fill_ms": 1778015260074,
+          "last_fill_ms": 1788199996751,
+          "postdelist": 226,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kPEPE": {
+          "fills": 15,
+          "first_fill_ms": 1778084005529,
+          "last_fill_ms": 1778390718167,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 15
+        },
+        "kSHIB": {
+          "fills": 15,
+          "first_fill_ms": 1785109940983,
+          "last_fill_ms": 1785254059430,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 15
+        }
+      },
+      "fills": 4929,
+      "postdelist": 226,
+      "prelaunch": 61,
+      "unknown_launch": 0,
+      "unknown_market": 30
+    },
+    "W#117": {
+      "coins": {
+        "PUMP": {
+          "fills": 120,
+          "first_fill_ms": 1777954179723,
+          "last_fill_ms": 1788198007577,
+          "postdelist": 120,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 624,
+      "postdelist": 120,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#12": {
+      "coins": {
+        "PURR": {
+          "fills": 6,
+          "first_fill_ms": 1779627521023,
+          "last_fill_ms": 1779711538186,
+          "postdelist": 0,
+          "prelaunch": 6,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kPEPE": {
+          "fills": 3,
+          "first_fill_ms": 1785124271106,
+          "last_fill_ms": 1785193882245,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 3
+        }
+      },
+      "fills": 9348,
+      "postdelist": 0,
+      "prelaunch": 6,
+      "unknown_launch": 0,
+      "unknown_market": 3
+    },
+    "W#121": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 34,
+          "first_fill_ms": 1785896485831,
+          "last_fill_ms": 1786561017616,
+          "postdelist": 0,
+          "prelaunch": 20,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 37,
+          "first_fill_ms": 1787347154516,
+          "last_fill_ms": 1788196030024,
+          "postdelist": 37,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 892,
+      "postdelist": 37,
+      "prelaunch": 20,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#131": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 415,
+          "first_fill_ms": 1784033928516,
+          "last_fill_ms": 1788070961956,
+          "postdelist": 0,
+          "prelaunch": 157,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "FET": {
+          "fills": 220,
+          "first_fill_ms": 1780644973286,
+          "last_fill_ms": 1787375333340,
+          "postdelist": 220,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 173,
+          "first_fill_ms": 1781994934018,
+          "last_fill_ms": 1787388311548,
+          "postdelist": 173,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PURR": {
+          "fills": 116,
+          "first_fill_ms": 1779377231659,
+          "last_fill_ms": 1784241727894,
+          "postdelist": 0,
+          "prelaunch": 87,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "VINE": {
+          "fills": 40,
+          "first_fill_ms": 1780822714381,
+          "last_fill_ms": 1787587106170,
+          "postdelist": 11,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kBONK": {
+          "fills": 6,
+          "first_fill_ms": 1784594564401,
+          "last_fill_ms": 1784595214928,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 6
+        },
+        "kNEIRO": {
+          "fills": 6,
+          "first_fill_ms": 1783302313550,
+          "last_fill_ms": 1783315911291,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 6
+        },
+        "kPEPE": {
+          "fills": 80,
+          "first_fill_ms": 1781232827268,
+          "last_fill_ms": 1787332831129,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 80
+        },
+        "kSHIB": {
+          "fills": 3,
+          "first_fill_ms": 1787348647676,
+          "last_fill_ms": 1787366791841,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 3
+        }
+      },
+      "fills": 10832,
+      "postdelist": 404,
+      "prelaunch": 244,
+      "unknown_launch": 0,
+      "unknown_market": 95
+    },
+    "W#134": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 172,
+          "first_fill_ms": 1785784442965,
+          "last_fill_ms": 1787932697272,
+          "postdelist": 0,
+          "prelaunch": 2,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 119,
+          "first_fill_ms": 1787490398931,
+          "last_fill_ms": 1787725330302,
+          "postdelist": 119,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kLUNC": {
+          "fills": 290,
+          "first_fill_ms": 1779855356509,
+          "last_fill_ms": 1781807281986,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 290
+        }
+      },
+      "fills": 9010,
+      "postdelist": 119,
+      "prelaunch": 2,
+      "unknown_launch": 0,
+      "unknown_market": 290
+    },
+    "W#142": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 550,
+          "first_fill_ms": 1783800891533,
+          "last_fill_ms": 1787567341772,
+          "postdelist": 0,
+          "prelaunch": 494,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 90,
+          "first_fill_ms": 1784503752808,
+          "last_fill_ms": 1786135645990,
+          "postdelist": 90,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 1494,
+      "postdelist": 90,
+      "prelaunch": 494,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#147": {
+      "coins": {
+        "PUMP": {
+          "fills": 1244,
+          "first_fill_ms": 1787269360946,
+          "last_fill_ms": 1788118523925,
+          "postdelist": 1244,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 3907,
+      "postdelist": 1244,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#165": {
+      "coins": {
+        "FET": {
+          "fills": 126,
+          "first_fill_ms": 1781932174452,
+          "last_fill_ms": 1783241112844,
+          "postdelist": 126,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 136,
+          "first_fill_ms": 1779325590566,
+          "last_fill_ms": 1783241052142,
+          "postdelist": 136,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kBONK": {
+          "fills": 4,
+          "first_fill_ms": 1783049062919,
+          "last_fill_ms": 1783056191713,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 4
+        },
+        "kPEPE": {
+          "fills": 27,
+          "first_fill_ms": 1783079508813,
+          "last_fill_ms": 1785154579766,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 27
+        }
+      },
+      "fills": 3433,
+      "postdelist": 262,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 31
+    },
+    "W#167": {
+      "coins": {
+        "PURR": {
+          "fills": 25,
+          "first_fill_ms": 1781798009315,
+          "last_fill_ms": 1783777943957,
+          "postdelist": 0,
+          "prelaunch": 17,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 187,
+      "postdelist": 0,
+      "prelaunch": 17,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#169": {
+      "coins": {
+        "FET": {
+          "fills": 122,
+          "first_fill_ms": 1779896204539,
+          "last_fill_ms": 1780295169262,
+          "postdelist": 122,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 6307,
+      "postdelist": 122,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#174": {
+      "coins": {
+        "kSHIB": {
+          "fills": 13,
+          "first_fill_ms": 1785072028026,
+          "last_fill_ms": 1785324037838,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 13
+        }
+      },
+      "fills": 1103,
+      "postdelist": 0,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 13
+    },
+    "W#176": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 7,
+          "first_fill_ms": 1784226920017,
+          "last_fill_ms": 1784228209620,
+          "postdelist": 0,
+          "prelaunch": 7,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kPEPE": {
+          "fills": 11,
+          "first_fill_ms": 1787839316433,
+          "last_fill_ms": 1787854667480,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 11
+        }
+      },
+      "fills": 2598,
+      "postdelist": 0,
+      "prelaunch": 7,
+      "unknown_launch": 0,
+      "unknown_market": 11
+    },
+    "W#182": {
+      "coins": {
+        "PUMP": {
+          "fills": 106,
+          "first_fill_ms": 1785898238070,
+          "last_fill_ms": 1788107398327,
+          "postdelist": 106,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 2171,
+      "postdelist": 106,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#183": {
+      "coins": {
+        "PUMP": {
+          "fills": 49,
+          "first_fill_ms": 1787058863412,
+          "last_fill_ms": 1787503883380,
+          "postdelist": 49,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 705,
+      "postdelist": 49,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#185": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 152,
+          "first_fill_ms": 1784044567538,
+          "last_fill_ms": 1787571135033,
+          "postdelist": 0,
+          "prelaunch": 87,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 171,
+          "first_fill_ms": 1784516767291,
+          "last_fill_ms": 1786285298858,
+          "postdelist": 171,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 2965,
+      "postdelist": 171,
+      "prelaunch": 87,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#19": {
+      "coins": {
+        "IP": {
+          "fills": 178,
+          "first_fill_ms": 1782169017709,
+          "last_fill_ms": 1782484087450,
+          "postdelist": 21,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 234,
+          "first_fill_ms": 1783050106898,
+          "last_fill_ms": 1788030403237,
+          "postdelist": 234,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kPEPE": {
+          "fills": 3,
+          "first_fill_ms": 1787367581496,
+          "last_fill_ms": 1787375450760,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 3
+        }
+      },
+      "fills": 3682,
+      "postdelist": 255,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 3
+    },
+    "W#190": {
+      "coins": {
+        "PUMP": {
+          "fills": 286,
+          "first_fill_ms": 1787338017299,
+          "last_fill_ms": 1787690371929,
+          "postdelist": 286,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 7911,
+      "postdelist": 286,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#197": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 13,
+          "first_fill_ms": 1784217733240,
+          "last_fill_ms": 1784224922663,
+          "postdelist": 0,
+          "prelaunch": 13,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "FET": {
+          "fills": 41,
+          "first_fill_ms": 1777927284048,
+          "last_fill_ms": 1780951708544,
+          "postdelist": 41,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 50,
+          "first_fill_ms": 1777927284048,
+          "last_fill_ms": 1788192278108,
+          "postdelist": 50,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PURR": {
+          "fills": 138,
+          "first_fill_ms": 1778064257358,
+          "last_fill_ms": 1787315540474,
+          "postdelist": 0,
+          "prelaunch": 51,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "TON": {
+          "fills": 16,
+          "first_fill_ms": 1778107546001,
+          "last_fill_ms": 1781515366698,
+          "postdelist": 1,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kLUNC": {
+          "fills": 2,
+          "first_fill_ms": 1780746665155,
+          "last_fill_ms": 1780746665155,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 2
+        },
+        "kPEPE": {
+          "fills": 12,
+          "first_fill_ms": 1785532504071,
+          "last_fill_ms": 1786034561295,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 12
+        }
+      },
+      "fills": 2096,
+      "postdelist": 92,
+      "prelaunch": 64,
+      "unknown_launch": 0,
+      "unknown_market": 14
+    },
+    "W#201": {
+      "coins": {
+        "PUMP": {
+          "fills": 8,
+          "first_fill_ms": 1787464438791,
+          "last_fill_ms": 1787617450049,
+          "postdelist": 8,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kNEIRO": {
+          "fills": 14,
+          "first_fill_ms": 1787335094529,
+          "last_fill_ms": 1787375450760,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 14
+        }
+      },
+      "fills": 3767,
+      "postdelist": 8,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 14
+    },
+    "W#203": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 183,
+          "first_fill_ms": 1783773000485,
+          "last_fill_ms": 1787781804915,
+          "postdelist": 0,
+          "prelaunch": 90,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 91,
+          "first_fill_ms": 1784492059434,
+          "last_fill_ms": 1788205026624,
+          "postdelist": 91,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kBONK": {
+          "fills": 9,
+          "first_fill_ms": 1778614893062,
+          "last_fill_ms": 1778617873242,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 9
+        },
+        "kPEPE": {
+          "fills": 6,
+          "first_fill_ms": 1777988607524,
+          "last_fill_ms": 1785167726734,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 6
+        }
+      },
+      "fills": 1109,
+      "postdelist": 91,
+      "prelaunch": 90,
+      "unknown_launch": 0,
+      "unknown_market": 15
+    },
+    "W#206": {
+      "coins": {
+        "PUMP": {
+          "fills": 36,
+          "first_fill_ms": 1787762584373,
+          "last_fill_ms": 1787775690304,
+          "postdelist": 36,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PURR": {
+          "fills": 132,
+          "first_fill_ms": 1778067838558,
+          "last_fill_ms": 1779466391740,
+          "postdelist": 0,
+          "prelaunch": 132,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 4647,
+      "postdelist": 36,
+      "prelaunch": 132,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#209": {
+      "coins": {
+        "PUMP": {
+          "fills": 849,
+          "first_fill_ms": 1779280891076,
+          "last_fill_ms": 1784032425823,
+          "postdelist": 849,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PURR": {
+          "fills": 220,
+          "first_fill_ms": 1781284478019,
+          "last_fill_ms": 1781759310206,
+          "postdelist": 0,
+          "prelaunch": 220,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 45954,
+      "postdelist": 849,
+      "prelaunch": 220,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#210": {
+      "coins": {
+        "PUMP": {
+          "fills": 8,
+          "first_fill_ms": 1777860157900,
+          "last_fill_ms": 1777860180861,
+          "postdelist": 8,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 226,
+      "postdelist": 8,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#218": {
+      "coins": {
+        "PUMP": {
+          "fills": 32,
+          "first_fill_ms": 1779417197367,
+          "last_fill_ms": 1788156351498,
+          "postdelist": 32,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 985,
+      "postdelist": 32,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#220": {
+      "coins": {
+        "FET": {
+          "fills": 69,
+          "first_fill_ms": 1787247599000,
+          "last_fill_ms": 1787324719558,
+          "postdelist": 69,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 81,
+          "first_fill_ms": 1787156497000,
+          "last_fill_ms": 1787157317514,
+          "postdelist": 81,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "TON": {
+          "fills": 402,
+          "first_fill_ms": 1777944417052,
+          "last_fill_ms": 1781515366698,
+          "postdelist": 1,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 2615,
+      "postdelist": 151,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#221": {
+      "coins": {
+        "PUMP": {
+          "fills": 15,
+          "first_fill_ms": 1778092309381,
+          "last_fill_ms": 1787494850051,
+          "postdelist": 15,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 157,
+      "postdelist": 15,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#226": {
+      "coins": {
+        "PUMP": {
+          "fills": 5,
+          "first_fill_ms": 1787841629563,
+          "last_fill_ms": 1787841629563,
+          "postdelist": 5,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 378,
+      "postdelist": 5,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#23": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 55,
+          "first_fill_ms": 1784018921141,
+          "last_fill_ms": 1788206766841,
+          "postdelist": 0,
+          "prelaunch": 16,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 375,
+      "postdelist": 0,
+      "prelaunch": 16,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#234": {
+      "coins": {
+        "FET": {
+          "fills": 6,
+          "first_fill_ms": 1778051693116,
+          "last_fill_ms": 1785938388397,
+          "postdelist": 6,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "FTT": {
+          "fills": 1,
+          "first_fill_ms": 1779700428967,
+          "last_fill_ms": 1779700428967,
+          "postdelist": 1,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "IP": {
+          "fills": 1,
+          "first_fill_ms": 1782728601103,
+          "last_fill_ms": 1782728601103,
+          "postdelist": 1,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PURR": {
+          "fills": 13,
+          "first_fill_ms": 1778248492857,
+          "last_fill_ms": 1787313402342,
+          "postdelist": 0,
+          "prelaunch": 10,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kBONK": {
+          "fills": 2,
+          "first_fill_ms": 1778264751159,
+          "last_fill_ms": 1778264751159,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 2
+        },
+        "kLUNC": {
+          "fills": 8,
+          "first_fill_ms": 1777745861984,
+          "last_fill_ms": 1782319628832,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 8
+        },
+        "kNEIRO": {
+          "fills": 1,
+          "first_fill_ms": 1788133635855,
+          "last_fill_ms": 1788133635855,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 1
+        },
+        "kPEPE": {
+          "fills": 3,
+          "first_fill_ms": 1777820931717,
+          "last_fill_ms": 1783098702629,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 3
+        },
+        "kSHIB": {
+          "fills": 2,
+          "first_fill_ms": 1778264935005,
+          "last_fill_ms": 1778264937264,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 2
+        }
+      },
+      "fills": 1100,
+      "postdelist": 8,
+      "prelaunch": 10,
+      "unknown_launch": 0,
+      "unknown_market": 16
+    },
+    "W#244": {
+      "coins": {
+        "PUMP": {
+          "fills": 25,
+          "first_fill_ms": 1785359467337,
+          "last_fill_ms": 1785368810299,
+          "postdelist": 25,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 5184,
+      "postdelist": 25,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#245": {
+      "coins": {
+        "PUMP": {
+          "fills": 189,
+          "first_fill_ms": 1784501308637,
+          "last_fill_ms": 1787499163450,
+          "postdelist": 189,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kBONK": {
+          "fills": 2,
+          "first_fill_ms": 1778252235311,
+          "last_fill_ms": 1778640580600,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 2
+        },
+        "kPEPE": {
+          "fills": 15,
+          "first_fill_ms": 1785117946465,
+          "last_fill_ms": 1785167533927,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 15
+        },
+        "kSHIB": {
+          "fills": 14,
+          "first_fill_ms": 1785044800893,
+          "last_fill_ms": 1785117486019,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 14
+        }
+      },
+      "fills": 904,
+      "postdelist": 189,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 31
+    },
+    "W#255": {
+      "coins": {
+        "kPEPE": {
+          "fills": 59,
+          "first_fill_ms": 1778311414009,
+          "last_fill_ms": 1787299808442,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 59
+        }
+      },
+      "fills": 5392,
+      "postdelist": 0,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 59
+    },
+    "W#257": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 729,
+          "first_fill_ms": 1784094639457,
+          "last_fill_ms": 1785970540583,
+          "postdelist": 0,
+          "prelaunch": 728,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 819,
+          "first_fill_ms": 1778599541054,
+          "last_fill_ms": 1787663853198,
+          "postdelist": 819,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kBONK": {
+          "fills": 92,
+          "first_fill_ms": 1783361361570,
+          "last_fill_ms": 1783952000373,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 92
+        }
+      },
+      "fills": 4619,
+      "postdelist": 819,
+      "prelaunch": 728,
+      "unknown_launch": 0,
+      "unknown_market": 92
+    },
+    "W#262": {
+      "coins": {
+        "PUMP": {
+          "fills": 9,
+          "first_fill_ms": 1777715323311,
+          "last_fill_ms": 1778269027485,
+          "postdelist": 9,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 64,
+      "postdelist": 9,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#263": {
+      "coins": {
+        "PUMP": {
+          "fills": 46,
+          "first_fill_ms": 1787471718408,
+          "last_fill_ms": 1788185080118,
+          "postdelist": 46,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 2800,
+      "postdelist": 46,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#273": {
+      "coins": {
+        "PURR": {
+          "fills": 131,
+          "first_fill_ms": 1778013206916,
+          "last_fill_ms": 1782947013521,
+          "postdelist": 0,
+          "prelaunch": 131,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "TON": {
+          "fills": 441,
+          "first_fill_ms": 1777984074440,
+          "last_fill_ms": 1781515366698,
+          "postdelist": 1,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 5930,
+      "postdelist": 1,
+      "prelaunch": 131,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#277": {
+      "coins": {
+        "FET": {
+          "fills": 171,
+          "first_fill_ms": 1779548412479,
+          "last_fill_ms": 1785192016205,
+          "postdelist": 171,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "FTT": {
+          "fills": 8,
+          "first_fill_ms": 1778494110911,
+          "last_fill_ms": 1779700428967,
+          "postdelist": 8,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 3965,
+      "postdelist": 179,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#278": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 67,
+          "first_fill_ms": 1785873843614,
+          "last_fill_ms": 1787153254538,
+          "postdelist": 0,
+          "prelaunch": 11,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 185,
+          "first_fill_ms": 1784783949216,
+          "last_fill_ms": 1788175802612,
+          "postdelist": 185,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "TON": {
+          "fills": 9,
+          "first_fill_ms": 1781244363554,
+          "last_fill_ms": 1781515366698,
+          "postdelist": 1,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 2705,
+      "postdelist": 186,
+      "prelaunch": 11,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#280": {
+      "coins": {
+        "PUMP": {
+          "fills": 48,
+          "first_fill_ms": 1787438604760,
+          "last_fill_ms": 1788064476310,
+          "postdelist": 48,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 609,
+      "postdelist": 48,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#29": {
+      "coins": {
+        "PUMP": {
+          "fills": 964,
+          "first_fill_ms": 1787277167893,
+          "last_fill_ms": 1787889003575,
+          "postdelist": 964,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 7034,
+      "postdelist": 964,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#291": {
+      "coins": {
+        "PUMP": {
+          "fills": 152,
+          "first_fill_ms": 1777953934513,
+          "last_fill_ms": 1788197988184,
+          "postdelist": 152,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 624,
+      "postdelist": 152,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#296": {
+      "coins": {
+        "PUMP": {
+          "fills": 24,
+          "first_fill_ms": 1777770155278,
+          "last_fill_ms": 1787970448168,
+          "postdelist": 24,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 107,
+      "postdelist": 24,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#306": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 125,
+          "first_fill_ms": 1783857078422,
+          "last_fill_ms": 1787375513858,
+          "postdelist": 0,
+          "prelaunch": 83,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 74,
+          "first_fill_ms": 1785142216240,
+          "last_fill_ms": 1788180362062,
+          "postdelist": 74,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PURR": {
+          "fills": 5,
+          "first_fill_ms": 1780242745690,
+          "last_fill_ms": 1780255786120,
+          "postdelist": 0,
+          "prelaunch": 5,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kPEPE": {
+          "fills": 16,
+          "first_fill_ms": 1778434520156,
+          "last_fill_ms": 1787373274288,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 16
+        }
+      },
+      "fills": 2330,
+      "postdelist": 74,
+      "prelaunch": 88,
+      "unknown_launch": 0,
+      "unknown_market": 16
+    },
+    "W#307": {
+      "coins": {
+        "PUMP": {
+          "fills": 188,
+          "first_fill_ms": 1777869310013,
+          "last_fill_ms": 1787234129504,
+          "postdelist": 188,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 1019,
+      "postdelist": 188,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#308": {
+      "coins": {
+        "IP": {
+          "fills": 3,
+          "first_fill_ms": 1782415452952,
+          "last_fill_ms": 1782479980792,
+          "postdelist": 1,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 257,
+          "first_fill_ms": 1777872236046,
+          "last_fill_ms": 1788101751605,
+          "postdelist": 257,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 2035,
+      "postdelist": 258,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#315": {
+      "coins": {
+        "PUMP": {
+          "fills": 15,
+          "first_fill_ms": 1785877034868,
+          "last_fill_ms": 1785926013661,
+          "postdelist": 15,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 1298,
+      "postdelist": 15,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#318": {
+      "coins": {
+        "FET": {
+          "fills": 12,
+          "first_fill_ms": 1780187191451,
+          "last_fill_ms": 1780322086814,
+          "postdelist": 12,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "FTT": {
+          "fills": 48,
+          "first_fill_ms": 1778002076991,
+          "last_fill_ms": 1778720614006,
+          "postdelist": 48,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 58,
+          "first_fill_ms": 1784506478746,
+          "last_fill_ms": 1787416854992,
+          "postdelist": 58,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PURR": {
+          "fills": 25,
+          "first_fill_ms": 1780275448387,
+          "last_fill_ms": 1780279245823,
+          "postdelist": 0,
+          "prelaunch": 25,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "TST": {
+          "fills": 21,
+          "first_fill_ms": 1777820856498,
+          "last_fill_ms": 1777849769026,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 21
+        },
+        "kLUNC": {
+          "fills": 224,
+          "first_fill_ms": 1777648362472,
+          "last_fill_ms": 1778990955452,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 224
+        },
+        "kPEPE": {
+          "fills": 14,
+          "first_fill_ms": 1787347742262,
+          "last_fill_ms": 1787757411746,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 14
+        },
+        "kSHIB": {
+          "fills": 17,
+          "first_fill_ms": 1785034473756,
+          "last_fill_ms": 1785147169632,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 17
+        }
+      },
+      "fills": 2849,
+      "postdelist": 118,
+      "prelaunch": 25,
+      "unknown_launch": 0,
+      "unknown_market": 276
+    },
+    "W#322": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 21,
+          "first_fill_ms": 1783762685866,
+          "last_fill_ms": 1783764849779,
+          "postdelist": 0,
+          "prelaunch": 21,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 1333,
+          "first_fill_ms": 1786288211955,
+          "last_fill_ms": 1788213042937,
+          "postdelist": 1333,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PURR": {
+          "fills": 6,
+          "first_fill_ms": 1780258911043,
+          "last_fill_ms": 1780259073059,
+          "postdelist": 0,
+          "prelaunch": 6,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 7582,
+      "postdelist": 1333,
+      "prelaunch": 27,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#33": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 188,
+          "first_fill_ms": 1783751076747,
+          "last_fill_ms": 1784492015116,
+          "postdelist": 0,
+          "prelaunch": 188,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kBONK": {
+          "fills": 98,
+          "first_fill_ms": 1783361707316,
+          "last_fill_ms": 1787153558949,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 98
+        }
+      },
+      "fills": 649,
+      "postdelist": 0,
+      "prelaunch": 188,
+      "unknown_launch": 0,
+      "unknown_market": 98
+    },
+    "W#331": {
+      "coins": {
+        "PUMP": {
+          "fills": 168,
+          "first_fill_ms": 1778154502957,
+          "last_fill_ms": 1788167216773,
+          "postdelist": 168,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 751,
+      "postdelist": 168,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#332": {
+      "coins": {
+        "kBONK": {
+          "fills": 20,
+          "first_fill_ms": 1782248666139,
+          "last_fill_ms": 1787818187759,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 20
+        },
+        "kFLOKI": {
+          "fills": 69,
+          "first_fill_ms": 1778229609068,
+          "last_fill_ms": 1788065242804,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 69
+        },
+        "kPEPE": {
+          "fills": 64,
+          "first_fill_ms": 1777900640519,
+          "last_fill_ms": 1787808751771,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 64
+        },
+        "kSHIB": {
+          "fills": 21,
+          "first_fill_ms": 1778521559398,
+          "last_fill_ms": 1785165665428,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 21
+        }
+      },
+      "fills": 905,
+      "postdelist": 0,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 174
+    },
+    "W#336": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 413,
+          "first_fill_ms": 1783772180571,
+          "last_fill_ms": 1786558129390,
+          "postdelist": 0,
+          "prelaunch": 399,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "FET": {
+          "fills": 24,
+          "first_fill_ms": 1783024686212,
+          "last_fill_ms": 1783150762687,
+          "postdelist": 24,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 31,
+          "first_fill_ms": 1781032916227,
+          "last_fill_ms": 1785983105573,
+          "postdelist": 31,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PURR": {
+          "fills": 310,
+          "first_fill_ms": 1779604986308,
+          "last_fill_ms": 1787528298796,
+          "postdelist": 0,
+          "prelaunch": 284,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 5554,
+      "postdelist": 55,
+      "prelaunch": 683,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#338": {
+      "coins": {
+        "PUMP": {
+          "fills": 445,
+          "first_fill_ms": 1787222032565,
+          "last_fill_ms": 1788201722169,
+          "postdelist": 445,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 1930,
+      "postdelist": 445,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#340": {
+      "coins": {
+        "kSHIB": {
+          "fills": 16,
+          "first_fill_ms": 1785042569219,
+          "last_fill_ms": 1785253853391,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 16
+        }
+      },
+      "fills": 154,
+      "postdelist": 0,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 16
+    },
+    "W#344": {
+      "coins": {
+        "PUMP": {
+          "fills": 11,
+          "first_fill_ms": 1777732846920,
+          "last_fill_ms": 1777732846920,
+          "postdelist": 11,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kBONK": {
+          "fills": 81,
+          "first_fill_ms": 1786133532502,
+          "last_fill_ms": 1787021509584,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 81
+        },
+        "kPEPE": {
+          "fills": 28,
+          "first_fill_ms": 1778064567687,
+          "last_fill_ms": 1778120818257,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 28
+        }
+      },
+      "fills": 2827,
+      "postdelist": 11,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 109
+    },
+    "W#350": {
+      "coins": {
+        "PUMP": {
+          "fills": 95,
+          "first_fill_ms": 1786536032710,
+          "last_fill_ms": 1788130896371,
+          "postdelist": 95,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 6273,
+      "postdelist": 95,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#353": {
+      "coins": {
+        "PUMP": {
+          "fills": 119,
+          "first_fill_ms": 1784530583002,
+          "last_fill_ms": 1787692928781,
+          "postdelist": 119,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kPEPE": {
+          "fills": 45,
+          "first_fill_ms": 1777963748003,
+          "last_fill_ms": 1787692088924,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 45
+        }
+      },
+      "fills": 430,
+      "postdelist": 119,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 45
+    },
+    "W#355": {
+      "coins": {
+        "PUMP": {
+          "fills": 12,
+          "first_fill_ms": 1785582791530,
+          "last_fill_ms": 1787527692772,
+          "postdelist": 12,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 231,
+      "postdelist": 12,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#358": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 957,
+          "first_fill_ms": 1783746797542,
+          "last_fill_ms": 1786076101076,
+          "postdelist": 0,
+          "prelaunch": 923,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 2021,
+      "postdelist": 0,
+      "prelaunch": 923,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#36": {
+      "coins": {
+        "PUMP": {
+          "fills": 90,
+          "first_fill_ms": 1785934112070,
+          "last_fill_ms": 1787529881348,
+          "postdelist": 90,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 596,
+      "postdelist": 90,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#360": {
+      "coins": {
+        "kBONK": {
+          "fills": 112,
+          "first_fill_ms": 1787778184370,
+          "last_fill_ms": 1787827948711,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 112
+        }
+      },
+      "fills": 2913,
+      "postdelist": 0,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 112
+    },
+    "W#361": {
+      "coins": {
+        "PUMP": {
+          "fills": 14,
+          "first_fill_ms": 1781620305514,
+          "last_fill_ms": 1788148808164,
+          "postdelist": 14,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 1191,
+      "postdelist": 14,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#368": {
+      "coins": {
+        "PUMP": {
+          "fills": 19,
+          "first_fill_ms": 1787367055824,
+          "last_fill_ms": 1787663657145,
+          "postdelist": 19,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 145,
+      "postdelist": 19,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#371": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 1613,
+          "first_fill_ms": 1783867500464,
+          "last_fill_ms": 1788218106044,
+          "postdelist": 0,
+          "prelaunch": 507,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 513,
+          "first_fill_ms": 1787491170582,
+          "last_fill_ms": 1788129558055,
+          "postdelist": 513,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PURR": {
+          "fills": 147,
+          "first_fill_ms": 1780437233212,
+          "last_fill_ms": 1787671134119,
+          "postdelist": 0,
+          "prelaunch": 44,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 3292,
+      "postdelist": 513,
+      "prelaunch": 551,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#40": {
+      "coins": {
+        "PUMP": {
+          "fills": 93,
+          "first_fill_ms": 1785769001780,
+          "last_fill_ms": 1788184986832,
+          "postdelist": 93,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 4476,
+      "postdelist": 93,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#45": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 39,
+          "first_fill_ms": 1784134795593,
+          "last_fill_ms": 1784181041338,
+          "postdelist": 0,
+          "prelaunch": 39,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 1809,
+      "postdelist": 0,
+      "prelaunch": 39,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#47": {
+      "coins": {
+        "PUMP": {
+          "fills": 57,
+          "first_fill_ms": 1787592927217,
+          "last_fill_ms": 1787819051082,
+          "postdelist": 57,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 4620,
+      "postdelist": 57,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#49": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 127,
+          "first_fill_ms": 1784141715902,
+          "last_fill_ms": 1784753287352,
+          "postdelist": 0,
+          "prelaunch": 127,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PONS": {
+          "fills": 97,
+          "first_fill_ms": 1788159715578,
+          "last_fill_ms": 1788197434619,
+          "postdelist": 0,
+          "prelaunch": 22,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 3625,
+      "postdelist": 0,
+      "prelaunch": 149,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#51": {
+      "coins": {
+        "kPEPE": {
+          "fills": 22,
+          "first_fill_ms": 1787375611716,
+          "last_fill_ms": 1787685243685,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 22
+        }
+      },
+      "fills": 1508,
+      "postdelist": 0,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 22
+    },
+    "W#52": {
+      "coins": {
+        "kPEPE": {
+          "fills": 16,
+          "first_fill_ms": 1787752514345,
+          "last_fill_ms": 1787829063423,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 16
+        }
+      },
+      "fills": 2439,
+      "postdelist": 0,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 16
+    },
+    "W#55": {
+      "coins": {
+        "PUMP": {
+          "fills": 754,
+          "first_fill_ms": 1784497315669,
+          "last_fill_ms": 1788158386315,
+          "postdelist": 754,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 1806,
+      "postdelist": 754,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#56": {
+      "coins": {
+        "PUMP": {
+          "fills": 94,
+          "first_fill_ms": 1787811107407,
+          "last_fill_ms": 1788167240186,
+          "postdelist": 94,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 1657,
+      "postdelist": 94,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#59": {
+      "coins": {
+        "PUMP": {
+          "fills": 14,
+          "first_fill_ms": 1786950426355,
+          "last_fill_ms": 1787533789583,
+          "postdelist": 14,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kPEPE": {
+          "fills": 10,
+          "first_fill_ms": 1778674934766,
+          "last_fill_ms": 1778675220074,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 10
+        }
+      },
+      "fills": 1702,
+      "postdelist": 14,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 10
+    },
+    "W#60": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 186,
+          "first_fill_ms": 1784013483067,
+          "last_fill_ms": 1787599346816,
+          "postdelist": 0,
+          "prelaunch": 95,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 3033,
+      "postdelist": 0,
+      "prelaunch": 95,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#64": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 549,
+          "first_fill_ms": 1783767171191,
+          "last_fill_ms": 1787934606684,
+          "postdelist": 0,
+          "prelaunch": 177,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "FET": {
+          "fills": 11,
+          "first_fill_ms": 1778070031684,
+          "last_fill_ms": 1778073340750,
+          "postdelist": 11,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 17,
+          "first_fill_ms": 1779402771424,
+          "last_fill_ms": 1787524627861,
+          "postdelist": 17,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kBONK": {
+          "fills": 24,
+          "first_fill_ms": 1778049858876,
+          "last_fill_ms": 1779299298605,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 24
+        },
+        "kFLOKI": {
+          "fills": 29,
+          "first_fill_ms": 1778066734501,
+          "last_fill_ms": 1787521106717,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 29
+        },
+        "kPEPE": {
+          "fills": 39,
+          "first_fill_ms": 1778018240141,
+          "last_fill_ms": 1787577788078,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 39
+        }
+      },
+      "fills": 2313,
+      "postdelist": 28,
+      "prelaunch": 177,
+      "unknown_launch": 0,
+      "unknown_market": 92
+    },
+    "W#68": {
+      "coins": {
+        "TON": {
+          "fills": 14,
+          "first_fill_ms": 1780783253462,
+          "last_fill_ms": 1781515366698,
+          "postdelist": 1,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kPEPE": {
+          "fills": 3,
+          "first_fill_ms": 1780524415016,
+          "last_fill_ms": 1780536112608,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 3
+        }
+      },
+      "fills": 662,
+      "postdelist": 1,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 3
+    },
+    "W#70": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 17,
+          "first_fill_ms": 1784277801079,
+          "last_fill_ms": 1787582455334,
+          "postdelist": 0,
+          "prelaunch": 16,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "FET": {
+          "fills": 217,
+          "first_fill_ms": 1780471963634,
+          "last_fill_ms": 1785864683440,
+          "postdelist": 217,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "LAYER": {
+          "fills": 21,
+          "first_fill_ms": 1778400451958,
+          "last_fill_ms": 1778502722363,
+          "postdelist": 21,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 232,
+          "first_fill_ms": 1780425986202,
+          "last_fill_ms": 1785864782628,
+          "postdelist": 232,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "TON": {
+          "fills": 88,
+          "first_fill_ms": 1777958092935,
+          "last_fill_ms": 1781515366698,
+          "postdelist": 1,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "TST": {
+          "fills": 34,
+          "first_fill_ms": 1777886119623,
+          "last_fill_ms": 1779478284140,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 34
+        },
+        "kLUNC": {
+          "fills": 13,
+          "first_fill_ms": 1777707077963,
+          "last_fill_ms": 1785865256715,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 13
+        }
+      },
+      "fills": 6932,
+      "postdelist": 471,
+      "prelaunch": 16,
+      "unknown_launch": 0,
+      "unknown_market": 47
+    },
+    "W#75": {
+      "coins": {
+        "PUMP": {
+          "fills": 21,
+          "first_fill_ms": 1784749064746,
+          "last_fill_ms": 1787428566495,
+          "postdelist": 21,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 185,
+      "postdelist": 21,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#81": {
+      "coins": {
+        "PUMP": {
+          "fills": 33,
+          "first_fill_ms": 1788075033959,
+          "last_fill_ms": 1788145732826,
+          "postdelist": 33,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 971,
+      "postdelist": 33,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#86": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 482,
+          "first_fill_ms": 1783775728172,
+          "last_fill_ms": 1787101139295,
+          "postdelist": 0,
+          "prelaunch": 173,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 16584,
+      "postdelist": 0,
+      "prelaunch": 173,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#93": {
+      "coins": {
+        "PUMP": {
+          "fills": 13,
+          "first_fill_ms": 1787597650382,
+          "last_fill_ms": 1788135924759,
+          "postdelist": 13,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 95,
+      "postdelist": 13,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#97": {
+      "coins": {
+        "PUMP": {
+          "fills": 1364,
+          "first_fill_ms": 1780339124662,
+          "last_fill_ms": 1788210171959,
+          "postdelist": 1364,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kSHIB": {
+          "fills": 106,
+          "first_fill_ms": 1785094651723,
+          "last_fill_ms": 1785101618906,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 106
+        }
+      },
+      "fills": 19500,
+      "postdelist": 1364,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 106
+    },
+    "W#99": {
+      "coins": {
+        "kPEPE": {
+          "fills": 3,
+          "first_fill_ms": 1783270960240,
+          "last_fill_ms": 1783715678493,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 3
+        }
+      },
+      "fills": 80,
+      "postdelist": 0,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 3
+    },
+    "W026": {
+      "coins": {
+        "PUMP": {
+          "fills": 63,
+          "first_fill_ms": 1777875186333,
+          "last_fill_ms": 1788144527927,
+          "postdelist": 63,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "TON": {
+          "fills": 219,
+          "first_fill_ms": 1777999957624,
+          "last_fill_ms": 1781515366698,
+          "postdelist": 1,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 1828,
+      "postdelist": 64,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W028": {
+      "coins": {
+        "FET": {
+          "fills": 25,
+          "first_fill_ms": 1779603160665,
+          "last_fill_ms": 1779610999016,
+          "postdelist": 25,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 629,
+      "postdelist": 25,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W030": {
+      "coins": {
+        "kPEPE": {
+          "fills": 12,
+          "first_fill_ms": 1778043803282,
+          "last_fill_ms": 1778164669272,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 12
+        }
+      },
+      "fills": 1327,
+      "postdelist": 0,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 12
+    },
+    "W032": {
+      "coins": {
+        "PUMP": {
+          "fills": 6,
+          "first_fill_ms": 1787157529414,
+          "last_fill_ms": 1787229388793,
+          "postdelist": 6,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "TST": {
+          "fills": 2,
+          "first_fill_ms": 1777817142966,
+          "last_fill_ms": 1777817524586,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 2
+        },
+        "kFLOKI": {
+          "fills": 6,
+          "first_fill_ms": 1787157544028,
+          "last_fill_ms": 1787221331961,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 6
+        },
+        "kPEPE": {
+          "fills": 8,
+          "first_fill_ms": 1778265424835,
+          "last_fill_ms": 1787640873202,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 8
+        },
+        "kSHIB": {
+          "fills": 14,
+          "first_fill_ms": 1787485047728,
+          "last_fill_ms": 1787640860442,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 14
+        }
+      },
+      "fills": 698,
+      "postdelist": 6,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 30
+    },
+    "W033": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 40,
+          "first_fill_ms": 1784246396126,
+          "last_fill_ms": 1784485826598,
+          "postdelist": 0,
+          "prelaunch": 40,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 17,
+          "first_fill_ms": 1782407481241,
+          "last_fill_ms": 1787591170343,
+          "postdelist": 17,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PURR": {
+          "fills": 860,
+          "first_fill_ms": 1777638427616,
+          "last_fill_ms": 1788110829964,
+          "postdelist": 0,
+          "prelaunch": 547,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kBONK": {
+          "fills": 10,
+          "first_fill_ms": 1784459486480,
+          "last_fill_ms": 1787666130465,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 10
+        }
+      },
+      "fills": 1663,
+      "postdelist": 17,
+      "prelaunch": 587,
+      "unknown_launch": 0,
+      "unknown_market": 10
+    },
+    "W035": {
+      "coins": {
+        "FET": {
+          "fills": 1,
+          "first_fill_ms": 1788044294230,
+          "last_fill_ms": 1788044294230,
+          "postdelist": 1,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 70,
+          "first_fill_ms": 1778127118683,
+          "last_fill_ms": 1788202151315,
+          "postdelist": 70,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kBONK": {
+          "fills": 3,
+          "first_fill_ms": 1787338683148,
+          "last_fill_ms": 1788036283506,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 3
+        },
+        "kFLOKI": {
+          "fills": 8,
+          "first_fill_ms": 1777930305863,
+          "last_fill_ms": 1778915736519,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 8
+        }
+      },
+      "fills": 437,
+      "postdelist": 71,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 11
+    },
+    "W036": {
+      "coins": {
+        "FET": {
+          "fills": 3,
+          "first_fill_ms": 1783199924516,
+          "last_fill_ms": 1784406524670,
+          "postdelist": 3,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PUMP": {
+          "fills": 6,
+          "first_fill_ms": 1784575128318,
+          "last_fill_ms": 1785874027507,
+          "postdelist": 6,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kBONK": {
+          "fills": 12,
+          "first_fill_ms": 1784406614957,
+          "last_fill_ms": 1784775848240,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 12
+        },
+        "kPEPE": {
+          "fills": 10,
+          "first_fill_ms": 1787420908835,
+          "last_fill_ms": 1787756701506,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 10
+        }
+      },
+      "fills": 300,
+      "postdelist": 9,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 22
+    },
+    "W083": {
+      "coins": {
+        "PUMP": {
+          "fills": 11,
+          "first_fill_ms": 1787996209394,
+          "last_fill_ms": 1788135180227,
+          "postdelist": 11,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 1748,
+      "postdelist": 11,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "Whale_0x5f94": {
+      "coins": {
+        "PUMP": {
+          "fills": 61,
+          "first_fill_ms": 1787375456572,
+          "last_fill_ms": 1787375459843,
+          "postdelist": 61,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kPEPE": {
+          "fills": 145,
+          "first_fill_ms": 1781539580303,
+          "last_fill_ms": 1787167816238,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 145
+        }
+      },
+      "fills": 8862,
+      "postdelist": 61,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 145
+    }
+  },
+  "archive_sha256": "bd2badb79973aaf4be37aebaacafe1e484628359e947fa9e51a7ec0f84f33a55",
+  "bybit_catalog_sha256": "38f6ce0722956ed006a464b5c43a67cee703cb008290aa5d0a323e5913be701a",
+  "current_roster_sha256": "8b61701784f8aa8576381456e484e13dd7f73f6ccab93929b478489f88b0cd02",
+  "finalist_exposure": {
+    "W#1": {
+      "coins": {},
+      "fills": 329,
+      "postdelist": 0,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#111": {
+      "coins": {
+        "CASHCAT": {
+          "fills": 32,
+          "first_fill_ms": 1783748344889,
+          "last_fill_ms": 1784475471479,
+          "postdelist": 0,
+          "prelaunch": 32,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "PURR": {
+          "fills": 71,
+          "first_fill_ms": 1780559999779,
+          "last_fill_ms": 1787376589788,
+          "postdelist": 0,
+          "prelaunch": 9,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        }
+      },
+      "fills": 909,
+      "postdelist": 0,
+      "prelaunch": 41,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#174": {
+      "coins": {
+        "kSHIB": {
+          "fills": 13,
+          "first_fill_ms": 1785072028026,
+          "last_fill_ms": 1785324037838,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 13
+        }
+      },
+      "fills": 1103,
+      "postdelist": 0,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 13
+    },
+    "W#179": {
+      "coins": {},
+      "fills": 3704,
+      "postdelist": 0,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#252": {
+      "coins": {},
+      "fills": 164,
+      "postdelist": 0,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "W#255": {
+      "coins": {
+        "kPEPE": {
+          "fills": 59,
+          "first_fill_ms": 1778311414009,
+          "last_fill_ms": 1787299808442,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 59
+        }
+      },
+      "fills": 5392,
+      "postdelist": 0,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 59
+    },
+    "W#264": {
+      "coins": {},
+      "fills": 409,
+      "postdelist": 0,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 0
+    },
+    "Whale_0x5f94": {
+      "coins": {
+        "PUMP": {
+          "fills": 61,
+          "first_fill_ms": 1787375456572,
+          "last_fill_ms": 1787375459843,
+          "postdelist": 61,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 0
+        },
+        "kPEPE": {
+          "fills": 145,
+          "first_fill_ms": 1781539580303,
+          "last_fill_ms": 1787167816238,
+          "postdelist": 0,
+          "prelaunch": 0,
+          "unknown_launch": 0,
+          "unknown_market": 145
+        }
+      },
+      "fills": 8862,
+      "postdelist": 61,
+      "prelaunch": 0,
+      "unknown_launch": 0,
+      "unknown_market": 145
+    }
+  },
+  "finalist_wallets": [
+    "W#1",
+    "W#111",
+    "W#174",
+    "W#179",
+    "W#252",
+    "W#255",
+    "W#264",
+    "Whale_0x5f94"
+  ],
+  "historical_identity_addresses_digest_at_freeze": "UNPROVEN_OLD_ROSTER_SHA_EXCLUDES_ADDRESSES",
+  "historical_label_reconciliation": [
+    {
+      "current_alias": "W111",
+      "original_alias": "W#111"
+    },
+    {
+      "current_alias": "W152",
+      "original_alias": "W#152"
+    },
+    {
+      "current_alias": "W312",
+      "original_alias": "W#312"
+    }
+  ],
+  "instrument_source": "CURRENT_TRADING_AND_CLOSED_AT_AUDIT_TIME",
+  "price_source": "HYPERLIQUID_LOCAL_1M_UNCHANGED",
+  "roster_sha256": "c4abfa90556928fd9abe7387a7853078d6e73ed6ecf595eeaa6ff5a19f2433fd",
+  "schema": "cft_train_bybit_launch_screen_v1",
+  "status": "RETROSPECTIVE_LISTING_SCREEN_NOT_PIT_SOURCE",
+  "totals": {
+    "fills": 604957,
+    "postdelist": 15301,
+    "prelaunch": 6854,
+    "unknown_launch": 0,
+    "unknown_market": 2132
+  },
+  "trade_authorized": false,
+  "train_window": [
+    "2026-05-01T00:00:00Z",
+    "2026-09-01T00:00:00Z"
+  ],
+  "unproven": [
+    "HISTORICAL_BYBIT_LOT_PARAMS",
+    "HISTORICAL_TEMPORARY_SUSPENSIONS",
+    "HISTORICAL_FIRST_KNOWN_SOURCE_RECEIPTS",
+    "PIT_HISTORICAL_REGISTRY"
+  ],
+  "wallets_with_fills": 194
+}

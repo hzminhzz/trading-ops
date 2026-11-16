@@ -1,0 +1,587 @@
+{
+  "broker_mutations": false,
+  "bybit_public": {
+    "collected_utc": "2026-11-16T14:52:45.785070+00:00",
+    "historical_rulebook_proof": "UNPROVEN_LIVE_INSTRUMENT_SNAPSHOT_ONLY",
+    "linear_usdt_perpetuals": 1142,
+    "public_metadata_sha256": "38f6ce0722956ed006a464b5c43a67cee703cb008290aa5d0a323e5913be701a",
+    "status_pages": {
+      "Closed": 2,
+      "Trading": 1
+    }
+  },
+  "bybit_symbol_evidence": {
+    "AAVEUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.01",
+        "qty_step": "0.01"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1620897660000
+    },
+    "ADAUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "1",
+        "qty_step": "1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1610668800000
+    },
+    "AEROUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "1",
+        "qty_step": "1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1721034308000
+    },
+    "APTUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.01",
+        "qty_step": "0.01"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1666107272000
+    },
+    "ASTERUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "1",
+        "qty_step": "1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1758267993000
+    },
+    "AVAXUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.1",
+        "qty_step": "0.1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1631664000000
+    },
+    "BCHUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.01",
+        "qty_step": "0.01"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1514764800000
+    },
+    "BNBUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.01",
+        "qty_step": "0.01"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1624951080000
+    },
+    "BTCUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.001",
+        "qty_step": "0.001"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1584230400000
+    },
+    "CASHCATUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "10",
+        "qty_step": "10"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1785924043000
+    },
+    "CRVUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.1",
+        "qty_step": "0.1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1635120000000
+    },
+    "DOGEUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "1",
+        "qty_step": "1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1622630640000
+    },
+    "DOTUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.1",
+        "qty_step": "0.1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1616060040000
+    },
+    "EIGENUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "1",
+        "qty_step": "1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1722915813000
+    },
+    "ETHFIUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.1",
+        "qty_step": "0.1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1710767803000
+    },
+    "ETHUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.01",
+        "qty_step": "0.01"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1615766400000
+    },
+    "GRASSUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "1",
+        "qty_step": "1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1728987123000
+    },
+    "HYPEUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.01",
+        "qty_step": "0.01"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1733316740000
+    },
+    "JTOUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.1",
+        "qty_step": "0.1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1701978619000
+    },
+    "LINKUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.1",
+        "qty_step": "0.1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1514764800000
+    },
+    "LITUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.1",
+        "qty_step": "0.1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1767089298000
+    },
+    "LTCUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.1",
+        "qty_step": "0.1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1514764800000
+    },
+    "MORPHOUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "1",
+        "qty_step": "1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1732264559000
+    },
+    "NEARUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.1",
+        "qty_step": "0.1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1633910400000
+    },
+    "ONDOUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "1",
+        "qty_step": "1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1705919392000
+    },
+    "OPUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.1",
+        "qty_step": "0.1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1654059063000
+    },
+    "PURRUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.1",
+        "qty_step": "0.1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1783676933000
+    },
+    "SEIUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "1",
+        "qty_step": "1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1692156527000
+    },
+    "SOLUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.1",
+        "qty_step": "0.1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1634256000000
+    },
+    "STRKUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.1",
+        "qty_step": "0.1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1708436526000
+    },
+    "SUIUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "10",
+        "qty_step": "10"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1683029724000
+    },
+    "TAOUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.001",
+        "qty_step": "0.001"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1706601081000
+    },
+    "TRUMPUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.1",
+        "qty_step": "0.1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1737181907000
+    },
+    "TRXUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "1",
+        "qty_step": "1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1628726400000
+    },
+    "UNIUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.1",
+        "qty_step": "0.1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1638230400000
+    },
+    "WLFIUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "1",
+        "qty_step": "1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1755939756000
+    },
+    "XLMUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "1",
+        "qty_step": "1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1628726400000
+    },
+    "XMRUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.01",
+        "qty_step": "0.01"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1640143015000
+    },
+    "XPLUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "1",
+        "qty_step": "1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1755854834000
+    },
+    "XRPUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.1",
+        "qty_step": "0.1"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1620898440000
+    },
+    "ZECUSDT": {
+      "at_cutoff_status": "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE",
+      "current_minimum_not_historical": {
+        "min_notional": "5",
+        "min_qty": "0.01",
+        "qty_step": "0.01"
+      },
+      "delivery_ms": null,
+      "kline_request_error": null,
+      "last_completed_kline_open_ms": 1788217200000,
+      "launch_ms": 1637712000000
+    }
+  },
+  "bybit_symbol_reconstruction_counts": {
+    "RECONSTRUCTED_HISTORICAL_TRADING_EVIDENCE": 41
+  },
+  "generated_utc": "2026-11-16T14:52:45.781131+00:00",
+  "historical_asof_cutoff": "2026-09-01T00:00:00+00:00",
+  "historical_bybit_lot_rules": "UNPROVEN_PRESENT_DAY_VALUES_NOT_HISTORICAL",
+  "historical_follower_pit_certified": false,
+  "historical_oos_independent": false,
+  "historical_original_first_known_status": "NO_PRE_CUTOFF_CWSA_RECEIPTS",
+  "historical_reconstructed_trade_data": "RETROSPECTIVE_RESERVOIR_NOT_RECEIPT_PROOF",
+  "historical_registry_roster_count": 0,
+  "historical_registry_roster_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "historical_registry_status": "BLOCKED_NO_ASOF_COHORT",
+  "historical_source_clocks": {
+    "earliest_published_ms": 1794460227025,
+    "earliest_received_ms": 1794460227021,
+    "journal_outcomes": 17766,
+    "outcomes_received_by_cutoff": 0,
+    "pre_cutoff_receipt_proven": false,
+    "receipt_scope": "CHAPTER2_ONLY_NOT_GLOBAL_WALLET_COVERAGE"
+  },
+  "historical_train_only_top30_no_current_value_gate": [
+    "W#94",
+    "W#294",
+    "W#179",
+    "M11",
+    "W#283",
+    "W#1",
+    "W#360",
+    "W#252",
+    "W#174",
+    "W#111",
+    "W#345",
+    "W#80",
+    "W#264",
+    "W#26",
+    "M22",
+    "W#46",
+    "W#263",
+    "W#350",
+    "W#247",
+    "W#229",
+    "W#143",
+    "W#39",
+    "M06",
+    "M18",
+    "W#150",
+    "W#3",
+    "W#68",
+    "W015",
+    "W#201",
+    "W#58"
+  ],
+  "historically_profitable_operationally_ineligible": 24,
+  "live_broker_credentials_accessed": false,
+  "previous_oos_exposure": "SEPTEMBER_OCTOBER_WAS_ALREADY_OPENED",
+  "prior_freeze_sha256": "4f9af9e21f90d755850725a3b4bb75cf92762eb811bb4748d35a77bcf1b377f4",
+  "prospective_asof_registry_count": 195,
+  "prospective_asof_registry_sha256": "a4000673c045bb70105d215d3334af5bd2d74293f01035edbb8532e347725b43",
+  "qualification": "BLOCKED_HISTORICAL_PIT_AND_INDEPENDENT_OOS",
+  "registry_receipt_census": {
+    "monitoring": {
+      "count": 329,
+      "earliest_known_at": "2026-11-04T09:36:57.574969+00:00"
+    },
+    "monitoring_history": {
+      "count": 909,
+      "earliest_known_at": "2026-11-04T03:00:22.406066+00:00"
+    },
+    "research_selections": {
+      "count": 10,
+      "earliest_known_at": "2026-11-04T09:06:33+00:00"
+    },
+    "wallet_aliases": {
+      "count": 187,
+      "earliest_known_at": "2026-11-04T02:49:59.638127+00:00"
+    }
+  },
+  "schema": "cft_pit_evidence_audit_v1",
+  "train_wallets_financially_replayed": 128
+}
