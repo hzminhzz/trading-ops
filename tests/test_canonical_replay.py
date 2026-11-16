@@ -336,3 +336,57 @@ def test_load_registry_universe_queries_all_configured_non_excluded(tmp_path: Pa
     records_with_ref, sha2 = cr.load_registry_universe(db_path, include_aliases=("UNCFG",))
     assert [r.wallet_id for r in records_with_ref] == [1, 3, 4]
     assert sha1 != sha2
+
+
+def test_guardian_min_trade_notional_usd_skips_small_deltas_but_allows_full_close() -> None:
+    n = 8
+    grid = _grid_ms(n)
+    t_open = np.full((1, n), 100.0)
+    m_close = np.full((1, n), 100.0)
+
+    # Bar 1: $10 open (< $15) -> skipped when min_trade_notional_usd=15
+    # Bar 2: $20 open (>= $15) -> executed
+    # Bar 3: $25 scale (+$5 delta < $15) -> skipped, stays at $20
+    # Bar 4: target stays 0.25 (still +$5 delta < $15 for deadband), price rises to 110 -> PnL on 0.20 = +$2.00, vs +$2.50 without deadband
+    # Bar 5: full close to 0.0 -> bypasses deadband and closes cleanly
+    targets = np.array([[0.0, 0.10, 0.20, 0.25, 0.25, 0.0, 0.0, 0.0]], dtype=np.float64)
+    m_close[0, 4:] = 110.0
+    t_open[0, 5:] = 110.0
+
+    spec_deadband = cr.GuardianSpec(
+        profit_target=50_000.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=50_000.0,
+        cost_bps=0.0,
+        min_trade_notional_usd=15.0,
+    )
+    res_db, _ = cr.simulate_guardian_challenge(["BTC"], targets, t_open, m_close, grid, spec_deadband)
+
+    # Bar 1 skipped (0.0); Bar 2 fills 0.20 ($20); Bar 3 skipped (stays 0.20);
+    # Bar 4 marks to 110 (+$2.00); Bar 5 closes 0.20 at 110 (no further PnL).
+    assert res_db.step_pnl[1] == 0.0
+    assert res_db.step_pnl[3] == 0.0
+    assert res_db.full_window_net_usd == pytest.approx(2.0, abs=1e-9)
+
+    # Compare with default min_trade_notional_usd=0.0 (all deltas execute, including Bar 3 0.25 -> +$2.50)
+    spec_default = cr.GuardianSpec(
+        profit_target=50_000.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=50_000.0,
+        cost_bps=0.0,
+    )
+    res_raw, _ = cr.simulate_guardian_challenge(["BTC"], targets, t_open, m_close, grid, spec_default)
+    assert res_raw.full_window_net_usd == pytest.approx(2.5, abs=1e-9)
+
+    # Verify full close bypasses deadband even when closing position < $15 notional
+    small_close_targets = np.array([[0.0, 0.20, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], dtype=np.float64)
+    t_drop = np.full((1, n), 100.0)
+    m_drop = np.full((1, n), 100.0)
+    m_drop[0, 2:] = 50.0
+    t_drop[0, 2:] = 50.0  # closing 0.20 at $50 = $10 notional (< $15), must still close!
+    m_drop[0, 4:] = 10.0
+    res_close, _ = cr.simulate_guardian_challenge(["BTC"], small_close_targets, t_drop, m_drop, grid, spec_deadband)
+    assert res_close.step_pnl[4] == 0.0
+    assert res_close.full_window_net_usd == pytest.approx(-10.0, abs=1e-9)

@@ -98,6 +98,7 @@ class GuardianSpec:
     reset_utc_hour: int = 0
     reset_utc_minute: int = 5
     reenter_after_sweep: Literal["new_only", "immediate_target"] = "new_only"
+    min_trade_notional_usd: float = 0.0
 
 
 @dataclass
@@ -644,6 +645,13 @@ def _execute_guardian_pass(
                 desired_c = want_c
 
             exec_px = t_c if np.isfinite(t_c) else m_c
+            if (
+                not blocked_until_reset
+                and spec.min_trade_notional_usd > 0.0
+                and abs(desired_c) > 1e-12
+                and abs(desired_c - cur) * exec_px < spec.min_trade_notional_usd
+            ):
+                desired_c = cur
             if np.isfinite(prev_m):
                 bar_pnl += cur * (exec_px - prev_m)
             bar_pnl += desired_c * (m_c - exec_px) - abs(desired_c - cur) * exec_px * cost_rate
