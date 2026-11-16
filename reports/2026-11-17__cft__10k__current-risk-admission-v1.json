@@ -1,0 +1,258 @@
+{
+  "current_admission_does_not_rewrite_oos": true,
+  "data_errors": {},
+  "frozen_source": "CFT_HYPERLIQUID_ONLY_V5",
+  "historical_evaluation": "SEPT_OCT_PREVIOUSLY_OPENED_RETROSPECTIVE",
+  "live_execution_authorized": false,
+  "obtained_at": "2026-11-16T17:16:07.734776+00:00",
+  "portfolios": [
+    {
+      "current_admission": "NO_GO",
+      "member_blockers": {
+        "W#280": [
+          "PERP_EQUITY_BELOW_MINIMUM"
+        ],
+        "W#94": [
+          "PERP_EQUITY_BELOW_MINIMUM",
+          "OPEN_LOSS_TO_EQUITY_EXCESSIVE"
+        ]
+      },
+      "train_rank": 1,
+      "wallet_aliases": [
+        "W#174",
+        "W#257",
+        "W#280",
+        "W#94"
+      ]
+    },
+    {
+      "current_admission": "NO_GO",
+      "member_blockers": {
+        "W#1": [
+          "OPEN_LOSS_TO_EQUITY_EXCESSIVE"
+        ],
+        "W#179": [
+          "OPEN_LOSS_TO_EQUITY_EXCESSIVE"
+        ],
+        "W#280": [
+          "PERP_EQUITY_BELOW_MINIMUM"
+        ]
+      },
+      "train_rank": 2,
+      "wallet_aliases": [
+        "W#1",
+        "W#174",
+        "W#179",
+        "W#280"
+      ]
+    },
+    {
+      "current_admission": "NO_GO",
+      "member_blockers": {
+        "W#1": [
+          "OPEN_LOSS_TO_EQUITY_EXCESSIVE"
+        ],
+        "W#94": [
+          "PERP_EQUITY_BELOW_MINIMUM",
+          "OPEN_LOSS_TO_EQUITY_EXCESSIVE"
+        ]
+      },
+      "train_rank": 3,
+      "wallet_aliases": [
+        "W#1",
+        "W#174",
+        "W#94",
+        "Whale_0x5f94"
+      ]
+    },
+    {
+      "current_admission": "NO_GO",
+      "member_blockers": {
+        "W#179": [
+          "OPEN_LOSS_TO_EQUITY_EXCESSIVE"
+        ]
+      },
+      "train_rank": 4,
+      "wallet_aliases": [
+        "W#174",
+        "W#179",
+        "W#257",
+        "Whale_0x5f94"
+      ]
+    }
+  ],
+  "research_policy": {
+    "leverage_review_multiple": 5.0,
+    "max_negative_unrealized_pnl_fraction_equity": 0.25,
+    "min_perp_account_equity_usd": 1000.0,
+    "recent_activity_lookback_days": 30
+  },
+  "risk_policy_is_deployment_authority": false,
+  "roster_alias_census_sha256": "00be969e7e0cc5b101f774e30aaf557507eb5b3c86da26bc00e5c0fae260455b",
+  "schema": "cft_current_admission_v1",
+  "selection_period": "MAY_AUG_TRAIN_2026",
+  "snapshots": {
+    "W#1": {
+      "account_scope": "PERP_MARGIN_NOT_COMBINED_SPOT",
+      "alias": "W#1",
+      "checks": [
+        "OPEN_LOSS_TO_EQUITY_EXCESSIVE"
+      ],
+      "closed_pnl_30d_usd_excl_funding": -3610.19,
+      "fills_30d_returned": 5,
+      "is_delayed_follower_pnl": false,
+      "latest_fill_at_ms": 1793936154811,
+      "notional_to_perp_equity": 5.56,
+      "observed_at": "2026-11-16T17:16:07.734776+00:00",
+      "open_loss_over_perp_equity": 1.1462,
+      "open_notional_usd": 405302.57,
+      "perp_equity_usd": 72891.19,
+      "position_count": 4,
+      "source": "OFFICIAL_HYPERLIQUID_PUBLIC_INFO",
+      "status": "CURRENT_RESEARCH_NO_GO",
+      "unrealized_pnl_usd": -83546.69,
+      "warnings": [
+        "HIGH_NOTIONAL_TO_PERP_EQUITY",
+        "ZERO_WITHDRAWABLE_WHILE_EXPOSED"
+      ],
+      "withdrawable_usd": 0.0
+    },
+    "W#174": {
+      "account_scope": "PERP_MARGIN_NOT_COMBINED_SPOT",
+      "alias": "W#174",
+      "checks": [],
+      "closed_pnl_30d_usd_excl_funding": 318.25,
+      "fills_30d_returned": 349,
+      "is_delayed_follower_pnl": false,
+      "latest_fill_at_ms": 1794701128164,
+      "notional_to_perp_equity": 0.0,
+      "observed_at": "2026-11-16T17:16:07.734776+00:00",
+      "open_loss_over_perp_equity": 0.0,
+      "open_notional_usd": 0.0,
+      "perp_equity_usd": 9487.45,
+      "position_count": 0,
+      "source": "OFFICIAL_HYPERLIQUID_PUBLIC_INFO",
+      "status": "CURRENT_RESEARCH_ADMISSION_PASS",
+      "unrealized_pnl_usd": 0,
+      "warnings": [
+        "NO_CURRENT_OPEN_PERP_POSITIONS"
+      ],
+      "withdrawable_usd": 9487.45
+    },
+    "W#179": {
+      "account_scope": "PERP_MARGIN_NOT_COMBINED_SPOT",
+      "alias": "W#179",
+      "checks": [
+        "OPEN_LOSS_TO_EQUITY_EXCESSIVE"
+      ],
+      "closed_pnl_30d_usd_excl_funding": 5391.23,
+      "fills_30d_returned": 902,
+      "is_delayed_follower_pnl": false,
+      "latest_fill_at_ms": 1794845715340,
+      "notional_to_perp_equity": 2.409,
+      "observed_at": "2026-11-16T17:16:07.734776+00:00",
+      "open_loss_over_perp_equity": 0.3371,
+      "open_notional_usd": 91512.0,
+      "perp_equity_usd": 37992.54,
+      "position_count": 2,
+      "source": "OFFICIAL_HYPERLIQUID_PUBLIC_INFO",
+      "status": "CURRENT_RESEARCH_NO_GO",
+      "unrealized_pnl_usd": -12806.12,
+      "warnings": [],
+      "withdrawable_usd": 28806.0
+    },
+    "W#257": {
+      "account_scope": "PERP_MARGIN_NOT_COMBINED_SPOT",
+      "alias": "W#257",
+      "checks": [],
+      "closed_pnl_30d_usd_excl_funding": 4633.87,
+      "fills_30d_returned": 435,
+      "is_delayed_follower_pnl": false,
+      "latest_fill_at_ms": 1794710342087,
+      "notional_to_perp_equity": 0.412,
+      "observed_at": "2026-11-16T17:16:07.734776+00:00",
+      "open_loss_over_perp_equity": 0.0053,
+      "open_notional_usd": 48501.42,
+      "perp_equity_usd": 117814.39,
+      "position_count": 4,
+      "source": "OFFICIAL_HYPERLIQUID_PUBLIC_INFO",
+      "status": "CURRENT_RESEARCH_ADMISSION_PASS",
+      "unrealized_pnl_usd": -621.6,
+      "warnings": [],
+      "withdrawable_usd": 7.94
+    },
+    "W#280": {
+      "account_scope": "PERP_MARGIN_NOT_COMBINED_SPOT",
+      "alias": "W#280",
+      "checks": [
+        "PERP_EQUITY_BELOW_MINIMUM"
+      ],
+      "closed_pnl_30d_usd_excl_funding": 950.56,
+      "fills_30d_returned": 125,
+      "is_delayed_follower_pnl": false,
+      "latest_fill_at_ms": 1794544112005,
+      "notional_to_perp_equity": null,
+      "observed_at": "2026-11-16T17:16:07.734776+00:00",
+      "open_loss_over_perp_equity": null,
+      "open_notional_usd": 0.0,
+      "perp_equity_usd": 0.0,
+      "position_count": 0,
+      "source": "OFFICIAL_HYPERLIQUID_PUBLIC_INFO",
+      "status": "CURRENT_RESEARCH_NO_GO",
+      "unrealized_pnl_usd": 0,
+      "warnings": [
+        "NO_CURRENT_OPEN_PERP_POSITIONS"
+      ],
+      "withdrawable_usd": 0.0
+    },
+    "W#94": {
+      "account_scope": "PERP_MARGIN_NOT_COMBINED_SPOT",
+      "alias": "W#94",
+      "checks": [
+        "PERP_EQUITY_BELOW_MINIMUM",
+        "OPEN_LOSS_TO_EQUITY_EXCESSIVE"
+      ],
+      "closed_pnl_30d_usd_excl_funding": 63.4,
+      "fills_30d_returned": 96,
+      "is_delayed_follower_pnl": false,
+      "latest_fill_at_ms": 1794833411450,
+      "notional_to_perp_equity": 8.558,
+      "observed_at": "2026-11-16T17:16:07.734776+00:00",
+      "open_loss_over_perp_equity": 0.7317,
+      "open_notional_usd": 1629.4,
+      "perp_equity_usd": 190.4,
+      "position_count": 4,
+      "source": "OFFICIAL_HYPERLIQUID_PUBLIC_INFO",
+      "status": "CURRENT_RESEARCH_NO_GO",
+      "unrealized_pnl_usd": -139.31,
+      "warnings": [
+        "HIGH_NOTIONAL_TO_PERP_EQUITY"
+      ],
+      "withdrawable_usd": 27.46
+    },
+    "Whale_0x5f94": {
+      "account_scope": "PERP_MARGIN_NOT_COMBINED_SPOT",
+      "alias": "Whale_0x5f94",
+      "checks": [],
+      "closed_pnl_30d_usd_excl_funding": 353958.48,
+      "fills_30d_returned": 228,
+      "is_delayed_follower_pnl": false,
+      "latest_fill_at_ms": 1794640741774,
+      "notional_to_perp_equity": 7.208,
+      "observed_at": "2026-11-16T17:16:07.734776+00:00",
+      "open_loss_over_perp_equity": 0.0,
+      "open_notional_usd": 12520122.23,
+      "perp_equity_usd": 1736962.89,
+      "position_count": 17,
+      "source": "OFFICIAL_HYPERLIQUID_PUBLIC_INFO",
+      "status": "CURRENT_RESEARCH_ADMISSION_PASS",
+      "unrealized_pnl_usd": 3832096.33,
+      "warnings": [
+        "HIGH_NOTIONAL_TO_PERP_EQUITY",
+        "ZERO_WITHDRAWABLE_WHILE_EXPOSED"
+      ],
+      "withdrawable_usd": 0.0
+    }
+  },
+  "source_account_scope": "HYPERLIQUID_PERP_MARGIN"
+}
