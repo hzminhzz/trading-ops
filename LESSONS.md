@@ -51,3 +51,13 @@ Monte Carlo (`80k–100k` paths) + Optional Stopping analysis across Vanta Class
 3. **Break micro-fill & clock fingerprints on anti-copytrading venues (`Vanta`):**
    - **Notional deadband:** Skip small rebalance deltas below a dollar floor (e.g. `$25–$50` when modifying an open position) to stop echoing every lead-wallet TWAP/trim, while **always bypassing the deadband on full closes (`target == 0`) and halt flattens** so dust never stays open.
    - **Post-wave jitter only (`10–60s`, never pre-bar):** `cwsa_heads` snapshots are only emitted at `next_checkpoint_ms` (5m UTC closes), so pre-5m execution jitter is impossible without shifting upstream sampling; bounded post-wave delay breaks exact `:00/:05` clustering while staying well inside `max_source_lag_ms` (`600s`).
+
+---
+
+## 2026-11-16 — Full-Tranche CFT Copy-Trading Financial Screening
+
+1. **Do not confuse full registry screening with full financial replay.** The prior study screened 195 wallets but financially replayed only 21. A deterministic 24-wallet convenience sample cannot support an exhaustive portfolio-ranking claim. This study replayed all 128 historically eligible wallets on Train, retaining a per-wallet checkpoint and a separate 30-wallet portfolio shortlist.
+2. **Split historical eligibility from current operational suitability.** Present-day Hyperliquid account value and current Bybit listings are not historical point-in-time facts. In the expanded Train ledger, historical eligibility and today's operational constraints are separate fields; current withdrawals never erase past Train observations.
+3. **Enforce half-risk sizing at the frozen primary portfolio, not as a comparison only.** The unconstrained optimizer may select multipliers far above each wallet's 50%-risk baseline. Cap primary k to that baseline, preserve uncapped k explicitly as a sensitivity, and never treat unconstrained optimizer feasibility as evidence for capped sizing.
+4. **Minimum-order warnings prevent economic qualification.** All three OOS-positive portfolios still have q10 order sizes below the illustrative $10 threshold. Until actual Bybit quantity steps/minimum notional and rejected-order economics are replayed, reported returns and bootstrap pass percentages remain retrospective scenarios rather than executable follower PnL.
+5. **Breadth of roster is not breadth of portfolio optimization.** 128 wallets received Train financial replay, but the bounded UPGMA candidate search evaluated 12 unique combinations and three finalists shared W#174 and Whale_0x5f94. Do not describe them as globally optimal; additional cluster diversity and a fresh chronological holdout are needed to strengthen selection claims.

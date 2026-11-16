@@ -1,0 +1,583 @@
+{
+  "archive_sha256": "bd2badb79973aaf4be37aebaacafe1e484628359e947fa9e51a7ec0f84f33a55",
+  "bybit": {
+    "base_coins": 821,
+    "lookup_utc": "2026-11-16T04:06:40.808149+00:00",
+    "pages": 1
+  },
+  "cost_bps": 6.5,
+  "cutoff_ms": 1788220800000,
+  "freeze_time_utc": "2026-11-16T04:27:32.928440+00:00",
+  "frozen_portfolios": [
+    {
+      "aggressive_exceeds_baseline": true,
+      "aggressive_unconstrained_k": [
+        0.28871097054534567,
+        4.1403440134456835,
+        0.0780901404496469,
+        0.00038211257339039977
+      ],
+      "aliases": [
+        "W#111",
+        "W#174",
+        "W#179",
+        "Whale_0x5f94"
+      ],
+      "binding_constraint": "DailyCVaR_99",
+      "feasible": true,
+      "indices": [
+        7,
+        11,
+        12,
+        29
+      ],
+      "min_lot_warnings": [
+        "W#174: q10_order=$7.52<$10",
+        "W#179: q10_order=$8.05<$10"
+      ],
+      "netting_savings_usd": 0.48,
+      "size": 4,
+      "train_daily_cvar_usd": 300.0,
+      "train_half_risk_k": [
+        0.10950609745708517,
+        1.2493307634752053,
+        0.059389376297236035,
+        0.0006449342693386007
+      ],
+      "train_net_dd": 8.4046,
+      "train_net_usd": 3461.59,
+      "train_opt_k": [
+        0.10950609745708517,
+        1.2493307634752053,
+        0.059389376297236035,
+        0.00038211257339039977
+      ],
+      "train_peak_dd_usd": 411.87,
+      "train_unit_dd_usd": [
+        1141.4889481290008,
+        100.05356760149995,
+        2104.753540000006,
+        193818.20123807536
+      ],
+      "train_worst_day_usd": 314.81
+    },
+    {
+      "aggressive_exceeds_baseline": true,
+      "aggressive_unconstrained_k": [
+        0.014341086333505013,
+        4.332736192245599,
+        4.939429711617293,
+        0.0006664474299978387
+      ],
+      "aliases": [
+        "W#1",
+        "W#174",
+        "W#264",
+        "Whale_0x5f94"
+      ],
+      "binding_constraint": "DailyCVaR_99",
+      "feasible": true,
+      "indices": [
+        6,
+        11,
+        19,
+        29
+      ],
+      "min_lot_warnings": [
+        "W#174: q10_order=$7.87<$10"
+      ],
+      "netting_savings_usd": 0.59,
+      "size": 4,
+      "train_daily_cvar_usd": 300.0,
+      "train_half_risk_k": [
+        0.008003193090309692,
+        1.2493307634752053,
+        3.3228493700824533,
+        0.0006449342693386007
+      ],
+      "train_net_dd": 7.7285,
+      "train_net_usd": 3196.4,
+      "train_opt_k": [
+        0.008003193090309692,
+        1.2493307634752053,
+        3.3228493700824533,
+        0.0006449342693386007
+      ],
+      "train_peak_dd_usd": 413.59,
+      "train_unit_dd_usd": [
+        15618.765983711008,
+        100.05356760149995,
+        37.618316715000006,
+        193818.20123807536
+      ],
+      "train_worst_day_usd": 326.78
+    },
+    {
+      "aggressive_exceeds_baseline": true,
+      "aggressive_unconstrained_k": [
+        4.240337664149365,
+        0.12227352529829902,
+        0.001210630168800666,
+        0.0006522349880551403
+      ],
+      "aliases": [
+        "W#174",
+        "W#252",
+        "W#255",
+        "Whale_0x5f94"
+      ],
+      "binding_constraint": "DailyCVaR_99",
+      "feasible": true,
+      "indices": [
+        11,
+        15,
+        16,
+        29
+      ],
+      "min_lot_warnings": [
+        "W#174: q10_order=$7.70<$10",
+        "W#255: q10_order=$2.78<$10"
+      ],
+      "netting_savings_usd": 0.0,
+      "size": 4,
+      "train_daily_cvar_usd": 300.0,
+      "train_half_risk_k": [
+        1.2493307634752053,
+        0.07547463975812896,
+        0.0015395391630724613,
+        0.0006449342693386007
+      ],
+      "train_net_dd": 6.5479,
+      "train_net_usd": 2587.92,
+      "train_opt_k": [
+        1.2493307634752053,
+        0.07547463975812896,
+        0.001210630168800666,
+        0.0006449342693386007
+      ],
+      "train_peak_dd_usd": 395.23,
+      "train_unit_dd_usd": [
+        100.05356760149995,
+        1656.1854471989968,
+        81193.1277867185,
+        193818.20123807536
+      ],
+      "train_worst_day_usd": 321.39
+    }
+  ],
+  "roster_sha256": "c4abfa90556928fd9abe7387a7853078d6e73ed6ecf595eeaa6ff5a19f2433fd",
+  "scientific_status": "RETROSPECTIVE_NO_PIT_ROSTER",
+  "shortlist": [
+    "W#179",
+    "M11",
+    "W#283",
+    "W#1",
+    "W#360",
+    "W#252",
+    "W#174",
+    "W#111",
+    "W#345",
+    "W#264",
+    "W#26",
+    "M22",
+    "W#46",
+    "W#263",
+    "W#350",
+    "W#189",
+    "W#169",
+    "ACT09",
+    "Whale_0x5f94",
+    "M06",
+    "W#86",
+    "W#255",
+    "W#209",
+    "W#60",
+    "W#301",
+    "W#143",
+    "W#12",
+    "M54",
+    "ACT04",
+    "W#58"
+  ],
+  "train_audit": {
+    "3": {
+      "candidate_pods": [
+        [
+          "W#1",
+          "W#174",
+          "Whale_0x5f94"
+        ],
+        [
+          "W#174",
+          "W#179",
+          "Whale_0x5f94"
+        ],
+        [
+          "W#174",
+          "W#252",
+          "Whale_0x5f94"
+        ]
+      ],
+      "distance_shape": [
+        21,
+        21
+      ],
+      "passed": [
+        "ACT09",
+        "M06",
+        "M22",
+        "M54",
+        "W#1",
+        "W#111",
+        "W#12",
+        "W#143",
+        "W#169",
+        "W#174",
+        "W#179",
+        "W#209",
+        "W#252",
+        "W#255",
+        "W#263",
+        "W#264",
+        "W#350",
+        "W#46",
+        "W#58",
+        "W#86",
+        "Whale_0x5f94"
+      ],
+      "rejected": [
+        {
+          "alias": "ACT04",
+          "reason": "martingale_tilt(8.18>1.5)",
+          "tilt": 8.177
+        },
+        {
+          "alias": "M11",
+          "reason": "martingale_tilt(2.08>1.5)",
+          "tilt": 2.084
+        },
+        {
+          "alias": "W#189",
+          "reason": "martingale_tilt(6.34>1.5)",
+          "tilt": 6.337
+        },
+        {
+          "alias": "W#26",
+          "reason": "martingale_tilt(1.88>1.5)",
+          "tilt": 1.877
+        },
+        {
+          "alias": "W#283",
+          "reason": "martingale_tilt(4.89>1.5)",
+          "tilt": 4.891
+        },
+        {
+          "alias": "W#301",
+          "reason": "martingale_tilt(2.83>1.5)",
+          "tilt": 2.828
+        },
+        {
+          "alias": "W#345",
+          "reason": "martingale_tilt(2.79>1.5)",
+          "tilt": 2.785
+        },
+        {
+          "alias": "W#360",
+          "reason": "martingale_tilt(3.61>1.5)",
+          "tilt": 3.612
+        },
+        {
+          "alias": "W#60",
+          "reason": "martingale_tilt(1.94>1.5)",
+          "tilt": 1.936
+        }
+      ],
+      "sized": 3
+    },
+    "4": {
+      "candidate_pods": [
+        [
+          "W#111",
+          "W#174",
+          "W#179",
+          "Whale_0x5f94"
+        ],
+        [
+          "W#1",
+          "W#174",
+          "W#179",
+          "Whale_0x5f94"
+        ],
+        [
+          "W#111",
+          "W#174",
+          "W#264",
+          "Whale_0x5f94"
+        ],
+        [
+          "W#1",
+          "W#174",
+          "W#264",
+          "Whale_0x5f94"
+        ],
+        [
+          "W#111",
+          "W#174",
+          "W#255",
+          "Whale_0x5f94"
+        ],
+        [
+          "W#174",
+          "W#179",
+          "W#252",
+          "Whale_0x5f94"
+        ],
+        [
+          "W#1",
+          "W#174",
+          "W#255",
+          "Whale_0x5f94"
+        ],
+        [
+          "W#174",
+          "W#252",
+          "W#264",
+          "Whale_0x5f94"
+        ],
+        [
+          "W#174",
+          "W#252",
+          "W#255",
+          "Whale_0x5f94"
+        ]
+      ],
+      "distance_shape": [
+        21,
+        21
+      ],
+      "passed": [
+        "ACT09",
+        "M06",
+        "M22",
+        "M54",
+        "W#1",
+        "W#111",
+        "W#12",
+        "W#143",
+        "W#169",
+        "W#174",
+        "W#179",
+        "W#209",
+        "W#252",
+        "W#255",
+        "W#263",
+        "W#264",
+        "W#350",
+        "W#46",
+        "W#58",
+        "W#86",
+        "Whale_0x5f94"
+      ],
+      "rejected": [
+        {
+          "alias": "ACT04",
+          "reason": "martingale_tilt(8.18>1.5)",
+          "tilt": 8.177
+        },
+        {
+          "alias": "M11",
+          "reason": "martingale_tilt(2.08>1.5)",
+          "tilt": 2.084
+        },
+        {
+          "alias": "W#189",
+          "reason": "martingale_tilt(6.34>1.5)",
+          "tilt": 6.337
+        },
+        {
+          "alias": "W#26",
+          "reason": "martingale_tilt(1.88>1.5)",
+          "tilt": 1.877
+        },
+        {
+          "alias": "W#283",
+          "reason": "martingale_tilt(4.89>1.5)",
+          "tilt": 4.891
+        },
+        {
+          "alias": "W#301",
+          "reason": "martingale_tilt(2.83>1.5)",
+          "tilt": 2.828
+        },
+        {
+          "alias": "W#345",
+          "reason": "martingale_tilt(2.79>1.5)",
+          "tilt": 2.785
+        },
+        {
+          "alias": "W#360",
+          "reason": "martingale_tilt(3.61>1.5)",
+          "tilt": 3.612
+        },
+        {
+          "alias": "W#60",
+          "reason": "martingale_tilt(1.94>1.5)",
+          "tilt": 1.936
+        }
+      ],
+      "sized": 9
+    }
+  },
+  "train_diagnostics": {
+    "ACT04": {
+      "forced_gap_exits": 1,
+      "unanchored_coins": 12,
+      "unpriced_open_steps": 1
+    },
+    "ACT09": {
+      "forced_gap_exits": 1,
+      "unanchored_coins": 4,
+      "unpriced_open_steps": 1
+    },
+    "M06": {
+      "forced_gap_exits": 11,
+      "unanchored_coins": 1,
+      "unpriced_open_steps": 11
+    },
+    "M11": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 4,
+      "unpriced_open_steps": 0
+    },
+    "M22": {
+      "forced_gap_exits": 3,
+      "unanchored_coins": 6,
+      "unpriced_open_steps": 3
+    },
+    "M54": {
+      "forced_gap_exits": 1,
+      "unanchored_coins": 5,
+      "unpriced_open_steps": 1
+    },
+    "W#1": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 3,
+      "unpriced_open_steps": 0
+    },
+    "W#111": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 3,
+      "unpriced_open_steps": 0
+    },
+    "W#12": {
+      "forced_gap_exits": 3,
+      "unanchored_coins": 16,
+      "unpriced_open_steps": 3
+    },
+    "W#143": {
+      "forced_gap_exits": 1,
+      "unanchored_coins": 1,
+      "unpriced_open_steps": 1
+    },
+    "W#169": {
+      "forced_gap_exits": 1,
+      "unanchored_coins": 20,
+      "unpriced_open_steps": 1
+    },
+    "W#174": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 1,
+      "unpriced_open_steps": 0
+    },
+    "W#179": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 4,
+      "unpriced_open_steps": 0
+    },
+    "W#189": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 1,
+      "unpriced_open_steps": 0
+    },
+    "W#209": {
+      "forced_gap_exits": 3,
+      "unanchored_coins": 6,
+      "unpriced_open_steps": 3
+    },
+    "W#252": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 4,
+      "unpriced_open_steps": 0
+    },
+    "W#255": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 4,
+      "unpriced_open_steps": 0
+    },
+    "W#26": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 5,
+      "unpriced_open_steps": 0
+    },
+    "W#263": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 5,
+      "unpriced_open_steps": 0
+    },
+    "W#264": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 1,
+      "unpriced_open_steps": 0
+    },
+    "W#283": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 2,
+      "unpriced_open_steps": 0
+    },
+    "W#301": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 2,
+      "unpriced_open_steps": 0
+    },
+    "W#345": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 3,
+      "unpriced_open_steps": 0
+    },
+    "W#350": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 6,
+      "unpriced_open_steps": 0
+    },
+    "W#360": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 2,
+      "unpriced_open_steps": 0
+    },
+    "W#46": {
+      "forced_gap_exits": 4,
+      "unanchored_coins": 7,
+      "unpriced_open_steps": 4
+    },
+    "W#58": {
+      "forced_gap_exits": 0,
+      "unanchored_coins": 2,
+      "unpriced_open_steps": 0
+    },
+    "W#60": {
+      "forced_gap_exits": 2,
+      "unanchored_coins": 6,
+      "unpriced_open_steps": 2
+    },
+    "W#86": {
+      "forced_gap_exits": 2,
+      "unanchored_coins": 14,
+      "unpriced_open_steps": 2
+    },
+    "Whale_0x5f94": {
+      "forced_gap_exits": 2,
+      "unanchored_coins": 23,
+      "unpriced_open_steps": 2
+    }
+  }
+}
