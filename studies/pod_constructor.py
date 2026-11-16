@@ -19,7 +19,7 @@ Provides four reusable building blocks for ``trading-ops`` and ``portfolio-resea
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from itertools import combinations, product
 from typing import Literal
@@ -185,6 +185,8 @@ class PodConstructorConfig:
     min_episodes: int = 4
     max_tilt_multiplier: float = 1.50
     min_active_bar_frac: float = 0.01
+    baseline_port_dd_frac: float = 0.02
+    min_baseline_order_usd: float = 0.0  # >0 filters q10_order at baseline k before clustering
 
     # Stage 1.5a Crowding Distance Tensor
     tail_window_bars: int = 48  # 4h window (48 x 5m)
@@ -351,53 +353,181 @@ class RosterCUSUMState:
 # ---------------------------------------------------------------------------
 
 
-def build_tensor_from_unit_replays(
-    unit_pos_by_alias: dict[str, dict[str, object]],
-    timestamps_ms: Sequence[int],
+def _init_unit_tensor_buffers(
+    unit_map: Mapping[str, Mapping[str, object]],
+    timestamps_ms: Sequence[int] | np.ndarray,
     *,
-    pod_equity_usd: float = 10_000.0,
-    chop_split_ms: int | None = None,
-) -> UnitCopy5mTensor:
-    """Aggregate Policy A 1m replay DataFrames into an execution-aligned 5m tensor.
+    pod_equity_usd: float,
+    tensor_dtype: np.dtype | type,
+    include_sym_net_ret: bool,
+) -> tuple[
+    tuple[str, ...],
+    tuple[str, ...],
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray | None,
+]:
+    if pod_equity_usd <= 0.0:
+        raise ValueError(f"pod_equity_usd must be positive, got {pod_equity_usd}")
+    dtype = np.dtype(tensor_dtype)
+    if dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
+        raise ValueError(f"tensor_dtype must be float32 or float64, got {dtype}")
 
-    Accepts ``pos_by_coin`` dicts returned by ``replay_portfolio_5m({alias: 1.0}, ...)``
-    where each Polars DataFrame holds ``timestamp, open, close, pos, delta, gross, cost, net``.
-    Since Policy A updates ``pos`` strictly at ``minute % 5 == 0`` opens, 5m aggregation
-    preserves exact gross PnL, open-minute turnover costs, and open notional linearity.
-    """
-    import polars as pl
-
-    aliases = tuple(sorted(unit_pos_by_alias.keys()))
+    aliases = tuple(sorted(unit_map.keys()))
     symbol_set: set[str] = set()
-    for by_coin in unit_pos_by_alias.values():
+    for by_coin in unit_map.values():
         symbol_set.update(by_coin.keys())
     symbols = tuple(sorted(symbol_set))
 
     ts_arr = np.asarray(timestamps_ms, dtype=np.int64)
-    n_traders = len(aliases)
-    n_syms = len(symbols)
-    n_bars = ts_arr.size
+    n_traders, n_syms, n_bars = len(aliases), len(symbols), ts_arr.size
 
-    notional_frac = np.zeros((n_traders, n_syms, n_bars), dtype=np.float64)
-    delta_notional_frac = np.zeros((n_traders, n_syms, n_bars), dtype=np.float64)
+    notional_frac = np.zeros((n_traders, n_syms, n_bars), dtype=dtype)
+    delta_notional_frac = np.zeros((n_traders, n_syms, n_bars), dtype=dtype)
     gross_ret_frac = np.zeros((n_traders, n_bars), dtype=np.float64)
     net_ret_frac = np.zeros((n_traders, n_bars), dtype=np.float64)
-    sym_net_ret_frac = np.zeros((n_traders, n_syms, n_bars), dtype=np.float64)
+    sym_net_ret_frac = (
+        np.zeros((n_traders, n_syms, n_bars), dtype=dtype) if include_sym_net_ret else None
+    )
+    return (
+        aliases,
+        symbols,
+        ts_arr,
+        notional_frac,
+        delta_notional_frac,
+        gross_ret_frac,
+        net_ret_frac,
+        sym_net_ret_frac,
+    )
 
-    ts_ms_col = pl.DataFrame({"ts_ms": ts_arr})
+
+def _write_aligned_coin_arrays(
+    ti: int,
+    si: int,
+    bar_idx: np.ndarray | slice,
+    notional_usd: np.ndarray,
+    delta_notional_usd: np.ndarray,
+    gross_usd: np.ndarray,
+    net_usd: np.ndarray,
+    *,
+    inv_equity: float,
+    notional_frac: np.ndarray,
+    delta_notional_frac: np.ndarray,
+    gross_ret_frac: np.ndarray,
+    net_ret_frac: np.ndarray,
+    sym_net_ret_frac: np.ndarray | None,
+) -> None:
+    # Skip writing all-zero slices so untouched OS zero pages consume no physical RSS.
+    if notional_usd.any():
+        notional_frac[ti, si, bar_idx] = notional_usd * inv_equity
+    if delta_notional_usd.any():
+        delta_notional_frac[ti, si, bar_idx] = delta_notional_usd * inv_equity
+    if gross_usd.any():
+        gross_ret_frac[ti, bar_idx] += gross_usd * inv_equity
+    if net_usd.any():
+        coin_net = net_usd * inv_equity
+        net_ret_frac[ti, bar_idx] += coin_net
+        if sym_net_ret_frac is not None:
+            sym_net_ret_frac[ti, si, bar_idx] = coin_net
+
+
+def build_tensor_from_unit_replays(
+    unit_pos_by_alias: dict[str, dict[str, object]],
+    timestamps_ms: Sequence[int] | np.ndarray,
+    *,
+    pod_equity_usd: float = 10_000.0,
+    chop_split_ms: int | None = None,
+    tensor_dtype: np.dtype | type = np.float32,
+    include_sym_net_ret: bool = False,
+) -> UnitCopy5mTensor:
+    """Aggregate Policy A replay DataFrames into an execution-aligned 5m tensor.
+
+    Accepts ``pos_by_coin`` dicts returned by ``replay_portfolio_5m({alias: 1.0}, ...)``
+    or ``canonical_replay.build_unit_replay_by_alias`` where each Polars DataFrame holds
+    ``timestamp, open, close, pos, delta, gross, cost, net``. Uses a direct NumPy fast-path
+    when rows are already aligned to ``timestamps_ms`` and falls back to Polars 5m
+    aggregation + ``searchsorted`` alignment otherwise.
+    """
+    import polars as pl
+
+    (
+        aliases,
+        symbols,
+        ts_arr,
+        notional_frac,
+        delta_notional_frac,
+        gross_ret_frac,
+        net_ret_frac,
+        sym_net_ret_frac,
+    ) = _init_unit_tensor_buffers(
+        unit_pos_by_alias,
+        timestamps_ms,
+        pod_equity_usd=pod_equity_usd,
+        tensor_dtype=tensor_dtype,
+        include_sym_net_ret=include_sym_net_ret,
+    )
+    n_bars = ts_arr.size
+    inv_eq = 1.0 / pod_equity_usd
     sym_idx = {s: idx for idx, s in enumerate(symbols)}
+    ts_strict_inc = n_bars > 0 and bool(np.all(ts_arr[1:] > ts_arr[:-1]))
+    ts_ms_col: pl.DataFrame | None = None
 
     for ti, alias in enumerate(aliases):
         for coin, df_obj in unit_pos_by_alias[alias].items():
             si = sym_idx[coin]
             df = df_obj  # type: ignore[assignment]
-            b5 = (
-                df.sort("timestamp")
-                .with_columns(
-                    (
-                        (pl.col("timestamp").dt.epoch("ms") // 300_000) * 300_000
-                    ).alias("ts_ms")
+            if df.height == 0 or n_bars == 0:
+                continue
+
+            # Fast path: DataFrame already aligned 1-to-1 with timestamps_ms and non-null
+            if (
+                df.height == n_bars
+                and df["open"].null_count() == 0
+                and df["pos"].null_count() == 0
+                and df["delta"].null_count() == 0
+                and df["gross"].null_count() == 0
+                and df["net"].null_count() == 0
+            ):
+                ts_col = df["timestamp"]
+                df_ts_ms = (
+                    ts_col.to_numpy()
+                    if ts_col.dtype.is_integer()
+                    else ts_col.dt.epoch("ms").to_numpy()
                 )
+                if np.array_equal(df_ts_ms, ts_arr):
+                    open_arr = df["open"].to_numpy().astype(np.float64, copy=False)
+                    pos_arr = df["pos"].to_numpy().astype(np.float64, copy=False)
+                    delta_arr = df["delta"].to_numpy().astype(np.float64, copy=False)
+                    gross_arr = df["gross"].to_numpy().astype(np.float64, copy=False)
+                    net_arr = df["net"].to_numpy().astype(np.float64, copy=False)
+                    _write_aligned_coin_arrays(
+                        ti,
+                        si,
+                        slice(None),
+                        pos_arr * open_arr,
+                        delta_arr * open_arr,
+                        gross_arr,
+                        net_arr,
+                        inv_equity=inv_eq,
+                        notional_frac=notional_frac,
+                        delta_notional_frac=delta_notional_frac,
+                        gross_ret_frac=gross_ret_frac,
+                        net_ret_frac=net_ret_frac,
+                        sym_net_ret_frac=sym_net_ret_frac,
+                    )
+                    continue
+
+            df_sorted = df if df["timestamp"].is_sorted() else df.sort("timestamp")
+            ts_expr = (
+                pl.col("timestamp")
+                if df_sorted["timestamp"].dtype.is_integer()
+                else pl.col("timestamp").dt.epoch("ms")
+            )
+            b5 = (
+                df_sorted.with_columns(((ts_expr // 300_000) * 300_000).alias("ts_ms"))
                 .group_by("ts_ms", maintain_order=True)
                 .agg(
                     (pl.col("pos").first() * pl.col("open").first()).alias("notional"),
@@ -405,14 +535,145 @@ def build_tensor_from_unit_replays(
                     pl.col("gross").sum().alias("gross"),
                     pl.col("net").sum().alias("net"),
                 )
+                .fill_null(0.0)
             )
-            aligned = ts_ms_col.join(b5, on="ts_ms", how="left").fill_null(0.0)
-            notional_frac[ti, si] = aligned["notional"].to_numpy() / pod_equity_usd
-            delta_notional_frac[ti, si] = aligned["d_notional"].to_numpy() / pod_equity_usd
-            coin_net = aligned["net"].to_numpy() / pod_equity_usd
-            sym_net_ret_frac[ti, si] = coin_net
-            gross_ret_frac[ti] += aligned["gross"].to_numpy() / pod_equity_usd
-            net_ret_frac[ti] += coin_net
+            if ts_strict_inc:
+                b5_ts = b5["ts_ms"].to_numpy()
+                ix = np.searchsorted(ts_arr, b5_ts)
+                valid = (ix < n_bars) & (ts_arr[np.minimum(ix, n_bars - 1)] == b5_ts)
+                if not np.any(valid):
+                    continue
+                v_ix = ix[valid]
+                notional_arr = b5["notional"].to_numpy().astype(np.float64, copy=False)[valid]
+                d_notional_arr = b5["d_notional"].to_numpy().astype(np.float64, copy=False)[valid]
+                gross_arr = b5["gross"].to_numpy().astype(np.float64, copy=False)[valid]
+                net_arr = b5["net"].to_numpy().astype(np.float64, copy=False)[valid]
+                bar_idx: np.ndarray | slice = v_ix
+            else:
+                if ts_ms_col is None:
+                    ts_ms_col = pl.DataFrame({"ts_ms": ts_arr})
+                aligned = ts_ms_col.join(b5, on="ts_ms", how="left").fill_null(0.0)
+                notional_arr = aligned["notional"].to_numpy().astype(np.float64, copy=False)
+                d_notional_arr = aligned["d_notional"].to_numpy().astype(np.float64, copy=False)
+                gross_arr = aligned["gross"].to_numpy().astype(np.float64, copy=False)
+                net_arr = aligned["net"].to_numpy().astype(np.float64, copy=False)
+                bar_idx = slice(None)
+
+            _write_aligned_coin_arrays(
+                ti,
+                si,
+                bar_idx,
+                notional_arr,
+                d_notional_arr,
+                gross_arr,
+                net_arr,
+                inv_equity=inv_eq,
+                notional_frac=notional_frac,
+                delta_notional_frac=delta_notional_frac,
+                gross_ret_frac=gross_ret_frac,
+                net_ret_frac=net_ret_frac,
+                sym_net_ret_frac=sym_net_ret_frac,
+            )
+
+    chop_mask = (ts_arr >= chop_split_ms) if chop_split_ms is not None else None
+    return UnitCopy5mTensor(
+        aliases=aliases,
+        symbols=symbols,
+        timestamps_ms=ts_arr,
+        notional_frac=notional_frac,
+        delta_notional_frac=delta_notional_frac,
+        gross_ret_frac=gross_ret_frac,
+        net_ret_frac=net_ret_frac,
+        sym_net_ret_frac=sym_net_ret_frac,
+        chop_mask=chop_mask,
+        pod_equity_usd=pod_equity_usd,
+    )
+
+
+def build_tensor_from_arrays(
+    unit_arrays_by_alias: Mapping[str, Mapping[str, Mapping[str, np.ndarray]]],
+    timestamps_ms: Sequence[int] | np.ndarray,
+    *,
+    pod_equity_usd: float = 10_000.0,
+    chop_split_ms: int | None = None,
+    tensor_dtype: np.dtype | type = np.float32,
+    include_sym_net_ret: bool = False,
+) -> UnitCopy5mTensor:
+    """Build a ``UnitCopy5mTensor`` directly from pre-aligned 1D NumPy arrays.
+
+    Each ``unit_arrays_by_alias[alias][coin]`` mapping must contain arrays of shape ``(T,)``:
+      - Notional inputs: either ``("notional", "delta_notional")`` or ``("open", "pos", "delta")``
+      - Return inputs: ``"gross"`` and either ``"net"`` or ``"cost"``
+    """
+    (
+        aliases,
+        symbols,
+        ts_arr,
+        notional_frac,
+        delta_notional_frac,
+        gross_ret_frac,
+        net_ret_frac,
+        sym_net_ret_frac,
+    ) = _init_unit_tensor_buffers(
+        unit_arrays_by_alias,
+        timestamps_ms,
+        pod_equity_usd=pod_equity_usd,
+        tensor_dtype=tensor_dtype,
+        include_sym_net_ret=include_sym_net_ret,
+    )
+    n_bars = ts_arr.size
+    inv_eq = 1.0 / pod_equity_usd
+    sym_idx = {s: idx for idx, s in enumerate(symbols)}
+
+    def _vec(arrs: Mapping[str, np.ndarray], key: str, alias: str, coin: str) -> np.ndarray:
+        arr = np.asarray(arrs[key], dtype=np.float64)
+        if arr.shape != (n_bars,):
+            raise ValueError(
+                f"Array '{key}' for ({alias}, {coin}) has shape {arr.shape}, expected ({n_bars},)"
+            )
+        return arr
+
+    for ti, alias in enumerate(aliases):
+        for coin, arrs in unit_arrays_by_alias[alias].items():
+            si = sym_idx[coin]
+            if "notional" in arrs and "delta_notional" in arrs:
+                notional_usd = _vec(arrs, "notional", alias, coin)
+                delta_notional_usd = _vec(arrs, "delta_notional", alias, coin)
+            elif "open" in arrs and "pos" in arrs and "delta" in arrs:
+                open_arr = _vec(arrs, "open", alias, coin)
+                notional_usd = _vec(arrs, "pos", alias, coin) * open_arr
+                delta_notional_usd = _vec(arrs, "delta", alias, coin) * open_arr
+            else:
+                raise ValueError(
+                    f"Missing notional keys for ({alias}, {coin}); provide "
+                    "('notional', 'delta_notional') or ('open', 'pos', 'delta')"
+                )
+
+            if "gross" not in arrs:
+                raise ValueError(f"Missing 'gross' array for ({alias}, {coin})")
+            gross_usd = _vec(arrs, "gross", alias, coin)
+            if "net" in arrs:
+                net_usd = _vec(arrs, "net", alias, coin)
+            elif "cost" in arrs:
+                net_usd = gross_usd - _vec(arrs, "cost", alias, coin)
+            else:
+                raise ValueError(f"Missing 'net' or 'cost' array for ({alias}, {coin})")
+
+            _write_aligned_coin_arrays(
+                ti,
+                si,
+                slice(None),
+                notional_usd,
+                delta_notional_usd,
+                gross_usd,
+                net_usd,
+                inv_equity=inv_eq,
+                notional_frac=notional_frac,
+                delta_notional_frac=delta_notional_frac,
+                gross_ret_frac=gross_ret_frac,
+                net_ret_frac=net_ret_frac,
+                sym_net_ret_frac=sym_net_ret_frac,
+            )
 
     chop_mask = (ts_arr >= chop_split_ms) if chop_split_ms is not None else None
     return UnitCopy5mTensor(
@@ -434,6 +695,122 @@ def build_tensor_from_unit_replays(
 # ---------------------------------------------------------------------------
 
 
+def _compute_slice_maes(
+    ret_f64: np.ndarray,
+    starts: np.ndarray,
+    pnl_ends: np.ndarray,
+) -> np.ndarray:
+    """Compute per-episode maximum adverse excursion across variable-length slices."""
+    n_runs = starts.size
+    ep_mae = np.empty(n_runs, dtype=np.float64)
+    for r_i in range(n_runs):
+        r_slice = ret_f64[starts[r_i] : pnl_ends[r_i]]
+        if r_slice.size > 0:
+            cum_r = np.cumsum(r_slice)
+            peaks = np.maximum(0.0, np.maximum.accumulate(cum_r))
+            ep_mae[r_i] = float(np.max(peaks - cum_r))
+        else:
+            ep_mae[r_i] = 0.0
+    return ep_mae
+
+
+def _extract_symbol_episodes_vectorized(
+    pos_s: np.ndarray,
+    delta_s: np.ndarray,
+    ret_s: np.ndarray,
+    eps: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray] | None:
+    """Vectorized per-symbol run extraction splitting on flat gaps and sign reversals."""
+    n_bars = pos_s.size
+    if n_bars == 0:
+        return None
+    abs_s = np.abs(pos_s).astype(np.float64, copy=False)
+    held_s = abs_s > eps
+    if not np.any(held_s):
+        return None
+
+    signs = np.where(held_s, np.where(pos_s >= 0.0, 1, -1), 0)
+    changes = np.flatnonzero(signs[1:] != signs[:-1]) + 1
+    run_starts = np.concatenate((np.array([0], dtype=np.intp), changes))
+    run_ends = np.concatenate((changes, np.array([n_bars], dtype=np.intp)))
+    nz_mask = signs[run_starts] != 0
+    starts = run_starts[nz_mask]
+    ends = run_ends[nz_mask]
+    n_runs = starts.size
+    if n_runs == 0:
+        return None
+
+    clipped_ends = np.minimum(ends, n_bars - 1)
+    include_close = (
+        (ends < n_bars)
+        & (signs[clipped_ends] == 0)
+        & (np.abs(delta_s[clipped_ends]).astype(np.float64, copy=False) > 1e-7)
+    )
+    pnl_ends = np.where(include_close, ends + 1, ends)
+
+    # Interleave [start_k, end_k] on 1-element padded buffers for exact reduceat without overflow.
+    idx_hold = np.empty(2 * n_runs, dtype=np.intp)
+    idx_hold[0::2] = starts
+    idx_hold[1::2] = ends
+    abs_pad = np.empty(n_bars + 1, dtype=np.float64)
+    abs_pad[:-1] = abs_s
+    abs_pad[-1] = 0.0
+    ep_peak = np.maximum.reduceat(abs_pad, idx_hold)[0::2]
+    ep_sym_tot = np.add.reduceat(abs_pad, idx_hold)[0::2]
+
+    ret_f64 = np.asarray(ret_s, dtype=np.float64)
+    idx_pnl = np.empty(2 * n_runs, dtype=np.intp)
+    idx_pnl[0::2] = starts
+    idx_pnl[1::2] = pnl_ends
+    ret_pad = np.empty(n_bars + 1, dtype=np.float64)
+    ret_pad[:-1] = ret_f64
+    ret_pad[-1] = 0.0
+    ep_pnl = np.add.reduceat(ret_pad, idx_pnl)[0::2]
+
+    ep_dur = (ends - starts).astype(np.float64)
+    ep_mae = _compute_slice_maes(ret_f64, starts, pnl_ends)
+
+    return ends, ep_pnl, ep_peak, ep_dur, ep_mae, ep_sym_tot
+
+
+def _empty_episodes_dict(n_syms: int) -> dict[str, np.ndarray]:
+    return {
+        "ep_pnl": np.zeros(0, dtype=np.float64),
+        "ep_peak_notional": np.zeros(0, dtype=np.float64),
+        "ep_duration_bars": np.zeros(0, dtype=np.float64),
+        "ep_mae": np.zeros(0, dtype=np.float64),
+        "ep_symbol_notional": np.zeros((0, n_syms), dtype=np.float64),
+    }
+
+
+def _collect_symbol_episode_batches(
+    batches: list[tuple[int, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]],
+    n_syms: int,
+) -> dict[str, np.ndarray]:
+    if not batches:
+        return _empty_episodes_dict(n_syms)
+    all_ends = np.concatenate([b[1] for b in batches])
+    all_pnl = np.concatenate([b[2] for b in batches])
+    all_peak = np.concatenate([b[3] for b in batches])
+    all_dur = np.concatenate([b[4] for b in batches])
+    all_mae = np.concatenate([b[5] for b in batches])
+    all_sym_tot = np.concatenate([b[6] for b in batches])
+    all_sym_idx = np.concatenate(
+        [np.full(b[1].size, b[0], dtype=np.intp) for b in batches]
+    )
+    order = np.argsort(all_ends, kind="stable")
+    n_ep = order.size
+    sym_mat = np.zeros((n_ep, n_syms), dtype=np.float64)
+    sym_mat[np.arange(n_ep), all_sym_idx[order]] = all_sym_tot[order]
+    return {
+        "ep_pnl": all_pnl[order],
+        "ep_peak_notional": all_peak[order],
+        "ep_duration_bars": all_dur[order],
+        "ep_mae": all_mae[order],
+        "ep_symbol_notional": sym_mat,
+    }
+
+
 def reconstruct_execution_episodes(
     tensor: UnitCopy5mTensor,
     eps: float = 1e-4,
@@ -447,130 +824,138 @@ def reconstruct_execution_episodes(
     per-coin position lifecycle in chronological close order.
     """
     n_traders, n_syms, n_bars = tensor.notional_frac.shape
-    abs_notional = np.abs(tensor.notional_frac)
-    gross_notional = np.sum(abs_notional, axis=1)  # (N, T)
     episodes_by_trader: dict[int, dict[str, np.ndarray]] = {}
 
     for i in range(n_traders):
-        raw_episodes: list[tuple[int, float, float, float, float, np.ndarray]] = []
         if tensor.sym_net_ret_frac is not None:
+            batches: list[
+                tuple[int, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+            ] = []
             for s in range(n_syms):
                 pos_s = tensor.notional_frac[i, s]
-                abs_s = abs_notional[i, s]
-                d_s = np.abs(tensor.delta_notional_frac[i, s])
-                ret_s = tensor.sym_net_ret_frac[i, s]
-                held_s = abs_s > eps
-                if not np.any(held_s):
+                if not pos_s.any():
                     continue
-                signs = np.where(held_s, np.where(pos_s >= 0.0, 1, -1), 0)
-                t = 0
-                while t < n_bars:
-                    if signs[t] == 0:
-                        t += 1
-                        continue
-                    cur_sign = signs[t]
-                    s_idx = t
-                    while t < n_bars and signs[t] == cur_sign:
-                        t += 1
-                    e_idx = t
-                    # Include flat closing bar's exit slippage & mark gap
-                    pnl_end = e_idx
-                    if e_idx < n_bars and signs[e_idx] == 0 and d_s[e_idx] > 1e-7:
-                        pnl_end = e_idx + 1
-                    r_slice = ret_s[s_idx:pnl_end]
-                    cum_r = np.cumsum(r_slice)
-                    peaks = np.maximum(0.0, np.maximum.accumulate(cum_r))
-                    sym_vec = np.zeros(n_syms, dtype=np.float64)
-                    sym_vec[s] = float(np.sum(abs_s[s_idx:e_idx]))
-                    raw_episodes.append(
-                        (
-                            e_idx,
-                            float(np.sum(r_slice)),
-                            float(np.max(abs_s[s_idx:e_idx])),
-                            float(e_idx - s_idx),
-                            float(np.max(peaks - cum_r)) if cum_r.size > 0 else 0.0,
-                            sym_vec,
-                        )
-                    )
-        else:
-            # Fallback when sym_net_ret_frac is absent: slice per symbol using proportional
-            # notional share of account net_ret_frac so continuous multi-coin traders still
-            # yield accurate per-symbol episode counts unless single-symbol/array fallback fits.
-            held_any = gross_notional[i] > eps
-            padded_any = np.concatenate(([False], held_any, [False]))
-            n_acct_runs = int(np.sum(padded_any[1:] & ~padded_any[:-1]))
-            if n_acct_runs >= 5 or n_syms == 1:
-                abs_delta = np.sum(np.abs(tensor.delta_notional_frac[i]), axis=0)
-                starts = np.flatnonzero(padded_any[1:] & ~padded_any[:-1])
-                ends = np.flatnonzero(~padded_any[1:] & padded_any[:-1])
-                for s_idx, e_idx in zip(starts, ends):
-                    pnl_end = e_idx + 1 if (e_idx < n_bars and abs_delta[e_idx] > 1e-7) else e_idx
-                    r_slice = tensor.net_ret_frac[i, s_idx:pnl_end]
-                    cum_r = np.cumsum(r_slice)
-                    peaks = np.maximum(0.0, np.maximum.accumulate(cum_r))
-                    raw_episodes.append(
-                        (
-                            int(e_idx),
-                            float(np.sum(r_slice)),
-                            float(np.max(gross_notional[i, s_idx:e_idx])),
-                            float(e_idx - s_idx),
-                            float(np.max(peaks - cum_r)) if cum_r.size > 0 else 0.0,
-                            np.sum(abs_notional[i, :, s_idx:e_idx], axis=1),
-                        )
-                    )
-            else:
-                denom = np.maximum(gross_notional[i], 1e-12)
-                for s in range(n_syms):
-                    pos_s = tensor.notional_frac[i, s]
-                    abs_s = abs_notional[i, s]
-                    d_s = np.abs(tensor.delta_notional_frac[i, s])
-                    held_s = abs_s > eps
-                    if not np.any(held_s):
-                        continue
-                    signs = np.where(held_s, np.where(pos_s >= 0.0, 1, -1), 0)
-                    share = abs_s / denom
-                    ret_est = tensor.net_ret_frac[i] * share
-                    t = 0
-                    while t < n_bars:
-                        if signs[t] == 0:
-                            t += 1
-                            continue
-                        cur_sign = signs[t]
-                        s_idx = t
-                        while t < n_bars and signs[t] == cur_sign:
-                            t += 1
-                        e_idx = t
-                        pnl_end = e_idx + 1 if (e_idx < n_bars and signs[e_idx] == 0 and d_s[e_idx] > 1e-7) else e_idx
-                        r_slice = ret_est[s_idx:pnl_end]
-                        cum_r = np.cumsum(r_slice)
-                        peaks = np.maximum(0.0, np.maximum.accumulate(cum_r))
-                        sym_vec = np.zeros(n_syms, dtype=np.float64)
-                        sym_vec[s] = float(np.sum(abs_s[s_idx:e_idx]))
-                        raw_episodes.append(
-                            (
-                                e_idx,
-                                float(np.sum(r_slice)),
-                                float(np.max(abs_s[s_idx:e_idx])),
-                                float(e_idx - s_idx),
-                                float(np.max(peaks - cum_r)) if cum_r.size > 0 else 0.0,
-                                sym_vec,
-                            )
-                        )
+                extracted = _extract_symbol_episodes_vectorized(
+                    pos_s,
+                    tensor.delta_notional_frac[i, s],
+                    tensor.sym_net_ret_frac[i, s],
+                    eps,
+                )
+                if extracted is not None:
+                    batches.append((s, *extracted))
+            episodes_by_trader[i] = _collect_symbol_episode_batches(batches, n_syms)
+            continue
 
-        raw_episodes.sort(key=lambda item: item[0])
-        n_ep = len(raw_episodes)
-        episodes_by_trader[i] = {
-            "ep_pnl": np.array([r[1] for r in raw_episodes], dtype=np.float64),
-            "ep_peak_notional": np.array([r[2] for r in raw_episodes], dtype=np.float64),
-            "ep_duration_bars": np.array([r[3] for r in raw_episodes], dtype=np.float64),
-            "ep_mae": np.array([r[4] for r in raw_episodes], dtype=np.float64),
-            "ep_symbol_notional": (
-                np.vstack([r[5] for r in raw_episodes])
-                if n_ep > 0
-                else np.zeros((0, n_syms), dtype=np.float64)
-            ),
-        }
+        # Fallback when sym_net_ret_frac is absent: compute trader gross notional per active coin.
+        gross_i = np.zeros(n_bars, dtype=np.float64)
+        active_syms_i: list[int] = []
+        for s in range(n_syms):
+            pos_s = tensor.notional_frac[i, s]
+            if pos_s.any():
+                active_syms_i.append(s)
+                gross_i += np.abs(pos_s).astype(np.float64, copy=False)
+
+        if not active_syms_i:
+            episodes_by_trader[i] = _empty_episodes_dict(n_syms)
+            continue
+
+        held_any = gross_i > eps
+        padded_any = np.concatenate(([False], held_any, [False]))
+        starts = np.flatnonzero(padded_any[1:] & ~padded_any[:-1])
+        ends = np.flatnonzero(~padded_any[1:] & padded_any[:-1])
+        n_acct_runs = starts.size
+
+        if n_acct_runs >= 5 or n_syms == 1:
+            if n_acct_runs == 0:
+                episodes_by_trader[i] = _empty_episodes_dict(n_syms)
+                continue
+            abs_delta = np.zeros(n_bars, dtype=np.float64)
+            for s in range(n_syms):
+                d_s = tensor.delta_notional_frac[i, s]
+                if d_s.any():
+                    abs_delta += np.abs(d_s).astype(np.float64, copy=False)
+
+            clipped_ends = np.minimum(ends, n_bars - 1)
+            include_close = (ends < n_bars) & (abs_delta[clipped_ends] > 1e-7)
+            pnl_ends = np.where(include_close, ends + 1, ends)
+
+            idx_hold = np.empty(2 * n_acct_runs, dtype=np.intp)
+            idx_hold[0::2] = starts
+            idx_hold[1::2] = ends
+            gross_pad = np.empty(n_bars + 1, dtype=np.float64)
+            gross_pad[:-1] = gross_i
+            gross_pad[-1] = 0.0
+            ep_peak = np.maximum.reduceat(gross_pad, idx_hold)[0::2]
+
+            ret_i = np.asarray(tensor.net_ret_frac[i], dtype=np.float64)
+            idx_pnl = np.empty(2 * n_acct_runs, dtype=np.intp)
+            idx_pnl[0::2] = starts
+            idx_pnl[1::2] = pnl_ends
+            ret_pad = np.empty(n_bars + 1, dtype=np.float64)
+            ret_pad[:-1] = ret_i
+            ret_pad[-1] = 0.0
+            ep_pnl = np.add.reduceat(ret_pad, idx_pnl)[0::2]
+            ep_dur = (ends - starts).astype(np.float64)
+            ep_mae = _compute_slice_maes(ret_i, starts, pnl_ends)
+
+            sym_mat = np.zeros((n_acct_runs, n_syms), dtype=np.float64)
+            abs_pad = np.empty(n_bars + 1, dtype=np.float64)
+            abs_pad[-1] = 0.0
+            for s in active_syms_i:
+                abs_pad[:-1] = np.abs(tensor.notional_frac[i, s]).astype(np.float64, copy=False)
+                sym_mat[:, s] = np.add.reduceat(abs_pad, idx_hold)[0::2]
+
+            episodes_by_trader[i] = {
+                "ep_pnl": ep_pnl,
+                "ep_peak_notional": ep_peak,
+                "ep_duration_bars": ep_dur,
+                "ep_mae": ep_mae,
+                "ep_symbol_notional": sym_mat,
+            }
+        else:
+            share_base = np.asarray(tensor.net_ret_frac[i], dtype=np.float64) / np.maximum(
+                gross_i, 1e-12
+            )
+            batches = []
+            for s in active_syms_i:
+                pos_s = tensor.notional_frac[i, s]
+                ret_est = share_base * np.abs(pos_s).astype(np.float64, copy=False)
+                extracted = _extract_symbol_episodes_vectorized(
+                    pos_s,
+                    tensor.delta_notional_frac[i, s],
+                    ret_est,
+                    eps,
+                )
+                if extracted is not None:
+                    batches.append((s, *extracted))
+            episodes_by_trader[i] = _collect_symbol_episode_batches(batches, n_syms)
     return episodes_by_trader
+
+
+def _compute_trader_activity_q10(
+    tensor: UnitCopy5mTensor,
+    trader_idx: int,
+    eps: float,
+) -> tuple[np.ndarray, float]:
+    """Return active bar indices and 10th-percentile non-zero symbol notional fraction."""
+    n_syms = len(tensor.symbols)
+    n_bars = tensor.timestamps_ms.size
+    gross_i = np.zeros(n_bars, dtype=np.float64)
+    nz_parts: list[np.ndarray] = []
+    for s in range(n_syms):
+        pos_s = tensor.notional_frac[trader_idx, s]
+        if pos_s.any():
+            abs_s = np.abs(pos_s).astype(np.float64, copy=False)
+            gross_i += abs_s
+            nz_s = abs_s[abs_s > eps]
+            if nz_s.size > 0:
+                nz_parts.append(nz_s)
+    act_idx = np.flatnonzero(gross_i > eps)
+    if act_idx.size >= 20 and nz_parts:
+        q10 = float(np.quantile(np.concatenate(nz_parts), 0.10))
+    else:
+        q10 = 0.0
+    return act_idx, q10
 
 
 def stage1_audit_traders(
@@ -583,13 +968,10 @@ def stage1_audit_traders(
     used as a blanket rejection cutoff on discretionary wallets.
     """
     n_traders, n_syms, n_bars = tensor.notional_frac.shape
-    abs_notional = np.abs(tensor.notional_frac)
-    gross_notional = np.sum(abs_notional, axis=1)
-    active_mask = gross_notional > config.flat_notional_eps_frac
-
     episodes_map = reconstruct_execution_episodes(tensor)
     bars_per_year = float(config.bars_per_day * config.days_per_year)
 
+    active_bars_vec = np.zeros(n_traders, dtype=np.int64)
     raw_sr_bar = np.zeros(n_traders, dtype=np.float64)
     raw_sr_ann = np.zeros(n_traders, dtype=np.float64)
     sr_var_ann = np.zeros(n_traders, dtype=np.float64)
@@ -604,8 +986,9 @@ def stage1_audit_traders(
     baselines: dict[int, TraderEpisodeBaseline] = {}
 
     for i in range(n_traders):
-        act_idx = np.flatnonzero(active_mask[i])
+        act_idx, q10 = _compute_trader_activity_q10(tensor, i, config.flat_notional_eps_frac)
         t_act = act_idx.size
+        active_bars_vec[i] = t_act
         act_frac = t_act / float(max(1, n_bars))
 
         if t_act >= 20:
@@ -621,10 +1004,8 @@ def stage1_audit_traders(
                 (1.0 - g3 * sr_b + ((g4 - 1.0) / 4.0) * (sr_b * sr_b)) / max(1.0, t_act - 1.0),
             )
             var_a = var_b * (bars_per_year * act_frac)
-            nz_pos = abs_notional[i][abs_notional[i] > config.flat_notional_eps_frac]
-            q10 = float(np.quantile(nz_pos, 0.10)) if nz_pos.size > 0 else 0.0
         else:
-            sr_b, sr_a, var_a, g3, g4, q10 = 0.0, 0.0, 1.0, 0.0, 3.0, 0.0
+            sr_b, sr_a, var_a, g3, g4 = 0.0, 0.0, 1.0, 0.0, 3.0
 
         raw_sr_bar[i] = sr_b
         raw_sr_ann[i] = sr_a
@@ -727,7 +1108,7 @@ def stage1_audit_traders(
     metrics: list[TraderAuditMetrics] = []
     passed_ids: list[int] = []
     for i in range(n_traders):
-        t_act = int(np.sum(active_mask[i]))
+        t_act = int(active_bars_vec[i])
         act_frac = t_act / float(max(1, n_bars))
         n_ep = episodes_map[i]["ep_pnl"].size
         se_ann = math.sqrt(max(1e-8, sr_var_ann[i]))
@@ -742,6 +1123,18 @@ def stage1_audit_traders(
             reasons.append(f"martingale_tilt({tilt_vec[i]:.2f}>{config.max_tilt_multiplier})")
         if net_dd_vec[i] <= 0.0 and chop_net_dd_vec[i] <= 0.0:
             reasons.append("non_positive_net_return")
+        if config.min_baseline_order_usd > 0.0:
+            if config.baseline_port_dd_frac <= 0.0:
+                raise ValueError("baseline_port_dd_frac must be positive when min_baseline_order_usd > 0")
+            base_k = (config.baseline_port_dd_frac / max(1, config.pod_size)) / max(
+                float(maxdd_vec[i]), 1e-6
+            )
+            eff_base_k = min(base_k, config.max_k_mult)
+            q10_order_usd = eff_base_k * float(q10_vec[i]) * tensor.pod_equity_usd
+            if q10_order_usd < config.min_baseline_order_usd:
+                reasons.append(
+                    f"below_min_baseline_order(${q10_order_usd:.2f}<${config.min_baseline_order_usd:.0f})"
+                )
 
         passed = len(reasons) == 0
         if passed:
@@ -775,6 +1168,84 @@ def stage1_audit_traders(
 # ---------------------------------------------------------------------------
 
 
+def _pairwise_union_cooccurrence(
+    events: np.ndarray,
+    active: np.ndarray,
+    *,
+    min_union: int = 1,
+) -> np.ndarray:
+    """Compute symmetric pairwise P(E_a | E_b) / 2 + P(E_b | E_a) / 2 over A | B."""
+    c_n = events.shape[0]
+    e_f = events.astype(np.float64, copy=False)
+    m_f = active.astype(np.float64, copy=False)
+    em = e_f * m_f
+    e_inact = e_f * (1.0 - m_f)
+
+    cnt_m = np.sum(m_f, axis=1)
+    n_u = cnt_m[:, None] + cnt_m[None, :] - (m_f @ m_f.T)
+    cnt_eb_on_u = (m_f @ e_f.T) + np.sum(em, axis=1)[None, :] - (m_f @ em.T)
+    cnt_ea_eb_on_u = (e_f @ e_f.T) - (e_inact @ e_inact.T)
+
+    valid = (n_u >= min_union) & (cnt_eb_on_u > 0.5)
+    p_ab = np.divide(cnt_ea_eb_on_u, cnt_eb_on_u, out=np.zeros((c_n, c_n)), where=valid)
+    return 0.5 * (p_ab + p_ab.T)
+
+
+def _pairwise_union_corr(
+    values: np.ndarray,
+    active: np.ndarray,
+    *,
+    min_union: int = 5,
+) -> np.ndarray:
+    """Compute pairwise Pearson correlation restricted to active union A | B."""
+    c_n = values.shape[0]
+    x = np.asarray(values, dtype=np.float64)
+    m_f = active.astype(np.float64, copy=False)
+    xm = x * m_f
+    x2 = x * x
+    x2m = x2 * m_f
+    x_inact = x * (1.0 - m_f)
+
+    cnt_m = np.sum(m_f, axis=1)
+    n_u = cnt_m[:, None] + cnt_m[None, :] - (m_f @ m_f.T)
+    sum_a = np.sum(xm, axis=1)[:, None] + (x @ m_f.T) - (xm @ m_f.T)
+    sum_b = sum_a.T
+    ss_a = np.sum(x2m, axis=1)[:, None] + (x2 @ m_f.T) - (x2m @ m_f.T)
+    ss_b = ss_a.T
+    prod_ab = (x @ x.T) - (x_inact @ x_inact.T)
+
+    u_valid = n_u >= min_union
+    inv_n = np.where(u_valid, 1.0 / np.maximum(n_u, 1.0), 0.0)
+    mean_a = sum_a * inv_n
+    mean_b = sum_b * inv_n
+    var_a = np.maximum(0.0, ss_a * inv_n - mean_a * mean_a)
+    var_b = np.maximum(0.0, ss_b * inv_n - mean_b * mean_b)
+    std_a = np.sqrt(var_a)
+    std_b = np.sqrt(var_b)
+
+    corr_valid = u_valid & (std_a > 1e-12) & (std_b > 1e-12)
+    cov_ab = prod_ab * inv_n - mean_a * mean_b
+    corr = np.divide(cov_ab, std_a * std_b, out=np.zeros((c_n, c_n)), where=corr_valid)
+    corr = np.clip(corr, -1.0, 1.0)
+
+    # Disambiguate rare nearly-constant rows where float64 sum-of-squares cancellation matters.
+    tol_a = var_a <= 1e-12 * np.maximum(1.0, ss_a * inv_n)
+    tol_b = var_b <= 1e-12 * np.maximum(1.0, ss_b * inv_n)
+    suspect = u_valid & (tol_a | tol_b)
+    for a in range(c_n):
+        for b in range(a + 1, c_n):
+            if suspect[a, b]:
+                u_d = active[a] | active[b]
+                da_r, db_r = x[a, u_d], x[b, u_d]
+                val = (
+                    float(np.corrcoef(da_r, db_r)[0, 1])
+                    if np.std(da_r) > 1e-12 and np.std(db_r) > 1e-12
+                    else 0.0
+                )
+                corr[a, b] = corr[b, a] = val
+    return corr
+
+
 def compute_crowding_distance_matrix(
     candidate_ids: Sequence[int],
     tensor: UnitCopy5mTensor,
@@ -790,12 +1261,28 @@ def compute_crowding_distance_matrix(
     """
     cand = list(candidate_ids)
     n_cand = len(cand)
-    sub_pos = tensor.notional_frac[cand]  # (C, S, T)
-    sub_ret = tensor.net_ret_frac[cand]  # (C, T)
+    n_syms = len(tensor.symbols)
+    sub_ret = np.asarray(tensor.net_ret_frac[cand], dtype=np.float64)  # (C, T)
     n_bars = sub_ret.shape[1]
 
-    gross = np.sum(np.abs(sub_pos), axis=1)
-    active_mask = gross > config.flat_notional_eps_frac
+    active_mask = np.zeros((n_cand, n_bars), dtype=bool)
+    pos_norm = np.zeros((n_cand, n_bars), dtype=np.float64)
+    active_syms_by_cand: list[tuple[int, ...]] = []
+    for idx, tid in enumerate(cand):
+        gross_i = np.zeros(n_bars, dtype=np.float64)
+        norm_sq_i = np.zeros(n_bars, dtype=np.float64)
+        nz_syms: list[int] = []
+        for s in range(n_syms):
+            pos_s = tensor.notional_frac[tid, s]
+            if pos_s.any():
+                nz_syms.append(s)
+                p_f64 = pos_s.astype(np.float64, copy=False)
+                gross_i += np.abs(p_f64)
+                norm_sq_i += p_f64 * p_f64
+        active_syms_by_cand.append(tuple(nz_syms))
+        if nz_syms:
+            active_mask[idx] = gross_i > config.flat_notional_eps_frac
+            pos_norm[idx] = np.sqrt(norm_sq_i)
 
     w_len = min(config.tail_window_bars, max(1, n_bars))
     stride = max(1, w_len // 4)
@@ -827,80 +1314,63 @@ def compute_crowding_distance_matrix(
     day_ret = np.sum(sub_ret[:, :usable].reshape(n_cand, n_days, bpd), axis=2)
     day_act = np.any(active_mask[:, :usable].reshape(n_cand, n_days, bpd), axis=2)
 
-    lambda_mat = np.eye(n_cand, dtype=np.float64)
-    omega_mat = np.eye(n_cand, dtype=np.float64)
+    # A: Vectorized Active-Union lower-tail co-distress + daily prior + overlap counts
+    emp_lambda = _pairwise_union_cooccurrence(win_ret <= q05[:, None], win_act, min_union=1)
+    prior_lambda = _pairwise_union_cooccurrence(day_ret < 0.0, day_act, min_union=5)
+    act_f = active_mask.astype(np.float64)
+    n_inter_mat = act_f @ act_f.T
+    w_shr = n_inter_mat / (n_inter_mat + config.overlap_shrinkage_kappa)
+    lambda_mat = np.clip(w_shr * emp_lambda + (1.0 - w_shr) * prior_lambda, 0.0, 1.0)
+    np.fill_diagonal(lambda_mat, 1.0)
+
+    # B: Vectorized Underwater Co-Drawdown
+    dd_norms = np.linalg.norm(dd_excess, axis=1)
+    valid_dd = dd_norms > 1e-12
+    dd_unit = np.zeros_like(dd_excess)
+    dd_unit[valid_dd] = dd_excess[valid_dd] / dd_norms[valid_dd, None]
+    omega_mat = np.clip(dd_unit @ dd_unit.T, 0.0, 1.0)
+    np.fill_diagonal(omega_mat, 1.0)
+
+    # D: Vectorized active-union daily correlation regime penalty
+    corr_day = _pairwise_union_corr(day_ret, day_act, min_union=5)
+    regime_mat = np.clip(0.5 * (1.0 + corr_day), 0.0, 1.0)
+    np.fill_diagonal(regime_mat, 1.0)
+
+    # C: Signed Notional Netting Cosine on active intersection (only common active coins)
     psi_mat = np.eye(n_cand, dtype=np.float64)
-    regime_mat = np.eye(n_cand, dtype=np.float64)
-    dist_mat = np.zeros((n_cand, n_cand), dtype=np.float64)
+    active_sets = [set(syms) for syms in active_syms_by_cand]
+    for a in range(n_cand):
+        tid_a = cand[a]
+        set_a = active_sets[a]
+        if not set_a:
+            continue
+        for b in range(a + 1, n_cand):
+            if n_inter_mat[a, b] <= 0.5:
+                continue
+            common_syms = sorted(set_a & active_sets[b])
+            if not common_syms:
+                continue
+            tid_b = cand[b]
+            inter_bars = active_mask[a] & active_mask[b]
+            dots = np.zeros(int(np.sum(inter_bars)), dtype=np.float64)
+            for s in common_syms:
+                dots += (
+                    tensor.notional_frac[tid_a, s, inter_bars].astype(np.float64, copy=False)
+                    * tensor.notional_frac[tid_b, s, inter_bars].astype(np.float64, copy=False)
+                )
+            norms = pos_norm[a, inter_bars] * pos_norm[b, inter_bars] + 1e-12
+            psi_pos = float(np.clip(np.mean(dots / norms), -1.0, 1.0))
+            psi_mat[a, b] = psi_mat[b, a] = psi_pos
 
     w1, w2, w3, w4 = config.crowding_weights
-
-    for a in range(n_cand):
-        for b in range(a + 1, n_cand):
-            # A: Active-Union lower-tail co-distress
-            u_win = win_act[a] | win_act[b]
-            if np.any(u_win):
-                ra, rb = win_ret[a, u_win], win_ret[b, u_win]
-                da, db = ra <= q05[a], rb <= q05[b]
-                p_ab = float(np.mean(da[db])) if np.any(db) else 0.0
-                p_ba = float(np.mean(db[da])) if np.any(da) else 0.0
-                emp_lambda = 0.5 * (p_ab + p_ba)
-            else:
-                emp_lambda = 0.0
-
-            inter_bars = active_mask[a] & active_mask[b]
-            n_inter = int(np.sum(inter_bars))
-            u_days = day_act[a] | day_act[b]
-            if np.sum(u_days) >= 5:
-                da_r, db_r = day_ret[a, u_days], day_ret[b, u_days]
-                neg_a = da_r < 0.0
-                neg_b = db_r < 0.0
-                prior_lambda = (
-                    0.5
-                    * (
-                        (float(np.mean(neg_a[neg_b])) if np.any(neg_b) else 0.0)
-                        + (float(np.mean(neg_b[neg_a])) if np.any(neg_a) else 0.0)
-                    )
-                )
-                corr_day = float(np.corrcoef(da_r, db_r)[0, 1]) if np.std(da_r) > 1e-12 and np.std(db_r) > 1e-12 else 0.0
-            else:
-                prior_lambda = 0.0
-                corr_day = 0.0
-
-            w_shr = n_inter / (n_inter + config.overlap_shrinkage_kappa)
-            tilde_lambda = float(np.clip(w_shr * emp_lambda + (1.0 - w_shr) * prior_lambda, 0.0, 1.0))
-
-            # B: Underwater Co-Drawdown
-            na, nb = float(np.linalg.norm(dd_excess[a])), float(np.linalg.norm(dd_excess[b]))
-            omega_dd = float(np.clip(np.dot(dd_excess[a], dd_excess[b]) / (na * nb), 0.0, 1.0)) if na > 1e-12 and nb > 1e-12 else 0.0
-
-            # C: Signed Notional Netting Cosine on active intersection
-            if n_inter > 0:
-                pa = sub_pos[a, :, inter_bars]
-                pb = sub_pos[b, :, inter_bars]
-                if pa.shape[0] != n_inter:
-                    pa, pb = pa.T, pb.T
-                dots = np.sum(pa * pb, axis=1)
-                norms = np.linalg.norm(pa, axis=1) * np.linalg.norm(pb, axis=1) + 1e-12
-                psi_pos = float(np.clip(np.mean(dots / norms), -1.0, 1.0))
-            else:
-                psi_pos = 0.0
-
-            reg_pen = float(np.clip(0.5 * (1.0 + corr_day), 0.0, 1.0))
-
-            lambda_mat[a, b] = lambda_mat[b, a] = tilde_lambda
-            omega_mat[a, b] = omega_mat[b, a] = omega_dd
-            psi_mat[a, b] = psi_mat[b, a] = psi_pos
-            regime_mat[a, b] = regime_mat[b, a] = reg_pen
-
-            crowding = (
-                w1 * tilde_lambda
-                + w2 * omega_dd
-                + w3 * (0.5 * (1.0 + psi_pos))
-                + w4 * reg_pen
-            )
-            d_ab = float(np.clip(1.0 - crowding, 0.05, 1.0))
-            dist_mat[a, b] = dist_mat[b, a] = d_ab
+    crowding = (
+        w1 * lambda_mat
+        + w2 * omega_mat
+        + w3 * (0.5 * (1.0 + psi_mat))
+        + w4 * regime_mat
+    )
+    dist_mat = np.clip(1.0 - crowding, 0.05, 1.0)
+    np.fill_diagonal(dist_mat, 0.0)
 
     return dist_mat, {
         "lambda_tail": lambda_mat,
@@ -1222,6 +1692,79 @@ def discover_diverse_pods(
 # ---------------------------------------------------------------------------
 
 
+def _cpcv_sizing_metrics(
+    tensor: UnitCopy5mTensor,
+    config: PodConstructorConfig,
+) -> list[TraderAuditMetrics]:
+    """Compute exact per-trader risk and activity metrics required by size_pod_dual_barrier."""
+    n_traders = len(tensor.aliases)
+    n_bars = tensor.timestamps_ms.size
+    metrics: list[TraderAuditMetrics] = []
+    for i in range(n_traders):
+        act_idx, q10 = _compute_trader_activity_q10(tensor, i, config.flat_notional_eps_frac)
+        t_act = act_idx.size
+        cum_r = np.cumsum(tensor.net_ret_frac[i])
+        _, mdd, cdar95 = compute_underwater_and_cdar(cum_r, alpha=config.cdar_alpha)
+        max_dd = max(mdd, 1e-6)
+        tot_ret = float(cum_r[-1]) if cum_r.size > 0 else 0.0
+        metrics.append(
+            TraderAuditMetrics(
+                trader_id=i,
+                alias=tensor.aliases[i],
+                active_bars=t_act,
+                active_frac=t_act / float(max(1, n_bars)),
+                num_episodes=0,
+                raw_sharpe_ann=0.0,
+                eb_shrunk_sharpe_ann=0.0,
+                deflated_sharpe_prob=0.5,
+                net_over_max_dd=tot_ret / max_dd,
+                chop_net_over_dd=tot_ret / max_dd,
+                standalone_cdar95=max(cdar95, 1e-6),
+                standalone_max_dd=max_dd,
+                tilt_multiplier=1.0,
+                active_pos_q10_frac=q10,
+                passed_behavioral_gate=True,
+            )
+        )
+    return metrics
+
+
+def _slice_tensor_for_traders(
+    tensor: UnitCopy5mTensor,
+    candidate_pods: Sequence[tuple[int, ...]],
+) -> tuple[UnitCopy5mTensor, list[tuple[int, ...]]]:
+    """Slice tensor strictly to unique traders in candidate_pods and their active symbols."""
+    unique_traders = sorted({tid for pod in candidate_pods for tid in pod})
+    remap = {tid: new_idx for new_idx, tid in enumerate(unique_traders)}
+    remapped_pods = [tuple(remap[tid] for tid in pod) for pod in candidate_pods]
+
+    n_syms_full = len(tensor.symbols)
+    used_sym_mask = np.zeros(n_syms_full, dtype=bool)
+    for tid in unique_traders:
+        for s in range(n_syms_full):
+            if not used_sym_mask[s] and (
+                tensor.notional_frac[tid, s].any() or tensor.delta_notional_frac[tid, s].any()
+            ):
+                used_sym_mask[s] = True
+    active_syms = np.flatnonzero(used_sym_mask)
+    if active_syms.size == 0 and n_syms_full > 0:
+        active_syms = np.array([0], dtype=np.intp)
+
+    sub_tensor = UnitCopy5mTensor(
+        aliases=tuple(tensor.aliases[tid] for tid in unique_traders),
+        symbols=tuple(tensor.symbols[int(s)] for s in active_syms),
+        timestamps_ms=tensor.timestamps_ms,
+        notional_frac=tensor.notional_frac[np.ix_(unique_traders, active_syms)],
+        delta_notional_frac=tensor.delta_notional_frac[np.ix_(unique_traders, active_syms)],
+        gross_ret_frac=tensor.gross_ret_frac[unique_traders],
+        net_ret_frac=tensor.net_ret_frac[unique_traders],
+        sym_net_ret_frac=None,
+        chop_mask=None,
+        pod_equity_usd=tensor.pod_equity_usd,
+    )
+    return sub_tensor, remapped_pods
+
+
 def compute_leakfree_cpcv_pbo(
     candidate_pods: Sequence[tuple[int, ...]],
     tensor: UnitCopy5mTensor,
@@ -1231,12 +1774,18 @@ def compute_leakfree_cpcv_pbo(
 
     Unlike naive in-sample replay, weights k_i are re-solved strictly inside each
     training block subset (with boundary episode purging / embargo) before scoring OOS.
+    Slices the input tensor strictly to unique traders appearing in ``candidate_pods``
+    (and symbols traded by them) before iterating splits for exact O(U) scalability.
     """
     n_pods = len(candidate_pods)
     if n_pods < 2:
         return 0.0, np.array([1.0], dtype=np.float64)
 
-    n_bars = tensor.timestamps_ms.size
+    if not any(candidate_pods):
+        return 0.0, np.array([1.0], dtype=np.float64)
+
+    sub_tensor, remapped_pods = _slice_tensor_for_traders(tensor, candidate_pods)
+    n_bars = sub_tensor.timestamps_ms.size
     bpd = config.bars_per_day
     n_days = max(2, n_bars // bpd)
     n_blocks = min(config.cpcv_n_blocks, n_days // 2)
@@ -1272,43 +1821,35 @@ def compute_leakfree_cpcv_pbo(
         te_idx = np.asarray(te_bars, dtype=np.int32)
 
         tr_tensor = UnitCopy5mTensor(
-            aliases=tensor.aliases,
-            symbols=tensor.symbols,
-            timestamps_ms=tensor.timestamps_ms[tr_idx],
-            notional_frac=tensor.notional_frac[:, :, tr_idx],
-            delta_notional_frac=tensor.delta_notional_frac[:, :, tr_idx],
-            gross_ret_frac=tensor.gross_ret_frac[:, tr_idx],
-            net_ret_frac=tensor.net_ret_frac[:, tr_idx],
-            sym_net_ret_frac=(
-                tensor.sym_net_ret_frac[:, :, tr_idx]
-                if tensor.sym_net_ret_frac is not None
-                else None
-            ),
-            pod_equity_usd=tensor.pod_equity_usd,
+            aliases=sub_tensor.aliases,
+            symbols=sub_tensor.symbols,
+            timestamps_ms=sub_tensor.timestamps_ms[tr_idx],
+            notional_frac=sub_tensor.notional_frac[:, :, tr_idx],
+            delta_notional_frac=sub_tensor.delta_notional_frac[:, :, tr_idx],
+            gross_ret_frac=sub_tensor.gross_ret_frac[:, tr_idx],
+            net_ret_frac=sub_tensor.net_ret_frac[:, tr_idx],
+            sym_net_ret_frac=None,
+            pod_equity_usd=sub_tensor.pod_equity_usd,
         )
         te_tensor = UnitCopy5mTensor(
-            aliases=tensor.aliases,
-            symbols=tensor.symbols,
-            timestamps_ms=tensor.timestamps_ms[te_idx],
-            notional_frac=tensor.notional_frac[:, :, te_idx],
-            delta_notional_frac=tensor.delta_notional_frac[:, :, te_idx],
-            gross_ret_frac=tensor.gross_ret_frac[:, te_idx],
-            net_ret_frac=tensor.net_ret_frac[:, te_idx],
-            sym_net_ret_frac=(
-                tensor.sym_net_ret_frac[:, :, te_idx]
-                if tensor.sym_net_ret_frac is not None
-                else None
-            ),
-            pod_equity_usd=tensor.pod_equity_usd,
+            aliases=sub_tensor.aliases,
+            symbols=sub_tensor.symbols,
+            timestamps_ms=sub_tensor.timestamps_ms[te_idx],
+            notional_frac=sub_tensor.notional_frac[:, :, te_idx],
+            delta_notional_frac=sub_tensor.delta_notional_frac[:, :, te_idx],
+            gross_ret_frac=sub_tensor.gross_ret_frac[:, te_idx],
+            net_ret_frac=sub_tensor.net_ret_frac[:, te_idx],
+            sym_net_ret_frac=None,
+            pod_equity_usd=sub_tensor.pod_equity_usd,
         )
 
-        _, tr_metrics, _ = stage1_audit_traders(tr_tensor, config)
+        tr_metrics = _cpcv_sizing_metrics(tr_tensor, config)
         te_slices = _daily_reset_slices(te_tensor.timestamps_ms, bpd, config.reset_bar_offset)
         cost_rate = config.cost_bps * 1e-4
 
         is_scores = np.zeros(n_pods, dtype=np.float64)
         oos_scores = np.zeros(n_pods, dtype=np.float64)
-        for p_idx, pod in enumerate(candidate_pods):
+        for p_idx, pod in enumerate(remapped_pods):
             sized_tr = size_pod_dual_barrier(pod, tr_tensor, tr_metrics, config)
             is_scores[p_idx] = sized_tr.net_over_max_dd
 
