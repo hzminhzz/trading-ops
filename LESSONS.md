@@ -54,6 +54,14 @@ Monte Carlo (`80k–100k` paths) + Optional Stopping analysis across Vanta Class
 
 ---
 
+## 2026-11-16 — Strict New-Position-Only Research and Retrospective Qualification
+
+1. **Always reset lifecycle admission at the simulated activation boundary.** A position opened before an OOS activation is not a new position; carry a symbol only after a flat-to-open transition or a genuine side flip after activation. The May–Nov 2026 CFT study found five Train-selected candidates with negative Sep–Oct modeled follower net PnL under strict new-only admission. Historical full-target synchronization materially changed PnL and increased drawdown in several portfolios, so the policies must never be conflated.
+2. **Keep projected fills and retrospective rosters separate from live-quality financial evidence.** Reservoir `start_position` supports historical quantity reconstruction, but neither source observation known-at time nor actual Bybit execution, funding, min-lot and market impact is proven. Train stale-price checkpoints invalidate precise `k` qualification; handle them by verified backfill or conservative pair-local close before release.
+3. **Reject misleading pass probabilities.** Stationary-block Monte Carlo on historical Guardian daily summaries tests sensitivity under resampling, not independent broker-executable paths or a historically frozen wallet-selection release. No candidate is economically or scientifically qualified on these observations. Research artifact: `reports/2026-11-16__cft__10k__may-nov-follower-portfolio.md`.
+
+---
+
 ## 2026-11-16 — Canonical Backtest Hardening & Full-Universe `v4` (`May–Nov 2026`, CFT `$10k`)
 
 Hardening `studies/study_data.py`, `studies/canonical_replay.py`, `studies/pod_constructor.py`, and single-pass Parquet-cached `studies/2026-11-16__cft__10k__canonical-full-universe-v4.py` cut runtime from **`2,202.74s` (`36.7m`)** across `96` wallets in `v3` to **`818.61s` (`13.6m`)** across `189` wallets + full OOS stress matrices (`v4`), while uncovering four durable research rules:
