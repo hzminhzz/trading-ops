@@ -136,6 +136,7 @@ class ChallengeRunResult:
     full_window_peak_gross_leverage: float = 0.0
     total_funding_usd: float = 0.0
     full_window_funding_usd: float = 0.0
+    executed_deltas: np.ndarray | None = None
 
 
 def roster_digest(records: Sequence[WalletRecord]) -> str:
@@ -720,6 +721,25 @@ def _cap_phase2_leverage(
             )
 
 
+def _record_sweep_halt(
+    pos: np.ndarray,
+    sweep_snapshot: np.ndarray,
+    raw_want: np.ndarray,
+    coin_eligible: np.ndarray,
+    swept_flags: np.ndarray,
+    step_idx: int,
+    reenter_mode: str,
+    sweeps: int,
+) -> tuple[int, bool]:
+    """Flatten residual positions, snapshot targets, and lock re-entry after a sweep breach."""
+    pos[:] = 0.0
+    sweep_snapshot[:] = raw_want
+    if reenter_mode == "new_only":
+        coin_eligible[:] = False
+    swept_flags[step_idx] = True
+    return sweeps + 1, True
+
+
 def _execute_guardian_pass(
     coins: Sequence[str],
     net_targets: np.ndarray,
@@ -783,8 +803,10 @@ def _execute_guardian_pass(
     step_pnl = np.zeros(n, dtype=np.float64)
     eq_curve = np.zeros(n, dtype=np.float64)
     swept_flags = np.zeros(n, dtype=bool)
+    executed_deltas = np.zeros((nc, n), dtype=np.float64)
 
     for j in range(n):
+        prev_pos = pos.copy()
         ts_ms = int(timestamps_ms[j])
         if j > 0 and _is_reset_bar(ts_ms, spec.reset_utc_hour, spec.reset_utc_minute):
             cashday = eq
@@ -882,12 +904,16 @@ def _execute_guardian_pass(
                 peak_gross_leverage, _calc_gross_leverage(gross_open, eq + outage_pnl + open_mtm)
             )
             eq += bar_pnl
-            sweep_snapshot[:] = raw_want
-            if spec.reenter_after_sweep == "new_only":
-                coin_eligible[:] = False
-            sweeps += 1
-            blocked_until_reset = True
-            swept_flags[j] = True
+            sweeps, blocked_until_reset = _record_sweep_halt(
+                pos,
+                sweep_snapshot,
+                raw_want,
+                coin_eligible,
+                swept_flags,
+                j,
+                spec.reenter_after_sweep,
+                sweeps,
+            )
         else:
             p1_pnl = outage_pnl
             p1_funding = 0.0
@@ -924,12 +950,16 @@ def _execute_guardian_pass(
                 bar_pnl = p1_pnl - flatten_cost
                 total_funding_usd += p1_funding
                 eq += bar_pnl
-                sweep_snapshot[:] = raw_want
-                if spec.reenter_after_sweep == "new_only":
-                    coin_eligible[:] = False
-                sweeps += 1
-                blocked_until_reset = True
-                swept_flags[j] = True
+                sweeps, blocked_until_reset = _record_sweep_halt(
+                    pos,
+                    sweep_snapshot,
+                    raw_want,
+                    coin_eligible,
+                    swept_flags,
+                    j,
+                    spec.reenter_after_sweep,
+                    sweeps,
+                )
             else:
                 if not blocked_until_reset:
                     _cap_phase2_leverage(
@@ -991,14 +1021,18 @@ def _execute_guardian_pass(
                     flatten_cost = float(np.sum(np.abs(pos[valid_open]) * m[valid_open])) * cost_rate
                     bar_pnl -= flatten_cost
                     eq -= flatten_cost
-                    sweep_snapshot[:] = raw_want
-                    if spec.reenter_after_sweep == "new_only":
-                        coin_eligible[:] = False
-                    pos[:] = 0.0
-                    sweeps += 1
-                    blocked_until_reset = True
-                    swept_flags[j] = True
+                    sweeps, blocked_until_reset = _record_sweep_halt(
+                        pos,
+                        sweep_snapshot,
+                        raw_want,
+                        coin_eligible,
+                        swept_flags,
+                        j,
+                        spec.reenter_after_sweep,
+                        sweeps,
+                    )
 
+        executed_deltas[:, j] = pos - prev_pos
         step_pnl[j] = bar_pnl
         eq_curve[j] = eq
         peak = max(peak, eq)
@@ -1047,6 +1081,7 @@ def _execute_guardian_pass(
         "step_pnl": step_pnl,
         "eq_curve": eq_curve,
         "swept_flags": swept_flags,
+        "executed_deltas": executed_deltas,
     }
 
 
@@ -1173,6 +1208,7 @@ def simulate_guardian_challenge(
         full_window_peak_gross_leverage=cont["peak_gross_leverage"],
         total_funding_usd=term["total_funding_usd"],
         full_window_funding_usd=cont["total_funding_usd"],
+        executed_deltas=cont["executed_deltas"],
     )
     return result, blocks
 

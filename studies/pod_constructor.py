@@ -1759,10 +1759,26 @@ def _slice_tensor_for_traders(
         gross_ret_frac=tensor.gross_ret_frac[unique_traders],
         net_ret_frac=tensor.net_ret_frac[unique_traders],
         sym_net_ret_frac=None,
-        chop_mask=None,
+        chop_mask=tensor.chop_mask,
         pod_equity_usd=tensor.pod_equity_usd,
     )
     return sub_tensor, remapped_pods
+
+
+def _slice_tensor_bars(tensor: UnitCopy5mTensor, bar_idx: np.ndarray) -> UnitCopy5mTensor:
+    """Slice a tensor along the time axis using an integer bar-index array."""
+    return UnitCopy5mTensor(
+        aliases=tensor.aliases,
+        symbols=tensor.symbols,
+        timestamps_ms=tensor.timestamps_ms[bar_idx],
+        notional_frac=tensor.notional_frac[:, :, bar_idx],
+        delta_notional_frac=tensor.delta_notional_frac[:, :, bar_idx],
+        gross_ret_frac=tensor.gross_ret_frac[:, bar_idx],
+        net_ret_frac=tensor.net_ret_frac[:, bar_idx],
+        sym_net_ret_frac=None,
+        chop_mask=tensor.chop_mask[bar_idx] if tensor.chop_mask is not None else None,
+        pod_equity_usd=tensor.pod_equity_usd,
+    )
 
 
 def compute_leakfree_cpcv_pbo(
@@ -1820,28 +1836,8 @@ def compute_leakfree_cpcv_pbo(
         tr_idx = np.asarray(tr_bars, dtype=np.int32)
         te_idx = np.asarray(te_bars, dtype=np.int32)
 
-        tr_tensor = UnitCopy5mTensor(
-            aliases=sub_tensor.aliases,
-            symbols=sub_tensor.symbols,
-            timestamps_ms=sub_tensor.timestamps_ms[tr_idx],
-            notional_frac=sub_tensor.notional_frac[:, :, tr_idx],
-            delta_notional_frac=sub_tensor.delta_notional_frac[:, :, tr_idx],
-            gross_ret_frac=sub_tensor.gross_ret_frac[:, tr_idx],
-            net_ret_frac=sub_tensor.net_ret_frac[:, tr_idx],
-            sym_net_ret_frac=None,
-            pod_equity_usd=sub_tensor.pod_equity_usd,
-        )
-        te_tensor = UnitCopy5mTensor(
-            aliases=sub_tensor.aliases,
-            symbols=sub_tensor.symbols,
-            timestamps_ms=sub_tensor.timestamps_ms[te_idx],
-            notional_frac=sub_tensor.notional_frac[:, :, te_idx],
-            delta_notional_frac=sub_tensor.delta_notional_frac[:, :, te_idx],
-            gross_ret_frac=sub_tensor.gross_ret_frac[:, te_idx],
-            net_ret_frac=sub_tensor.net_ret_frac[:, te_idx],
-            sym_net_ret_frac=None,
-            pod_equity_usd=sub_tensor.pod_equity_usd,
-        )
+        tr_tensor = _slice_tensor_bars(sub_tensor, tr_idx)
+        te_tensor = _slice_tensor_bars(sub_tensor, te_idx)
 
         tr_metrics = _cpcv_sizing_metrics(tr_tensor, config)
         te_slices = _daily_reset_slices(te_tensor.timestamps_ms, bpd, config.reset_bar_offset)

@@ -976,3 +976,82 @@ def test_large_same_ms_burst_greedy_repair_and_edge_screen_guards(tmp_path: Path
         sd.assert_utc_coverage(start_ms - 1, end_ms - 1, start_ms, end_ms)
     with pytest.raises(ValueError, match="UTC_COVERAGE_START_SHORTFALL"):
         sd.assert_utc_coverage(start_ms + 3_700_000, end_ms - 1000, start_ms, end_ms)
+
+
+def test_fetch_bybit_usdt_perp_specs_parses_lot_size_filter_and_user_agent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import io
+    import json
+    import urllib.request
+
+    import study_data as sd
+
+    pages = [
+        {
+            "retCode": 0,
+            "result": {
+                "list": [
+                    {
+                        "baseCoin": "BTC",
+                        "quoteCoin": "USDT",
+                        "contractType": "LinearPerpetual",
+                        "lotSizeFilter": {"qtyStep": "0.001", "minOrderQty": "0.002"},
+                    },
+                    {
+                        "baseCoin": "ETH",
+                        "quoteCoin": "USDC",
+                        "contractType": "LinearPerpetual",
+                        "lotSizeFilter": {"qtyStep": "0.01", "minOrderQty": "0.01"},
+                    },
+                ],
+                "nextPageCursor": "page2",
+            },
+        },
+        {
+            "retCode": 0,
+            "result": {
+                "list": [
+                    {
+                        "baseCoin": "DOGE",
+                        "quoteCoin": "USDT",
+                        "contractType": "LinearPerpetual",
+                        "lotSizeFilter": {"qtyStep": "1", "minOrderQty": "5"},
+                    },
+                    {
+                        "baseCoin": "BTC",
+                        "quoteCoin": "USD",
+                        "contractType": "InversePerpetual",
+                        "lotSizeFilter": {"qtyStep": "1", "minOrderQty": "1"},
+                    },
+                ],
+                "nextPageCursor": "",
+            },
+        },
+    ]
+    seen_user_agents: list[str] = []
+
+    class _FakeResp(io.BytesIO):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+    def fake_urlopen(req, timeout=0):
+        seen_user_agents.append(req.get_header("User-agent"))
+        idx = 1 if "cursor=page2" in req.full_url else 0
+        return _FakeResp(json.dumps(pages[idx]).encode())
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+
+    specs, meta = sd.fetch_bybit_usdt_perp_specs(timeout=5)
+    assert specs == {"BTC": (0.001, 0.002), "DOGE": (1.0, 5.0)}
+    assert meta["pages"] == 2
+    assert meta["base_coins"] == 2
+    assert seen_user_agents == ["trading-ops-research/1.0", "trading-ops-research/1.0"]
+
+    coins, meta_legacy = sd.fetch_bybit_usdt_perps(timeout=5)
+    assert coins == {"BTC", "DOGE"}
+    assert meta_legacy["base_coins"] == 2
+

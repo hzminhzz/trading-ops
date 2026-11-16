@@ -11,7 +11,7 @@ import json
 import sys
 import time
 import urllib.request
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -45,6 +45,7 @@ POD_SIZES = (3, 4)
 DEADBANDS_USD = (15.0, 30.0)
 COST_MULTIPLIERS = (1.0, 2.0, 3.0)
 POLICIES = ("new", "full")
+MAX_GROSS_LEVERAGE = 5.0
 
 _VOL_SCAN_SCHEMA = pl.Schema(
     {
@@ -108,7 +109,7 @@ def prepare_screen(
     paths: StudyPaths = StudyPaths(),
     *,
     fetch_live_av: bool = True,
-    bybit_snapshot: tuple[set[str], dict] | None = None,
+    bybit_snapshot: tuple[set[str] | Mapping[str, tuple[float, float]], dict] | None = None,
     account_value_fetcher: Callable[
         [cr.WalletRecord], tuple[float | None, dict | None, str | None]
     ]
@@ -128,9 +129,19 @@ def prepare_screen(
         raise RuntimeError(f"MISSING_SOURCE_DAYS:{inv_manifest['missing_dates'][:10]}")
 
     ingestion = sd.ingest_fills(records, archive_paths, start=START, end=END, split=SPLIT)
-    bybit_coins, bybit_meta = (
-        bybit_snapshot if bybit_snapshot is not None else sd.fetch_bybit_usdt_perps()
-    )
+    if bybit_snapshot is None:
+        bybit_specs, bybit_meta = sd.fetch_bybit_usdt_perp_specs()
+        bybit_coins = set(bybit_specs)
+    elif isinstance(bybit_snapshot[0], Mapping):
+        bybit_specs = {
+            str(c): (float(v[0]), float(v[1])) for c, v in bybit_snapshot[0].items()
+        }
+        bybit_meta = bybit_snapshot[1]
+        bybit_coins = set(bybit_specs)
+    else:
+        bybit_coins = set(bybit_snapshot[0])
+        bybit_meta = bybit_snapshot[1]
+        bybit_specs = {}
     screen_rows = sd.screen_wallets(
         records,
         ingestion,
@@ -174,6 +185,9 @@ def prepare_screen(
         "roster_count": len(records),
         "source": inv_manifest,
         "bybit": bybit_meta,
+        "bybit_lot_specs": {
+            c: [float(s[0]), float(s[1])] for c, s in sorted(bybit_specs.items())
+        },
         "cost_bps_each_execution": cr.DEFAULT_COST_BPS,
         "screen": updated_rows,
         "screen_survivors_historical": sorted(hist_eligible),
@@ -283,19 +297,6 @@ def _export_train_parquet_artifacts(
         "train_unit_equity_parquet": _rel_artifact_path(equity_path),
         "train_solo_summary_parquet": _rel_artifact_path(summary_path),
     }
-
-
-def load_unit_streams_parquet(parquet_path: Path | str) -> dict[str, dict[str, pl.DataFrame]]:
-    """Reload persisted sparse unit-replay Parquet rows into ``build_tensor_from_unit_replays`` shape."""
-    df = pl.read_parquet(parquet_path)
-    out: dict[str, dict[str, pl.DataFrame]] = {}
-    if df.is_empty():
-        return out
-    for (alias, coin), part in df.partition_by(["alias", "coin"], as_dict=True, maintain_order=True).items():
-        out.setdefault(str(alias), {})[str(coin)] = part.select(
-            "timestamp", "open", "close", "pos", "delta", "gross", "cost", "net"
-        )
-    return out
 
 
 def run_single_pass_train_replay(
@@ -427,18 +428,10 @@ def _run_pod_discovery_pass(
     min_baseline_order_usd: float,
     min_lot_usd: float,
     baseline_port_dd_frac: float,
-) -> tuple[list[dict], dict, pc.PodConstructorConfig]:
+) -> tuple[list[dict], dict]:
     """Run Stage 1/1.5/2 discovery across pod_sizes with 2%-port-DD baseline k cap."""
     selected: list[dict] = []
     auditing: dict = {}
-    last_conf = pc.PodConstructorConfig(
-        min_baseline_order_usd=min_baseline_order_usd,
-        baseline_port_dd_frac=baseline_port_dd_frac,
-        min_lot_usd=min_lot_usd,
-        min_active_bar_frac=0.005,
-        top_per_cluster=2,
-        max_candidate_pods=16,
-    )
     strict_filter = min_baseline_order_usd > 0.0
 
     for size in pod_sizes:
@@ -451,7 +444,6 @@ def _run_pod_discovery_pass(
             min_baseline_order_usd=min_baseline_order_usd,
             baseline_port_dd_frac=baseline_port_dd_frac,
         )
-        last_conf = conf
         try:
             sized, metrics, _, components = pc.discover_diverse_pods(tensor, conf)
         except ValueError as exc:
@@ -537,7 +529,7 @@ def _run_pod_discovery_pass(
                     "indices": list(s.pod_indices),
                 }
             )
-    return _select_diverse_candidates(selected), auditing, last_conf
+    return _select_diverse_candidates(selected), auditing
 
 
 def train_pods(
@@ -550,7 +542,7 @@ def train_pods(
 ) -> tuple[list[dict], dict]:
     """Discover pods with strict >=$15 pre-clustering filter, 2% DD cap, and leak-free CPCV/PBO."""
     row_by_alias = {r["alias"]: r for r in (screen_rows or [])}
-    candidates, auditing, last_conf = _run_pod_discovery_pass(
+    candidates, auditing = _run_pod_discovery_pass(
         tensor,
         row_by_alias,
         pod_sizes=pod_sizes,
@@ -584,25 +576,6 @@ def train_pods(
     else:
         auditing["strict_min_notional_status"] = "INSUFFICIENT_FOR_POD_SIZES"
         auditing["cpcv"] = {"pbo": None, "n_splits": 0, "logits": []}
-
-    # Diagnostic sensitivity without min_baseline_order_usd filter (transparently marked; never promoted).
-    if not candidates or any(
-        auditing.get(str(sz), {}).get("status") == "INSUFFICIENT" for sz in pod_sizes
-    ):
-        diag_cands, diag_audit, _ = _run_pod_discovery_pass(
-            tensor,
-            row_by_alias,
-            pod_sizes=pod_sizes,
-            min_baseline_order_usd=0.0,
-            min_lot_usd=min_notional_usd,
-            baseline_port_dd_frac=baseline_port_dd_frac,
-        )
-        auditing["diagnostic_unfiltered_sensitivity"] = {
-            "strict_min_notional_passed": False,
-            "candidates": diag_cands,
-            "audit": diag_audit,
-        }
-        _ = last_conf
 
     return candidates, auditing
 
@@ -642,6 +615,19 @@ def candidate_targets(
     return coins, net, trade, mark
 
 
+def _epoch_ms_to_utc_datetime(timestamps_ms: np.ndarray) -> pl.DataFrame:
+    """Convert millisecond epoch array into a single-column UTC ``Datetime('us')`` DataFrame."""
+    return pl.DataFrame(
+        {
+            "timestamp": pl.from_epoch(
+                pl.Series("timestamp", timestamps_ms, dtype=pl.Int64), time_unit="ms"
+            )
+            .dt.replace_time_zone("UTC")
+            .cast(pl.Datetime("us", "UTC"))
+        }
+    )
+
+
 def load_1m_volumes_on_grid(
     coins: Sequence[str],
     grid_ms: np.ndarray,
@@ -655,15 +641,7 @@ def load_1m_volumes_on_grid(
     g_key = (int(grid_ms[0]), int(grid_ms.size))
     missing = [c for c in coins if (c, *g_key) not in vol_cache]
     if missing:
-        trade_grid_df = pl.DataFrame(
-            {
-                "timestamp": pl.from_epoch(
-                    pl.Series("timestamp", grid_ms + 60_000, dtype=pl.Int64), time_unit="ms"
-                )
-                .dt.replace_time_zone("UTC")
-                .cast(pl.Datetime("us", "UTC"))
-            }
-        )
+        trade_grid_df = _epoch_ms_to_utc_datetime(grid_ms + 60_000)
         start_dt = sd.to_utc_datetime(int(grid_ms[0]))
         end_dt = sd.to_utc_datetime(int(grid_ms[-1]) + 300_000)
         start_lit = pl.lit(start_dt, dtype=pl.Datetime("us", "UTC"))
@@ -720,15 +698,7 @@ def load_usdt_funding_rates_on_grid(
     g_key = (int(grid_ms[0]), int(grid_ms.size))
     missing = [c for c in coins if (c, *g_key) not in fund_cache]
     if missing:
-        grid_df = pl.DataFrame(
-            {
-                "timestamp": pl.from_epoch(
-                    pl.Series("timestamp", grid_ms, dtype=pl.Int64), time_unit="ms"
-                )
-                .dt.replace_time_zone("UTC")
-                .cast(pl.Datetime("us", "UTC"))
-            }
-        )
+        grid_df = _epoch_ms_to_utc_datetime(grid_ms)
         start_lit = pl.lit(sd.to_utc_datetime(int(grid_ms[0]) - 12 * 3_600_000), dtype=pl.Datetime("us", "UTC"))
         end_lit = pl.lit(sd.to_utc_datetime(int(grid_ms[-1]) + 300_000), dtype=pl.Datetime("us", "UTC"))
 
@@ -782,16 +752,21 @@ def load_usdt_funding_rates_on_grid(
 
 def compute_1m_participation_diagnostics(
     coins: Sequence[str],
-    net_targets: np.ndarray,
+    run_result: cr.ChallengeRunResult | np.ndarray,
     trade_open: np.ndarray,
     mark_close: np.ndarray,
     vol_usd_mat: np.ndarray,
     grid_ms: np.ndarray,
-    *,
-    deadband_usd: float,
 ) -> dict:
-    """Compute post-deadband trade notionals vs 1m bar USD volume participation diagnostics."""
-    _nc, n = net_targets.shape
+    """Compute Guardian-executed trade notionals vs 1m bar USD volume participation diagnostics."""
+    if isinstance(run_result, cr.ChallengeRunResult):
+        if run_result.executed_deltas is None:
+            raise ValueError("MISSING_EXECUTED_DELTAS")
+        executed_deltas = run_result.executed_deltas
+    else:
+        executed_deltas = run_result
+
+    _nc, n = executed_deltas.shape
     ratios: list[float] = []
     trade_count = 0
     no_vol_trades = 0
@@ -801,49 +776,32 @@ def compute_1m_participation_diagnostics(
     max_ts: int | None = None
 
     for ci, coin in enumerate(coins):
-        cur = 0.0
-        tgt_c = net_targets[ci]
+        delta_c = executed_deltas[ci]
         to_c = trade_open[ci]
         mc_c = mark_close[ci]
         vol_c = vol_usd_mat[ci]
         for j in range(n):
-            want = float(tgt_c[j])
-            m_c = float(mc_c[j])
-            if cur == 0.0 and abs(want) <= 1e-12 and np.isfinite(m_c):
-                continue
-            if not np.isfinite(m_c):
-                cur = 0.0
+            exec_delta = abs(float(delta_c[j]))
+            if exec_delta <= 1e-12:
                 continue
             t_c = float(to_c[j])
-            if abs(want - cur) > 1e-9 and not np.isfinite(t_c):
-                continue
+            m_c = float(mc_c[j])
             exec_px = t_c if np.isfinite(t_c) else m_c
-            if abs(want) <= 1e-12:
-                desired = 0.0
+            if not np.isfinite(exec_px):
+                continue
+            notional = exec_delta * exec_px
+            trade_count += 1
+            total_notional += notional
+            b_vol = float(vol_c[j])
+            if np.isfinite(b_vol) and b_vol > 0.0:
+                pct = (notional / b_vol) * 100.0
+                ratios.append(pct)
+                if pct > max_part:
+                    max_part = pct
+                    max_coin = coin
+                    max_ts = int(grid_ms[j])
             else:
-                d_qty = want - cur
-                if abs(d_qty) <= 1e-12 or (
-                    deadband_usd > 0.0 and abs(d_qty) * exec_px + 1e-9 < deadband_usd
-                ):
-                    desired = cur
-                else:
-                    desired = want
-            exec_delta = abs(desired - cur)
-            if exec_delta > 1e-12:
-                notional = exec_delta * exec_px
-                trade_count += 1
-                total_notional += notional
-                b_vol = float(vol_c[j])
-                if np.isfinite(b_vol) and b_vol > 0.0:
-                    pct = (notional / b_vol) * 100.0
-                    ratios.append(pct)
-                    if pct > max_part:
-                        max_part = pct
-                        max_coin = coin
-                        max_ts = int(grid_ms[j])
-                else:
-                    no_vol_trades += 1
-            cur = desired
+                no_vol_trades += 1
 
     cov_trades = len(ratios)
     arr = np.asarray(ratios, dtype=np.float64)
@@ -955,6 +913,9 @@ def evaluate_one(
     mc_n_paths: int = 5000,
     include_volume_participation: bool = True,
     include_funding_stress: bool = True,
+    amount_step_by_coin: Mapping[str, float] | None = None,
+    min_amount_by_coin: Mapping[str, float] | None = None,
+    max_gross_leverage: float | None = MAX_GROSS_LEVERAGE,
 ) -> dict:
     """Evaluate a candidate pod across ``new``/``full`` policies, deadbands, and cost multipliers."""
     aliases = row["aliases"]
@@ -964,6 +925,16 @@ def evaluate_one(
     f_cache = fund_cache if fund_cache is not None else {}
     mask = grid >= int(datetime(2026, 10, 1, tzinfo=UTC).timestamp() * 1000)
     out: dict = {}
+
+    def _guardian_spec(db_usd: float, *, cost_mult: float = 1.0, funding_bps: float = 0.0) -> cr.GuardianSpec:
+        return cr.GuardianSpec(
+            min_trade_notional_usd=float(db_usd),
+            cost_multiplier=float(cost_mult),
+            funding_bps_per_8h=float(funding_bps),
+            amount_step_by_coin=amount_step_by_coin,
+            min_amount_by_coin=min_amount_by_coin,
+            max_gross_leverage=max_gross_leverage,
+        )
 
     for policy in POLICIES:
         coins, tgt, trade, mark = candidate_targets(
@@ -988,7 +959,7 @@ def evaluate_one(
             base_obj = None
 
             for mult in cost_multipliers:
-                spec = cr.GuardianSpec(min_trade_notional_usd=float(db), cost_multiplier=float(mult))
+                spec = _guardian_spec(db, cost_mult=mult)
                 obj, blocks = cr.simulate_guardian_challenge(
                     coins, tgt, trade, mark, grid, spec, chop_mask=mask
                 )
@@ -1005,9 +976,9 @@ def evaluate_one(
                     )
 
             db_entry: dict = {"cost_multipliers": cm_map}
-            if include_volume_participation and vol_mat is not None:
+            if include_volume_participation and vol_mat is not None and base_obj is not None:
                 db_entry["volume_participation"] = compute_1m_participation_diagnostics(
-                    coins, tgt, trade, mark, vol_mat, grid, deadband_usd=float(db)
+                    coins, base_obj, trade, mark, vol_mat, grid
                 )
 
             if include_funding_stress and fund_mat is not None and abs(db - 15.0) < 1e-9:
@@ -1017,7 +988,7 @@ def evaluate_one(
                     trade,
                     mark,
                     grid,
-                    cr.GuardianSpec(min_trade_notional_usd=float(db), cost_multiplier=1.0),
+                    _guardian_spec(db),
                     chop_mask=mask,
                     funding_rates=fund_mat,
                 )
@@ -1027,11 +998,7 @@ def evaluate_one(
                     trade,
                     mark,
                     grid,
-                    cr.GuardianSpec(
-                        min_trade_notional_usd=float(db),
-                        cost_multiplier=1.0,
-                        funding_bps_per_8h=1.0,
-                    ),
+                    _guardian_spec(db, funding_bps=1.0),
                     chop_mask=mask,
                 )
                 db_entry["funding_stress"] = {
@@ -1055,7 +1022,7 @@ def evaluate_one(
                             trade,
                             mark,
                             grid,
-                            cr.GuardianSpec(min_trade_notional_usd=float(db), cost_multiplier=1.0),
+                            _guardian_spec(db),
                             chop_mask=mask,
                         )
                     for regime in ("Blended", "75%-Chop"):
@@ -1266,8 +1233,8 @@ def render_markdown_report(
         ]
         for r in results:
             tr15 = r["train"]["new"]["deadbands"]["15"]["cost_multipliers"]["1x"]
-            nw15 = r["oos"]["new"]["deadbands"]["15"]["cost_multipliers"]["1x"]
-            fl15 = r["oos"]["full"]["deadbands"]["15"]["cost_multipliers"]["1x"]
+            oos_new_15 = r["oos"]["new"]["deadbands"]["15"]["cost_multipliers"]["1x"]
+            oos_full_15 = r["oos"]["full"]["deadbands"]["15"]["cost_multipliers"]["1x"]
             mc1x = r["oos"]["new"]["deadbands"]["15"]["mc"]["1.0x/Blended"]["p_pass"]
             live_str = "YES" if r["optimization"].get("live_deployable") else "NO"
             lines.append(
@@ -1279,13 +1246,13 @@ def render_markdown_report(
                     ks=", ".join(f"{a}={v:.6g}" for a, v in zip(r["aliases"], r["k"])),
                     tn=tr15["full_window_net_usd"],
                     td=tr15["full_window_static_floor_dd_usd"],
-                    on=nw15["full_window_net_usd"],
-                    od=nw15["full_window_static_floor_dd_usd"],
-                    fn=fl15["full_window_net_usd"],
-                    fd=fl15["full_window_static_floor_dd_usd"],
-                    wd=nw15["worst_daily_usd"],
-                    lev=nw15["full_window_peak_gross_leverage"],
-                    sw=nw15["sweeps"],
+                    on=oos_new_15["full_window_net_usd"],
+                    od=oos_new_15["full_window_static_floor_dd_usd"],
+                    fn=oos_full_15["full_window_net_usd"],
+                    fd=oos_full_15["full_window_static_floor_dd_usd"],
+                    wd=oos_new_15["worst_daily_usd"],
+                    lev=oos_new_15["full_window_peak_gross_leverage"],
+                    sw=oos_new_15["sweeps"],
                     mc=mc1x,
                     conf=r.get("triada_conflicts", {}).get("coin_hours", 0.0),
                 )
@@ -1399,14 +1366,6 @@ def render_markdown_report(
             f"live-only CPCV PBO={live_audit.get('cpcv', {}).get('pbo')}."
         )
 
-    diag_unfilt = train_audit.get("diagnostic_unfiltered_sensitivity", {})
-    if diag_unfilt:
-        dc = diag_unfilt.get("candidates", [])
-        lines.append(
-            f"- **Diagnostic unfiltered sensitivity (`min_baseline_order_usd=0.0`, NOT qualified)**: "
-            f"{len(dc)} pods formed without pre-clustering `$15` filter; top aliases={dc[0]['aliases'] if dc else []}."
-        )
-
     if results:
         lines += [
             "",
@@ -1450,12 +1409,12 @@ def render_markdown_report(
         "## Guardian, PM03, and Triad A conflicts",
     ]
     for r in results:
-        nw15 = r["oos"]["new"]["deadbands"]["15"]["cost_multipliers"]["1x"]
+        oos_new_15 = r["oos"]["new"]["deadbands"]["15"]["cost_multipliers"]["1x"]
         pm = r["oos"]["new"].get("pm03", {})
         conf = r.get("triada_conflicts", {})
         lines.append(
-            f"- **Candidate {r['index']}**: verdict=`{nw15['verdict']}`, peak-DD={nw15['peak_to_trough_dd_usd']}, "
-            f"worst daily={nw15['worst_daily_usd']}, sweeps={nw15['sweeps']}, peak lev={nw15['full_window_peak_gross_leverage']:.2f}x; "
+            f"- **Candidate {r['index']}**: verdict=`{oos_new_15['verdict']}`, peak-DD={oos_new_15['peak_to_trough_dd_usd']}, "
+            f"worst daily={oos_new_15['worst_daily_usd']}, sweeps={oos_new_15['sweeps']}, peak lev={oos_new_15['full_window_peak_gross_leverage']:.2f}x; "
             f"PM03 7d drift={pm.get('drift_usd', 'UNPROVEN')}; Triad A reverse intervals={conf.get('events', 'UNPROVEN')} "
             f"({conf.get('coin_hours', 0.0)} coin-h)."
         )
@@ -1486,7 +1445,7 @@ def run_study(
     paths: StudyPaths = StudyPaths(),
     through: str = "all",
     fetch_live_av: bool = True,
-    bybit_snapshot: tuple[set[str], dict] | None = None,
+    bybit_snapshot: tuple[set[str] | Mapping[str, tuple[float, float]], dict] | None = None,
     account_value_fetcher: Callable[
         [cr.WalletRecord], tuple[float | None, dict | None, str | None]
     ]
@@ -1604,6 +1563,10 @@ def run_study(
             list(TRIAD), list(TRIAD_K), grouped, prices, OOS_GRID, "full", full_grid=GRID
         )
 
+    lot_specs_raw = inventory.get("bybit_lot_specs", {})
+    amount_step_by_coin = {c: float(v[0]) for c, v in lot_specs_raw.items()} or None
+    min_amount_by_coin = {c: float(v[1]) for c, v in lot_specs_raw.items()} or None
+
     vol_cache: dict[tuple[str, int, int], np.ndarray] = {}
     fund_cache: dict[tuple[str, int, int], np.ndarray] = {}
     equity_records: list[pl.DataFrame] = []
@@ -1628,6 +1591,9 @@ def run_study(
             cost_multipliers=(1.0,),
             include_volume_participation=False,
             include_funding_stress=False,
+            amount_step_by_coin=amount_step_by_coin,
+            min_amount_by_coin=min_amount_by_coin,
+            max_gross_leverage=MAX_GROSS_LEVERAGE,
         )
         oos_result = evaluate_one(
             row_with_idx,
@@ -1643,6 +1609,9 @@ def run_study(
             equity_sink=equity_records,
             block_sink=block_records,
             mc_n_paths=mc_n_paths,
+            amount_step_by_coin=amount_step_by_coin,
+            min_amount_by_coin=min_amount_by_coin,
+            max_gross_leverage=MAX_GROSS_LEVERAGE,
         )
         ctx = candidate_targets(
             row["aliases"], row["train_opt_k"], eligible, prices, OOS_GRID, "new", full_grid=GRID
@@ -1664,9 +1633,9 @@ def run_study(
 
     ref_stats: dict = {}
     if reference is not None:
-        trow = {"index": 0, "aliases": list(TRIAD), "train_opt_k": list(TRIAD_K)}
+        triad_row = {"index": 0, "aliases": list(TRIAD), "train_opt_k": list(TRIAD_K)}
         ref_stats = evaluate_one(
-            trow,
+            triad_row,
             grouped,
             prices,
             OOS_GRID,
@@ -1677,6 +1646,9 @@ def run_study(
             montecarlo=True,
             pm03=False,
             mc_n_paths=mc_n_paths,
+            amount_step_by_coin=amount_step_by_coin,
+            min_amount_by_coin=min_amount_by_coin,
+            max_gross_leverage=MAX_GROSS_LEVERAGE,
         )
         ref_stats["k_source"] = "prop-production/bybit_executor.py static defaults, live runtime unverified"
 

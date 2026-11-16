@@ -361,7 +361,14 @@ def test_single_pass_train_replay_exports_parquet_and_avoids_duplicate_simulatio
     assert streams_pq.exists() and eq_pq.exists() and summary_pq.exists()
 
     # Round-trip Parquet unit streams back into build_tensor_from_unit_replays matches exactly
-    reloaded = v4.load_unit_streams_parquet(streams_pq)
+    pq_df = pl.read_parquet(streams_pq)
+    reloaded: dict[str, dict[str, pl.DataFrame]] = {}
+    for (alias, coin), part in pq_df.partition_by(
+        ["alias", "coin"], as_dict=True, maintain_order=True
+    ).items():
+        reloaded.setdefault(str(alias), {})[str(coin)] = part.select(
+            "timestamp", "open", "close", "pos", "delta", "gross", "cost", "net"
+        )
     tensor_rt = pc.build_tensor_from_unit_replays(reloaded, grid, pod_equity_usd=10_000.0)
     assert tensor_rt.aliases == tensor.aliases
     assert tensor_rt.symbols == tensor.symbols
@@ -473,10 +480,7 @@ def test_train_pods_handles_insufficient_strict_wallets_without_fabricating() ->
     assert auditing["4"]["status"] == "INSUFFICIENT"
     assert auditing["strict_min_notional_status"] == "INSUFFICIENT_FOR_POD_SIZES"
     assert auditing["cpcv"]["pbo"] is None
-    # Transparent diagnostic unfiltered sensitivity runs without fabricating strict candidates
-    diag = auditing["diagnostic_unfiltered_sensitivity"]
-    assert len(diag["candidates"]) >= 1
-    assert diag["candidates"][0]["strict_min_notional_passed"] is False
+    assert "diagnostic_unfiltered_sensitivity" not in auditing
 
 
 def _write_monthly_funding(
@@ -945,3 +949,66 @@ def test_end_to_end_run_study_produces_sanitized_reports_and_parquet_caches(tmp_
     assert "1x" in md_text and "2x" in md_text and "3x" in md_text
     assert "peak" in md_text.lower() and "participation" in md_text.lower()
     assert "CPCV" in md_text and "Triad A" in md_text
+
+
+def test_evaluate_one_wires_lot_specs_5x_leverage_and_guardian_participation(tmp_path: Path) -> None:
+    v4 = _load_v4()
+    import study_data as sd
+
+    n_days = 2
+    n_bars = n_days * 288
+    start_dt = datetime(2026, 9, 1, 0, 0, tzinfo=UTC)
+    start_ms = int(start_dt.timestamp() * 1000)
+    oos_grid = np.arange(start_ms, start_ms + n_bars * 300_000, 300_000, dtype=np.int64)
+
+    store_root = tmp_path / "store"
+    for d in range(n_days):
+        day_dt = start_dt + timedelta(days=d)
+        _write_1m_store(
+            store_root,
+            "BTC",
+            day_dt.date().isoformat(),
+            day_dt,
+            1440,
+            prices=np.full(1440, 100.0),
+            volumes=np.full(1440, 1000.0),  # $100k/min dollar volume
+        )
+
+    prices = sd.LazyPrices(oos_grid, store_root=store_root, vike_root=None)
+    # Wallet requests 800 BTC ($80,000 = 8.0x on $10,000 eq), then closes.
+    # Guardian's 5.0x max_gross_leverage cap + lot step 10.0 BTC caps entry at <= 500 BTC ($50,000).
+    # Without Guardian alignment, raw target would trade $80k + $80k = $160k notional.
+    grouped = {
+        "W_BIG": {
+            "BTC": pl.DataFrame(
+                [
+                    {"ts": start_ms + 300_000, "sign": 1, "sz": 800.0, "pre": 0.0, "tid": "1"},
+                    {"ts": start_ms + 3_000_000, "sign": -1, "sz": 800.0, "pre": 800.0, "tid": "2"},
+                ]
+            )
+        }
+    }
+    row = {"index": 1, "aliases": ["W_BIG"], "train_opt_k": [1.0]}
+
+    res = v4.evaluate_one(
+        row,
+        grouped,
+        prices,
+        oos_grid,
+        full_grid=oos_grid,
+        store_root=store_root,
+        montecarlo=False,
+        pm03=False,
+        deadbands=(15.0,),
+        cost_multipliers=(1.0,),
+        include_funding_stress=False,
+        amount_step_by_coin={"BTC": 10.0},
+        min_amount_by_coin={"BTC": 10.0},
+    )
+
+    cm = res["new"]["deadbands"]["15"]["cost_multipliers"]["1x"]
+    vp = res["new"]["deadbands"]["15"]["volume_participation"]
+    assert cm["full_window_peak_gross_leverage"] <= 5.0 + 1e-9
+    # Capped round-trip notional (~$50k * 2 = ~$100k), strictly below raw un-capped $160k
+    assert 95_000.0 <= vp["total_traded_notional_usd"] <= 100_000.0
+

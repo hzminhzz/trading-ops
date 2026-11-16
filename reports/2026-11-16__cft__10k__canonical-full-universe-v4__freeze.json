@@ -2,12 +2,12 @@
   "archive_sha256": "bd2badb79973aaf4be37aebaacafe1e484628359e947fa9e51a7ec0f84f33a55",
   "bybit": {
     "base_coins": 821,
-    "lookup_utc": "2026-11-16T12:44:07.580724+00:00",
+    "lookup_utc": "2026-11-16T13:25:28.515673+00:00",
     "pages": 1
   },
   "cost_bps": 6.5,
   "cutoff_ms": 1788220800000,
-  "freeze_time_utc": "2026-11-16T12:49:27.457758+00:00",
+  "freeze_time_utc": "2026-11-16T13:30:56.132224+00:00",
   "frozen_portfolios": [
     {
       "aliases": [
@@ -338,7 +338,7 @@
       "n_splits": 20,
       "pbo": 0.7
     },
-    "live_shortlist_count": 80,
+    "live_shortlist_count": 79,
     "strict_min_notional_status": "OK"
   },
   "live_shortlist": [
@@ -378,7 +378,6 @@
     "W#59",
     "DEX-54",
     "W#381",
-    "W#361",
     "W#252",
     "W#335",
     "W#51",

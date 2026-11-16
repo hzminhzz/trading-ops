@@ -729,12 +729,12 @@ class LazyPrices:
         return trade, mark
 
 
-USER_AGENT = "OpenAI File Downloader, XaiImageApiFetch/1.0"
+USER_AGENT = "trading-ops-research/1.0"
 
 
-def fetch_bybit_usdt_perps(*, timeout: int = 18) -> tuple[set[str], dict]:
-    """Fetch current Bybit linear USDT perpetual base-coin listing snapshot."""
-    coins: set[str] = set()
+def fetch_bybit_usdt_perp_specs(*, timeout: int = 18) -> tuple[dict[str, tuple[float, float]], dict]:
+    """Fetch current Bybit linear USDT perpetual ``{baseCoin: (qtyStep, minOrderQty)}`` specs."""
+    specs: dict[str, tuple[float, float]] = {}
     cursor = ""
     pages = 0
     for _ in range(12):
@@ -751,21 +751,28 @@ def fetch_bybit_usdt_perps(*, timeout: int = 18) -> tuple[set[str], dict]:
             raise RuntimeError("BYBIT_INSTRUMENTS_ERROR")
         data = obj["result"]
         pages += 1
-        coins.update(
-            row["baseCoin"]
-            for row in data["list"]
-            if row.get("quoteCoin") == "USDT" and row.get("contractType") == "LinearPerpetual"
-        )
+        for row in data["list"]:
+            if row.get("quoteCoin") == "USDT" and row.get("contractType") == "LinearPerpetual":
+                lot_filter = row.get("lotSizeFilter") or {}
+                qty_step = float(lot_filter.get("qtyStep", 0.0) or 0.0)
+                min_qty = float(lot_filter.get("minOrderQty", 0.0) or 0.0)
+                specs[row["baseCoin"]] = (qty_step, min_qty)
         cursor = data.get("nextPageCursor") or ""
         if not cursor:
             break
-    if not coins or cursor:
+    if not specs or cursor:
         raise RuntimeError("INCOMPLETE_BYBIT_PAGINATION")
-    return coins, {
+    return specs, {
         "pages": pages,
-        "base_coins": len(coins),
+        "base_coins": len(specs),
         "lookup_utc": datetime.now(UTC).isoformat(),
     }
+
+
+def fetch_bybit_usdt_perps(*, timeout: int = 18) -> tuple[set[str], dict]:
+    """Fetch current Bybit linear USDT perpetual base-coin listing snapshot."""
+    specs, meta = fetch_bybit_usdt_perp_specs(timeout=timeout)
+    return set(specs), meta
 
 
 def fetch_hyperliquid_account_value(

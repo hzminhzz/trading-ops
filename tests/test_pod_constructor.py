@@ -831,6 +831,20 @@ def test_leakfree_cpcv_pbo_trader_sliced_equivalence_and_bounded_memory() -> Non
     assert peak_bytes < 10 * 1024 * 1024
 
 
+def test_slice_tensor_for_traders_preserves_chop_mask() -> None:
+    base = _synthetic_multi_regime_tensor(n_days=8)
+    assert base.chop_mask is not None
+
+    sub_tensor, remapped_pods = pc._slice_tensor_for_traders(base, [(0, 2, 4)])
+    assert remapped_pods == [(0, 1, 2)]
+    assert sub_tensor.chop_mask is not None
+    assert np.array_equal(sub_tensor.chop_mask, base.chop_mask)
+
+    _, metrics, _ = pc.stage1_audit_traders(sub_tensor, pc.PodConstructorConfig(min_episodes=2))
+    assert any(m.chop_net_over_dd != m.net_over_max_dd for m in metrics)
+
+
+
 def test_roster_episode_cusum_detects_decay_and_tilt() -> None:
     baseline = pc.TraderEpisodeBaseline(
         trader_id=0,

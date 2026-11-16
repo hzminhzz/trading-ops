@@ -799,3 +799,46 @@ def test_guardian_cost_multipliers_and_perpetual_funding_modeling() -> None:
         cr.simulate_guardian_challenge(
             ["BTC", "ETH"], tgt2, t2, m2, grid, spec_p, funding_rates=np.zeros((3, n))
         )
+
+
+def test_guardian_executed_deltas_reflect_sweep_halt_deadband_and_leverage_cap() -> None:
+    n = 295  # crosses UTC 00:05 daily reset at bar 289
+    grid = _grid_ms(n)
+    t_open = np.full((1, n), 100.0)
+    m_close = np.full((1, n), 100.0)
+    targets = np.zeros((1, n))
+
+    # Bar 1: open 10.0 ($1,000); bar 2: tiny +0.10 ($10 < $25 deadband) -> skipped!
+    targets[0, 1] = 10.0
+    targets[0, 2] = 10.1
+    # Bar 3: price drops $50 on 10.0 -> -$500 <= -$400 sweep -> flatten -10.0 & halt until reset
+    m_close[0, 3:] = 50.0
+    t_open[0, 4:] = 50.0
+    targets[0, 3:292] = 10.0
+    # Bar 292 (after reset): flat -> re-enter new position 40.0 ($2,000 on ~$500 eq -> capped by 1.5x leverage)
+    targets[0, 292] = 0.0
+    targets[0, 293] = 40.0
+
+    spec = cr.GuardianSpec(
+        initial_equity=1_000.0,
+        profit_target=50_000.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=400.0,
+        cost_bps=0.0,
+        min_trade_notional_usd=25.0,
+        max_gross_leverage=1.5,
+        reenter_after_sweep="new_only",
+    )
+    res, _ = cr.simulate_guardian_challenge(["BTC"], targets, t_open, m_close, grid, spec)
+
+    assert res.executed_deltas is not None
+    assert res.executed_deltas.shape == (1, n)
+    assert res.executed_deltas[0, 1] == pytest.approx(10.0, abs=1e-9)
+    assert res.executed_deltas[0, 2] == pytest.approx(0.0, abs=1e-9)  # deadband skipped
+    assert res.executed_deltas[0, 3] == pytest.approx(-10.0, abs=1e-9)  # sweep flattened
+    assert np.allclose(res.executed_deltas[0, 4:293], 0.0, atol=1e-12)  # blocked + new_only stale
+    # Re-entry at bar 293 capped at <= 1.5x * $500 / $50 = 15.0 (strictly < raw 40.0)
+    assert 0.0 < res.executed_deltas[0, 293] <= 15.0 + 1e-9
+    assert res.executed_deltas[0, 293] < 40.0
+
