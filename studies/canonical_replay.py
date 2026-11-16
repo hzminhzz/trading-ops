@@ -18,8 +18,9 @@ reports reuse one audited implementation rather than duplicating ad-hoc simulato
 from __future__ import annotations
 
 import hashlib
+import math
 import sqlite3
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal as D
@@ -95,9 +96,18 @@ class GuardianSpec:
     daily_loss_limit: float = 500.0
     guardian_sweep_loss: float = 400.0
     cost_bps: float = DEFAULT_COST_BPS
+    cost_multiplier: float = 1.0
+    funding_bps_per_8h: float = 0.0
+    funding_multiplier: float = 1.0
     reset_utc_hour: int = 0
     reset_utc_minute: int = 5
     reenter_after_sweep: Literal["new_only", "immediate_target"] = "new_only"
+    min_trade_notional_usd: float = 0.0
+    amount_step: float = 0.0
+    min_amount: float = 0.0
+    amount_step_by_coin: Mapping[str, float] | None = None
+    min_amount_by_coin: Mapping[str, float] | None = None
+    max_gross_leverage: float | None = None
 
 
 @dataclass
@@ -122,6 +132,11 @@ class ChallengeRunResult:
     full_window_sweeps: int
     step_pnl: np.ndarray
     equity_curve: np.ndarray
+    peak_gross_leverage: float = 0.0
+    full_window_peak_gross_leverage: float = 0.0
+    total_funding_usd: float = 0.0
+    full_window_funding_usd: float = 0.0
+    executed_deltas: np.ndarray | None = None
 
 
 def roster_digest(records: Sequence[WalletRecord]) -> str:
@@ -554,6 +569,177 @@ def _update_reentry_eligibility(
     return out
 
 
+def _split_exit_first_phase1(cur: float, desired: float, *, eps: float = 1e-12) -> float:
+    """Return the exit/reduction-only intermediate position allowed before sweep checks."""
+    if abs(desired) <= eps or abs(cur) <= eps or (cur * desired < -eps):
+        return 0.0
+    if abs(desired) < abs(cur):
+        return desired
+    return cur
+
+
+def _conservative_gap_exit_pnl(
+    cur: float,
+    prev_m: float,
+    m_c: float,
+    haircut_rate: float,
+    fee_rate: float,
+) -> float:
+    """Compute conservative forced-flatten PnL when ``trade_open`` is unavailable."""
+    direction = 1.0 if cur > 0 else -1.0
+    if np.isfinite(prev_m) and prev_m > 0:
+        ref_px = min(prev_m, m_c) if cur > 0 else max(prev_m, m_c)
+        exit_px = ref_px * (1.0 - direction * haircut_rate)
+        return cur * (exit_px - prev_m) - abs(cur) * exit_px * fee_rate
+    exit_px = m_c * (1.0 - direction * haircut_rate)
+    return cur * (exit_px - m_c) - abs(cur) * exit_px * fee_rate
+
+
+def _quantize_order_target(
+    cur: float,
+    want: float,
+    exec_px: float,
+    step: float,
+    min_amt: float,
+    min_notional: float,
+    *,
+    eps: float = 1e-12,
+) -> float:
+    """Apply Bybit lot-step rounding, min-amount, and notional deadband (bypassing full closes)."""
+    if abs(want) <= eps:
+        return 0.0
+    raw_delta = want - cur
+    if abs(raw_delta) <= eps:
+        return cur
+    if step > 0.0:
+        sign = -1.0 if raw_delta < 0.0 else 1.0
+        quotient = abs(raw_delta) / step
+        units = math.floor(quotient + max(1e-12, quotient * 1e-12))
+        qty_step = round(sign * units * step, 12)
+    else:
+        qty_step = raw_delta
+    if min_amt > 0.0 and abs(qty_step) + 1e-12 < min_amt:
+        return cur
+    if min_notional > 0.0 and abs(qty_step) * exec_px + 1e-9 < min_notional:
+        return cur
+    desired = round(cur + qty_step, 12) if step > 0.0 else (cur + qty_step)
+    return 0.0 if abs(desired) <= eps else desired
+
+
+def _calc_gross_leverage(gross_notional: float, equity: float) -> float:
+    if gross_notional <= 1e-12:
+        return 0.0
+    if equity <= 1e-9:
+        return float("inf")
+    return gross_notional / equity
+
+
+def _resolve_funding_matrix(
+    funding_rates: np.ndarray | None,
+    timestamps_ms: np.ndarray,
+    nc: int,
+    n: int,
+    spec: GuardianSpec,
+) -> np.ndarray | None:
+    """Resolve optional per-bar signed funding rate matrix ``(nc, n)`` scaled by multiplier."""
+    if funding_rates is not None:
+        fr = np.asarray(funding_rates, dtype=np.float64)
+        if fr.ndim == 1 and fr.shape[0] == n:
+            return np.broadcast_to(fr[None, :], (nc, n)) * spec.funding_multiplier
+        if fr.ndim == 2 and fr.shape in ((1, n), (nc, n)):
+            return np.broadcast_to(fr, (nc, n)) * spec.funding_multiplier
+        raise ValueError(f"INVALID_FUNDING_RATES_SHAPE:{fr.shape}")
+    if spec.funding_bps_per_8h == 0.0 or spec.funding_multiplier == 0.0:
+        return None
+    default_dt = int(timestamps_ms[1] - timestamps_ms[0]) if n > 1 else 300_000
+    dt_ms = np.empty(n, dtype=np.float64)
+    dt_ms[0] = float(default_dt)
+    if n > 1:
+        dt_ms[1:] = np.diff(timestamps_ms).astype(np.float64)
+    per_bar = spec.funding_bps_per_8h * 1e-4 * (dt_ms / 28_800_000.0) * spec.funding_multiplier
+    return np.broadcast_to(per_bar[None, :], (nc, n))
+
+
+def _cap_phase2_leverage(
+    pos: np.ndarray,
+    prev_mark: np.ndarray,
+    exec_px_arr: np.ndarray,
+    p1_arr: np.ndarray,
+    desired_arr: np.ndarray,
+    priced: np.ndarray,
+    step_arr: np.ndarray,
+    min_amt_arr: np.ndarray,
+    eq: float,
+    outage_pnl: float,
+    cost_rate: float,
+    spec: GuardianSpec,
+) -> None:
+    """Scale Phase-2 entries/increases proportionally so open leverage stays within ``max_gross_leverage``."""
+    if spec.max_gross_leverage is None:
+        return
+    nc = desired_arr.size
+    eq_open_p1 = eq + outage_pnl
+    used_notional = 0.0
+    add_notional = 0.0
+    for ci in range(nc):
+        if not priced[ci]:
+            continue
+        cur = float(pos[ci])
+        prev_m = float(prev_mark[ci])
+        exec_px = exec_px_arr[ci]
+        p1_c = p1_arr[ci]
+        if np.isfinite(prev_m):
+            eq_open_p1 += cur * (exec_px - prev_m)
+        eq_open_p1 -= abs(p1_c - cur) * exec_px * cost_rate
+        used_notional += abs(p1_c) * exec_px
+        add_notional += abs(desired_arr[ci] - p1_c) * exec_px
+    if add_notional <= 1e-12:
+        return
+    cap = max(0.0, float(spec.max_gross_leverage))
+    max_allowed = cap * max(0.0, eq_open_p1)
+    if used_notional + add_notional * (1.0 + cap * cost_rate) <= max_allowed + 1e-12:
+        return
+    avail = max(0.0, max_allowed - used_notional)
+    scale = min(1.0, avail / (add_notional * (1.0 + cap * cost_rate)))
+    for ci in range(nc):
+        if not priced[ci]:
+            continue
+        p1_c = p1_arr[ci]
+        delta2 = desired_arr[ci] - p1_c
+        if abs(delta2) <= 1e-12:
+            continue
+        if scale <= 1e-12:
+            desired_arr[ci] = p1_c
+        else:
+            desired_arr[ci] = _quantize_order_target(
+                p1_c,
+                p1_c + delta2 * scale,
+                exec_px_arr[ci],
+                float(step_arr[ci]),
+                float(min_amt_arr[ci]),
+                spec.min_trade_notional_usd,
+            )
+
+
+def _record_sweep_halt(
+    pos: np.ndarray,
+    sweep_snapshot: np.ndarray,
+    raw_want: np.ndarray,
+    coin_eligible: np.ndarray,
+    swept_flags: np.ndarray,
+    step_idx: int,
+    reenter_mode: str,
+    sweeps: int,
+) -> tuple[int, bool]:
+    """Flatten residual positions, snapshot targets, and lock re-entry after a sweep breach."""
+    pos[:] = 0.0
+    sweep_snapshot[:] = raw_want
+    if reenter_mode == "new_only":
+        coin_eligible[:] = False
+    swept_flags[step_idx] = True
+    return sweeps + 1, True
+
+
 def _execute_guardian_pass(
     coins: Sequence[str],
     net_targets: np.ndarray,
@@ -563,12 +749,32 @@ def _execute_guardian_pass(
     spec: GuardianSpec,
     *,
     stop_on_terminal: bool,
+    funding_rates: np.ndarray | None = None,
 ) -> dict:
     """Shared causal Guardian execution kernel used for both terminal and MC views."""
     nc, n = net_targets.shape
-    cost_rate = spec.cost_bps * 1e-4
+    cost_rate = spec.cost_bps * spec.cost_multiplier * 1e-4
     haircut_rate = GAP_EXIT_HAIRCUT_BPS * 1e-4
-    fee_rate = DEFAULT_FEE_BPS * 1e-4
+    fee_rate = DEFAULT_FEE_BPS * spec.cost_multiplier * 1e-4
+    funding_mat = _resolve_funding_matrix(funding_rates, timestamps_ms, nc, n, spec)
+    step_arr = np.array(
+        [
+            float(spec.amount_step_by_coin.get(c, spec.amount_step))
+            if spec.amount_step_by_coin is not None
+            else float(spec.amount_step)
+            for c in coins
+        ],
+        dtype=np.float64,
+    )
+    min_amt_arr = np.array(
+        [
+            float(spec.min_amount_by_coin.get(c, spec.min_amount))
+            if spec.min_amount_by_coin is not None
+            else float(spec.min_amount)
+            for c in coins
+        ],
+        dtype=np.float64,
+    )
 
     pos = np.zeros(nc, dtype=np.float64)
     prev_mark = np.full(nc, np.nan, dtype=np.float64)
@@ -586,6 +792,8 @@ def _execute_guardian_pass(
     forced_gap_exits = 0
     unpriced_open_steps = 0
     deferred_notional_usd = 0.0
+    peak_gross_leverage = 0.0
+    total_funding_usd = 0.0
 
     verdict: Literal["PASS", "FAIL_STATIC", "FAIL_DAILY", "TIMEOUT"] = "TIMEOUT"
     terminal_step: int | None = None
@@ -595,8 +803,10 @@ def _execute_guardian_pass(
     step_pnl = np.zeros(n, dtype=np.float64)
     eq_curve = np.zeros(n, dtype=np.float64)
     swept_flags = np.zeros(n, dtype=bool)
+    executed_deltas = np.zeros((nc, n), dtype=np.float64)
 
     for j in range(n):
+        prev_pos = pos.copy()
         ts_ms = int(timestamps_ms[j])
         if j > 0 and _is_reset_bar(ts_ms, spec.reset_utc_hour, spec.reset_utc_minute):
             cashday = eq
@@ -616,7 +826,13 @@ def _execute_guardian_pass(
         else:
             admitted = np.zeros(nc, dtype=np.float64)
 
-        bar_pnl = 0.0
+        priced = np.zeros(nc, dtype=bool)
+        exec_px_arr = np.zeros(nc, dtype=np.float64)
+        desired_arr = np.zeros(nc, dtype=np.float64)
+        p1_arr = np.zeros(nc, dtype=np.float64)
+        outage_pnl = 0.0
+        open_mtm = 0.0
+
         for ci in range(nc):
             m_c = float(m[ci])
             t_c = float(p[ci])
@@ -629,10 +845,16 @@ def _execute_guardian_pass(
                     if np.isfinite(prev_m) and prev_m > 0:
                         direction = 1.0 if cur > 0 else -1.0
                         exit_px = prev_m * (1.0 - direction * haircut_rate)
-                        bar_pnl += cur * (exit_px - prev_m) - abs(cur) * exit_px * fee_rate
+                        outage_pnl += cur * (exit_px - prev_m) - abs(cur) * exit_px * fee_rate
                         pos[ci] = 0.0
                         forced_gap_exits += 1
                 continue
+
+            priced[ci] = True
+            exec_px = t_c if np.isfinite(t_c) else m_c
+            exec_px_arr[ci] = exec_px
+            if np.isfinite(t_c) and np.isfinite(prev_m) and abs(cur) > 1e-12:
+                open_mtm += cur * (t_c - prev_m)
 
             want_c = float(admitted[ci])
             if blocked_until_reset:
@@ -641,30 +863,176 @@ def _execute_guardian_pass(
                 desired_c = cur
                 deferred_notional_usd += abs(want_c - cur) * m_c
             else:
-                desired_c = want_c
+                desired_c = _quantize_order_target(
+                    cur,
+                    want_c,
+                    exec_px,
+                    float(step_arr[ci]),
+                    float(min_amt_arr[ci]),
+                    spec.min_trade_notional_usd,
+                )
 
-            exec_px = t_c if np.isfinite(t_c) else m_c
-            if np.isfinite(prev_m):
-                bar_pnl += cur * (exec_px - prev_m)
-            bar_pnl += desired_c * (m_c - exec_px) - abs(desired_c - cur) * exec_px * cost_rate
-            pos[ci] = desired_c
-            prev_mark[ci] = m_c
+            desired_arr[ci] = desired_c
+            p1_arr[ci] = 0.0 if blocked_until_reset else _split_exit_first_phase1(cur, desired_c)
 
-        eq += bar_pnl
+        bar_pnl = outage_pnl
+        if not blocked_until_reset and (eq + outage_pnl + open_mtm - cashday) <= -spec.guardian_sweep_loss:
+            # Open-time sweep breach: flatten carried positions at open without admitting entries.
+            gross_open = 0.0
+            for ci in range(nc):
+                if not priced[ci]:
+                    continue
+                cur = float(pos[ci])
+                prev_m = float(prev_mark[ci])
+                m_c = float(m[ci])
+                t_c = float(p[ci])
+                if abs(cur) > 1e-12:
+                    gross_open += abs(cur) * (t_c if np.isfinite(t_c) else m_c)
+                    if np.isfinite(t_c):
+                        if np.isfinite(prev_m):
+                            bar_pnl += cur * (t_c - prev_m)
+                        bar_pnl -= abs(cur) * t_c * cost_rate
+                    else:
+                        bar_pnl += _conservative_gap_exit_pnl(
+                            cur, prev_m, m_c, haircut_rate, fee_rate
+                        )
+                        unpriced_open_steps += 1
+                        forced_gap_exits += 1
+                pos[ci] = 0.0
+                prev_mark[ci] = m_c
+            peak_gross_leverage = max(
+                peak_gross_leverage, _calc_gross_leverage(gross_open, eq + outage_pnl + open_mtm)
+            )
+            eq += bar_pnl
+            sweeps, blocked_until_reset = _record_sweep_halt(
+                pos,
+                sweep_snapshot,
+                raw_want,
+                coin_eligible,
+                swept_flags,
+                j,
+                spec.reenter_after_sweep,
+                sweeps,
+            )
+        else:
+            p1_pnl = outage_pnl
+            p1_funding = 0.0
+            if not blocked_until_reset:
+                for ci in range(nc):
+                    if not priced[ci]:
+                        continue
+                    cur = float(pos[ci])
+                    prev_m = float(prev_mark[ci])
+                    exec_px = exec_px_arr[ci]
+                    m_c = float(m[ci])
+                    p1_c = p1_arr[ci]
+                    if np.isfinite(prev_m):
+                        p1_pnl += cur * (exec_px - prev_m)
+                    p1_pnl += p1_c * (m_c - exec_px) - abs(p1_c - cur) * exec_px * cost_rate
+                    if funding_mat is not None and abs(p1_c) > 1e-12:
+                        f_c = -p1_c * m_c * float(funding_mat[ci, j])
+                        p1_pnl += f_c
+                        p1_funding += f_c
 
-        if not blocked_until_reset and (eq - cashday) <= -spec.guardian_sweep_loss:
-            valid_open = np.isfinite(m) & (np.abs(pos) > 1e-12)
-            flatten_cost = float(np.sum(np.abs(pos[valid_open]) * m[valid_open])) * cost_rate
-            bar_pnl -= flatten_cost
-            eq -= flatten_cost
-            sweep_snapshot[:] = raw_want
-            if spec.reenter_after_sweep == "new_only":
-                coin_eligible[:] = False
-            pos[:] = 0.0
-            sweeps += 1
-            blocked_until_reset = True
-            swept_flags[j] = True
+            if not blocked_until_reset and (eq + p1_pnl - cashday) <= -spec.guardian_sweep_loss:
+                # Exit-first sweep breach: exits/reductions settled, new opens/increases blocked.
+                flatten_cost = 0.0
+                gross_p1 = 0.0
+                for ci in range(nc):
+                    if priced[ci]:
+                        gross_p1 += abs(p1_arr[ci]) * float(m[ci])
+                        flatten_cost += abs(p1_arr[ci]) * float(m[ci]) * cost_rate
+                        pos[ci] = 0.0
+                        prev_mark[ci] = float(m[ci])
+                peak_gross_leverage = max(
+                    peak_gross_leverage, _calc_gross_leverage(gross_p1, eq + p1_pnl)
+                )
+                bar_pnl = p1_pnl - flatten_cost
+                total_funding_usd += p1_funding
+                eq += bar_pnl
+                sweeps, blocked_until_reset = _record_sweep_halt(
+                    pos,
+                    sweep_snapshot,
+                    raw_want,
+                    coin_eligible,
+                    swept_flags,
+                    j,
+                    spec.reenter_after_sweep,
+                    sweeps,
+                )
+            else:
+                if not blocked_until_reset:
+                    _cap_phase2_leverage(
+                        pos,
+                        prev_mark,
+                        exec_px_arr,
+                        p1_arr,
+                        desired_arr,
+                        priced,
+                        step_arr,
+                        min_amt_arr,
+                        eq,
+                        outage_pnl,
+                        cost_rate,
+                        spec,
+                    )
 
+                bar_pnl = outage_pnl
+                gross_close = 0.0
+                bar_funding = 0.0
+                for ci in range(nc):
+                    if not priced[ci]:
+                        continue
+                    cur = float(pos[ci])
+                    prev_m = float(prev_mark[ci])
+                    exec_px = exec_px_arr[ci]
+                    m_c = float(m[ci])
+                    p1_c = p1_arr[ci]
+                    desired_c = desired_arr[ci]
+                    if blocked_until_reset and abs(cur) > 1e-12 and not np.isfinite(float(p[ci])):
+                        bar_pnl += _conservative_gap_exit_pnl(
+                            cur, prev_m, m_c, haircut_rate, fee_rate
+                        )
+                        unpriced_open_steps += 1
+                        forced_gap_exits += 1
+                        pos[ci] = 0.0
+                        prev_mark[ci] = m_c
+                        continue
+                    if np.isfinite(prev_m):
+                        bar_pnl += cur * (exec_px - prev_m)
+                    bar_pnl += desired_c * (m_c - exec_px) - (
+                        abs(p1_c - cur) + abs(desired_c - p1_c)
+                    ) * exec_px * cost_rate
+                    if funding_mat is not None and abs(desired_c) > 1e-12:
+                        f_c = -desired_c * m_c * float(funding_mat[ci, j])
+                        bar_pnl += f_c
+                        bar_funding += f_c
+                    pos[ci] = desired_c
+                    prev_mark[ci] = m_c
+                    gross_close += abs(desired_c) * m_c
+
+                total_funding_usd += bar_funding
+                eq += bar_pnl
+                peak_gross_leverage = max(
+                    peak_gross_leverage, _calc_gross_leverage(gross_close, eq)
+                )
+                if not blocked_until_reset and (eq - cashday) <= -spec.guardian_sweep_loss:
+                    valid_open = priced & (np.abs(pos) > 1e-12)
+                    flatten_cost = float(np.sum(np.abs(pos[valid_open]) * m[valid_open])) * cost_rate
+                    bar_pnl -= flatten_cost
+                    eq -= flatten_cost
+                    sweeps, blocked_until_reset = _record_sweep_halt(
+                        pos,
+                        sweep_snapshot,
+                        raw_want,
+                        coin_eligible,
+                        swept_flags,
+                        j,
+                        spec.reenter_after_sweep,
+                        sweeps,
+                    )
+
+        executed_deltas[:, j] = pos - prev_pos
         step_pnl[j] = bar_pnl
         eq_curve[j] = eq
         peak = max(peak, eq)
@@ -708,9 +1076,12 @@ def _execute_guardian_pass(
         "unpriced_open_steps": unpriced_open_steps,
         "deferred_notional_usd": round(deferred_notional_usd, 2),
         "full_window_net_usd": round(eq - spec.initial_equity, 2),
+        "peak_gross_leverage": peak_gross_leverage,
+        "total_funding_usd": round(total_funding_usd, 4),
         "step_pnl": step_pnl,
         "eq_curve": eq_curve,
         "swept_flags": swept_flags,
+        "executed_deltas": executed_deltas,
     }
 
 
@@ -781,14 +1152,32 @@ def simulate_guardian_challenge(
     spec: GuardianSpec = GuardianSpec(),
     *,
     chop_mask: np.ndarray | None = None,
+    funding_rates: np.ndarray | None = None,
 ) -> tuple[ChallengeRunResult, tuple]:
     """Run causal Guardian simulation returning both frozen terminal verdict and MC blocks."""
     term = _execute_guardian_pass(
-        coins, net_targets, trade_open, mark_close, timestamps_ms, spec, stop_on_terminal=True
+        coins,
+        net_targets,
+        trade_open,
+        mark_close,
+        timestamps_ms,
+        spec,
+        stop_on_terminal=True,
+        funding_rates=funding_rates,
     )
-    cont = _execute_guardian_pass(
-        coins, net_targets, trade_open, mark_close, timestamps_ms, spec, stop_on_terminal=False
-    )
+    if term["terminal_step"] is None:
+        cont = term
+    else:
+        cont = _execute_guardian_pass(
+            coins,
+            net_targets,
+            trade_open,
+            mark_close,
+            timestamps_ms,
+            spec,
+            stop_on_terminal=False,
+            funding_rates=funding_rates,
+        )
     blocks = extract_mc_daily_blocks(
         cont["step_pnl"],
         cont["swept_flags"],
@@ -815,6 +1204,11 @@ def simulate_guardian_challenge(
         full_window_sweeps=cont["sweeps"],
         step_pnl=cont["step_pnl"],
         equity_curve=cont["eq_curve"],
+        peak_gross_leverage=term["peak_gross_leverage"],
+        full_window_peak_gross_leverage=cont["peak_gross_leverage"],
+        total_funding_usd=term["total_funding_usd"],
+        full_window_funding_usd=cont["total_funding_usd"],
+        executed_deltas=cont["executed_deltas"],
     )
     return result, blocks
 

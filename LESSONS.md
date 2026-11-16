@@ -51,3 +51,26 @@ Monte Carlo (`80k–100k` paths) + Optional Stopping analysis across Vanta Class
 3. **Break micro-fill & clock fingerprints on anti-copytrading venues (`Vanta`):**
    - **Notional deadband:** Skip small rebalance deltas below a dollar floor (e.g. `$25–$50` when modifying an open position) to stop echoing every lead-wallet TWAP/trim, while **always bypassing the deadband on full closes (`target == 0`) and halt flattens** so dust never stays open.
    - **Post-wave jitter only (`10–60s`, never pre-bar):** `cwsa_heads` snapshots are only emitted at `next_checkpoint_ms` (5m UTC closes), so pre-5m execution jitter is impossible without shifting upstream sampling; bounded post-wave delay breaks exact `:00/:05` clustering while staying well inside `max_source_lag_ms` (`600s`).
+
+---
+
+## 2026-11-16 — Strict New-Position-Only Research and Retrospective Qualification
+
+1. **Always reset lifecycle admission at the simulated activation boundary.** A position opened before an OOS activation is not a new position; carry a symbol only after a flat-to-open transition or a genuine side flip after activation. The May–Nov 2026 CFT study found five Train-selected candidates with negative Sep–Oct modeled follower net PnL under strict new-only admission. Historical full-target synchronization materially changed PnL and increased drawdown in several portfolios, so the policies must never be conflated.
+2. **Keep projected fills and retrospective rosters separate from live-quality financial evidence.** Reservoir `start_position` supports historical quantity reconstruction, but neither source observation known-at time nor actual Bybit execution, funding, min-lot and market impact is proven. Train stale-price checkpoints invalidate precise `k` qualification; handle them by verified backfill or conservative pair-local close before release.
+3. **Reject misleading pass probabilities.** Stationary-block Monte Carlo on historical Guardian daily summaries tests sensitivity under resampling, not independent broker-executable paths or a historically frozen wallet-selection release. No candidate is economically or scientifically qualified on these observations. Research artifact: `reports/2026-11-16__cft__10k__may-nov-follower-portfolio.md`.
+
+---
+
+## 2026-11-16 — Canonical Backtest Hardening & Full-Universe `v4` (`May–Nov 2026`, CFT `$10k`)
+
+Hardening `studies/study_data.py`, `studies/canonical_replay.py`, `studies/pod_constructor.py`, and single-pass Parquet-cached `studies/2026-11-16__cft__10k__canonical-full-universe-v4.py` cut runtime from **`2,202.74s` (`36.7m`)** across `96` wallets in `v3` to **`818.61s` (`13.6m`)** across `189` wallets + full OOS stress matrices (`v4`), while uncovering four durable research rules:
+
+1. **Never sort Hyperliquid fills by `trade_id` or filter timestamps in local timezone.**
+   `trade_id` is non-monotonic inside same-millisecond bursts (`59,584 / 68,744` position-chain breaks in 30d vs raw arrival sequence), and host local-TZ SQL (`Europe/Berlin`) drops final UTC hours. Always ingest via UTC Polars lazy CSE scans preserving raw Parquet arrival sequence (`with_row_index`) + `start_position` continuity tie-break (`repair_same_ms_fill_order`) and assert UTC window coverage (`assert_utc_coverage`).
+2. **Enforce pre-clustering `min_baseline_order_usd = $15` before UPGMA clustering.**
+   In `v3` (`min_baseline_order_usd=0.0`), sub-`$15` wallets (`q10_order = $0.18–$12.44`) entered clustering and produced `CPCV PBO = 0.90`. Filtering sub-`$15` wallets at the `2%` portfolio-DD baseline (`$200 / size`) removed `73` wallets at `size=3` (`91` at `size=4`), eliminated `min_lot_warnings`, dropped leak-free **`CPCV PBO` from `0.90` to `0.15`**, and elevated live-deployable `Pod 3` (`W#111, W#152, W#312`, `0.93x` peak leverage, `$15` deadband) to `+$1,128` OOS (`new`, `-$15` static floor DD, `94.46%` 90d MC blended pass).
+3. **Separate historical Train eligibility (`scope="historical"`) from present-day deployability (`scope="live"`).**
+   Dropping `AV < $1,000` or currently unmapped wallets prior to Train replay injects survivorship lookahead (`scope="live"` alone lifted `CPCV PBO` to `0.70` vs `0.15` across the `189`-wallet historical screen). Keep historical eligibility strictly pre-split, then tag `live_deployable` independently on candidates.
+4. **Gate headline OOS passes with deadbands (`$15`/`$30`), `2x`/`3x` cost stress, funding, and 1m participation.**
+   `Pod 3` stays strongly profitable under `$30` deadband (`+$1,124` at `1x`), `2x`/`3x` costs (`+$936`/`+$743`), and historical USDT funding carry (`-$10.69`), yet 1m bar-volume diagnostics expose thin-altcoin spikes (`96.96%` of 1m bar volume on `XRP`, `79` trades `>1%`, vs `0.066%` median / `2.21%` p95) that require capacity validation and prospective CWSA paper runs in `copytrade-pm` prior to live authorization.

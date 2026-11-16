@@ -1,0 +1,2951 @@
+{
+  "calibration_frozen_before_oos": true,
+  "cpcv": {
+    "logits": [
+      1.0986,
+      1.0986,
+      1.0986,
+      0.0,
+      1.0986,
+      1.0986,
+      1.0986,
+      1.0986,
+      1.0986,
+      1.0986,
+      0.0,
+      1.0986,
+      1.0986,
+      1.0986,
+      1.0986,
+      1.0986,
+      1.0986,
+      1.0986,
+      1.0986,
+      -1.0986
+    ],
+    "n_splits": 20,
+    "pbo": 0.15
+  },
+  "elapsed_s": 818.61,
+  "frozen_candidates": 3,
+  "historical_eligible_count": 189,
+  "limitations": {
+    "CWSA_historical_5m_snapshots": "UNPROVEN",
+    "follower_bybit_fills": "UNPROVEN",
+    "historic_known_at_roster": "UNPROVEN",
+    "historical_bybit_symbol_eligibility": "UNPROVEN",
+    "hyperx_discovery_only": true,
+    "market_impact_funding": "UNPROVEN",
+    "pm03_subset": "first 7 OOS days; $0 deadband vs PM03 Decimal parity"
+  },
+  "live_deployable_count": 97,
+  "live_shortlist_count": 79,
+  "oos_window": [
+    "2026-09-01",
+    "2026-11-01"
+  ],
+  "parquet_artifacts": {
+    "oos_daily_blocks_parquet": "data/v4_cache/oos_daily_blocks.parquet",
+    "oos_equity_curves_parquet": "data/v4_cache/oos_equity_curves.parquet",
+    "train_solo_summary_parquet": "data/v4_cache/train_solo_summary.parquet",
+    "train_unit_equity_parquet": "data/v4_cache/train_unit_equity.parquet",
+    "train_unit_streams_parquet": "data/v4_cache/train_unit_streams.parquet"
+  },
+  "results": [
+    {
+      "aliases": [
+        "W#107",
+        "W#111",
+        "W#190",
+        "W#312"
+      ],
+      "baseline_k": [
+        0.06257606939377816,
+        0.08142433397432376,
+        0.0035598124695581795,
+        0.029198505954300878
+      ],
+      "index": 1,
+      "k": [
+        0.06022984196126362,
+        0.046451719823539316,
+        0.0035598124695581795,
+        0.019392303681213453
+      ],
+      "oos": {
+        "full": {
+          "deadbands": {
+            "15": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 633.12,
+                  "full_window_peak_gross_leverage": 0.6223,
+                  "full_window_peak_to_trough_dd_usd": -129.16,
+                  "full_window_static_floor_dd_usd": -18.59,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.6223,
+                  "peak_to_trough_dd_usd": -129.16,
+                  "static_floor_dd_usd": -18.59,
+                  "sweeps": 0,
+                  "terminal_net_usd": 633.12,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -105.14
+                },
+                "2x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 486.72,
+                  "full_window_peak_gross_leverage": 0.6304,
+                  "full_window_peak_to_trough_dd_usd": -143.11,
+                  "full_window_static_floor_dd_usd": -21.07,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.6304,
+                  "peak_to_trough_dd_usd": -143.11,
+                  "static_floor_dd_usd": -21.07,
+                  "sweeps": 0,
+                  "terminal_net_usd": 486.72,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -112.87
+                },
+                "3x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 340.32,
+                  "full_window_peak_gross_leverage": 0.6387,
+                  "full_window_peak_to_trough_dd_usd": -161.84,
+                  "full_window_static_floor_dd_usd": -23.55,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.6387,
+                  "peak_to_trough_dd_usd": -161.84,
+                  "static_floor_dd_usd": -23.55,
+                  "sweeps": 0,
+                  "terminal_net_usd": 340.32,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -120.6
+                }
+              },
+              "funding_stress": {
+                "constant_1bp_8h": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": -10.7698,
+                  "full_window_net_usd": 622.35,
+                  "full_window_peak_gross_leverage": 0.6229,
+                  "full_window_peak_to_trough_dd_usd": -129.92,
+                  "full_window_static_floor_dd_usd": -18.76,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.6229,
+                  "peak_to_trough_dd_usd": -129.92,
+                  "static_floor_dd_usd": -18.76,
+                  "sweeps": 0,
+                  "terminal_net_usd": 622.35,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": -10.7698,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -105.35
+                },
+                "historical_usdt_proxy": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": -4.7334,
+                  "full_window_net_usd": 628.39,
+                  "full_window_peak_gross_leverage": 0.6225,
+                  "full_window_peak_to_trough_dd_usd": -129.42,
+                  "full_window_static_floor_dd_usd": -18.65,
+                  "full_window_sweeps": 0,
+                  "funding_covered_coins": 13,
+                  "funding_total_coins": 16,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.6225,
+                  "peak_to_trough_dd_usd": -129.42,
+                  "static_floor_dd_usd": -18.65,
+                  "sweeps": 0,
+                  "terminal_net_usd": 628.39,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": -4.7334,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -105.28
+                }
+              },
+              "mc": {
+                "1.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 68.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 58.16,
+                  "p_timeout": 41.84
+                },
+                "1.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 66.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 68.12,
+                  "p_timeout": 31.88
+                },
+                "1.5x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 52.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 87.54,
+                  "p_timeout": 12.46
+                },
+                "1.5x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 49.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 92.8,
+                  "p_timeout": 7.2
+                },
+                "2.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 41.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 95.16,
+                  "p_timeout": 4.84
+                },
+                "2.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 38.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 97.82,
+                  "p_timeout": 2.18
+                }
+              },
+              "volume_participation": {
+                "max_participation_coin": "VVV",
+                "max_participation_pct": 43.1701,
+                "max_participation_ts_ms": 1788554100000,
+                "median_participation_pct": 0.0458,
+                "p95_participation_pct": 1.2576,
+                "p99_participation_pct": 5.2498,
+                "total_traded_notional_usd": 225230.18,
+                "trade_count": 1035,
+                "trades_gt_10pct_vol": 3,
+                "trades_gt_1pct_vol": 70,
+                "trades_without_1m_volume": 4,
+                "volume_coverage_frac": 0.9961,
+                "volume_covered_trades": 1031
+              }
+            },
+            "30": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 633.5,
+                  "full_window_peak_gross_leverage": 0.6195,
+                  "full_window_peak_to_trough_dd_usd": -129.16,
+                  "full_window_static_floor_dd_usd": -18.59,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.6195,
+                  "peak_to_trough_dd_usd": -129.16,
+                  "static_floor_dd_usd": -18.59,
+                  "sweeps": 0,
+                  "terminal_net_usd": 633.5,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -105.14
+                },
+                "2x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 487.87,
+                  "full_window_peak_gross_leverage": 0.6275,
+                  "full_window_peak_to_trough_dd_usd": -143.11,
+                  "full_window_static_floor_dd_usd": -21.07,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.6275,
+                  "peak_to_trough_dd_usd": -143.11,
+                  "static_floor_dd_usd": -21.07,
+                  "sweeps": 0,
+                  "terminal_net_usd": 487.87,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -112.87
+                },
+                "3x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 342.25,
+                  "full_window_peak_gross_leverage": 0.6358,
+                  "full_window_peak_to_trough_dd_usd": -159.25,
+                  "full_window_static_floor_dd_usd": -23.55,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.6358,
+                  "peak_to_trough_dd_usd": -159.25,
+                  "static_floor_dd_usd": -23.55,
+                  "sweeps": 0,
+                  "terminal_net_usd": 342.25,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -120.6
+                }
+              },
+              "mc": {
+                "1.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 67.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 57.7,
+                  "p_timeout": 42.3
+                },
+                "1.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 67.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 68.12,
+                  "p_timeout": 31.88
+                },
+                "1.5x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 52.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 86.42,
+                  "p_timeout": 13.58
+                },
+                "1.5x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 49.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 92.86,
+                  "p_timeout": 7.14
+                },
+                "2.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 40.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 94.1,
+                  "p_timeout": 5.9
+                },
+                "2.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 38.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 97.64,
+                  "p_timeout": 2.36
+                }
+              },
+              "volume_participation": {
+                "max_participation_coin": "VVV",
+                "max_participation_pct": 43.1701,
+                "max_participation_ts_ms": 1788554100000,
+                "median_participation_pct": 0.0523,
+                "p95_participation_pct": 1.4339,
+                "p99_participation_pct": 5.3239,
+                "total_traded_notional_usd": 224032.19,
+                "trade_count": 949,
+                "trades_gt_10pct_vol": 3,
+                "trades_gt_1pct_vol": 70,
+                "trades_without_1m_volume": 4,
+                "volume_coverage_frac": 0.9958,
+                "volume_covered_trades": 945
+              }
+            }
+          }
+        },
+        "new": {
+          "deadbands": {
+            "15": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 628.24,
+                  "full_window_peak_gross_leverage": 0.6226,
+                  "full_window_peak_to_trough_dd_usd": -129.16,
+                  "full_window_static_floor_dd_usd": -6.77,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.6226,
+                  "peak_to_trough_dd_usd": -129.16,
+                  "static_floor_dd_usd": -6.77,
+                  "sweeps": 0,
+                  "terminal_net_usd": 628.24,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -105.14
+                },
+                "2x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 482.38,
+                  "full_window_peak_gross_leverage": 0.6307,
+                  "full_window_peak_to_trough_dd_usd": -143.11,
+                  "full_window_static_floor_dd_usd": -7.9,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.6307,
+                  "peak_to_trough_dd_usd": -143.11,
+                  "static_floor_dd_usd": -7.9,
+                  "sweeps": 0,
+                  "terminal_net_usd": 482.38,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -112.87
+                },
+                "3x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 336.52,
+                  "full_window_peak_gross_leverage": 0.6389,
+                  "full_window_peak_to_trough_dd_usd": -161.84,
+                  "full_window_static_floor_dd_usd": -9.04,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.6389,
+                  "peak_to_trough_dd_usd": -161.84,
+                  "static_floor_dd_usd": -9.04,
+                  "sweeps": 0,
+                  "terminal_net_usd": 336.52,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -120.6
+                }
+              },
+              "funding_stress": {
+                "constant_1bp_8h": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": -10.5467,
+                  "full_window_net_usd": 617.7,
+                  "full_window_peak_gross_leverage": 0.6232,
+                  "full_window_peak_to_trough_dd_usd": -129.92,
+                  "full_window_static_floor_dd_usd": -6.78,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.6232,
+                  "peak_to_trough_dd_usd": -129.92,
+                  "static_floor_dd_usd": -6.78,
+                  "sweeps": 0,
+                  "terminal_net_usd": 617.7,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": -10.5467,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -105.35
+                },
+                "historical_usdt_proxy": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": -4.6389,
+                  "full_window_net_usd": 623.61,
+                  "full_window_peak_gross_leverage": 0.6228,
+                  "full_window_peak_to_trough_dd_usd": -129.42,
+                  "full_window_static_floor_dd_usd": -6.78,
+                  "full_window_sweeps": 0,
+                  "funding_covered_coins": 13,
+                  "funding_total_coins": 16,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.6228,
+                  "peak_to_trough_dd_usd": -129.42,
+                  "static_floor_dd_usd": -6.78,
+                  "sweeps": 0,
+                  "terminal_net_usd": 623.61,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": -4.6389,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -105.28
+                }
+              },
+              "mc": {
+                "1.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 68.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 57.6,
+                  "p_timeout": 42.4
+                },
+                "1.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 67.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 67.38,
+                  "p_timeout": 32.62
+                },
+                "1.5x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 52.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 87.34,
+                  "p_timeout": 12.66
+                },
+                "1.5x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 49.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 92.6,
+                  "p_timeout": 7.4
+                },
+                "2.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 41.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 95.14,
+                  "p_timeout": 4.86
+                },
+                "2.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 38.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 97.86,
+                  "p_timeout": 2.14
+                }
+              },
+              "volume_participation": {
+                "max_participation_coin": "VVV",
+                "max_participation_pct": 43.1701,
+                "max_participation_ts_ms": 1788554100000,
+                "median_participation_pct": 0.0457,
+                "p95_participation_pct": 1.2451,
+                "p99_participation_pct": 5.2665,
+                "total_traded_notional_usd": 224403.0,
+                "trade_count": 1028,
+                "trades_gt_10pct_vol": 3,
+                "trades_gt_1pct_vol": 69,
+                "trades_without_1m_volume": 4,
+                "volume_coverage_frac": 0.9961,
+                "volume_covered_trades": 1024
+              }
+            },
+            "30": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 628.62,
+                  "full_window_peak_gross_leverage": 0.6198,
+                  "full_window_peak_to_trough_dd_usd": -129.16,
+                  "full_window_static_floor_dd_usd": -6.77,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.6198,
+                  "peak_to_trough_dd_usd": -129.16,
+                  "static_floor_dd_usd": -6.77,
+                  "sweeps": 0,
+                  "terminal_net_usd": 628.62,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -105.14
+                },
+                "2x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 483.54,
+                  "full_window_peak_gross_leverage": 0.6278,
+                  "full_window_peak_to_trough_dd_usd": -143.11,
+                  "full_window_static_floor_dd_usd": -7.9,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.6278,
+                  "peak_to_trough_dd_usd": -143.11,
+                  "static_floor_dd_usd": -7.9,
+                  "sweeps": 0,
+                  "terminal_net_usd": 483.54,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -112.87
+                },
+                "3x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 338.45,
+                  "full_window_peak_gross_leverage": 0.636,
+                  "full_window_peak_to_trough_dd_usd": -159.25,
+                  "full_window_static_floor_dd_usd": -9.04,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.636,
+                  "peak_to_trough_dd_usd": -159.25,
+                  "static_floor_dd_usd": -9.04,
+                  "sweeps": 0,
+                  "terminal_net_usd": 338.45,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -120.6
+                }
+              },
+              "mc": {
+                "1.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 68.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 57.16,
+                  "p_timeout": 42.84
+                },
+                "1.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 67.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 67.84,
+                  "p_timeout": 32.16
+                },
+                "1.5x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 52.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 86.2,
+                  "p_timeout": 13.8
+                },
+                "1.5x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 50.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 92.7,
+                  "p_timeout": 7.3
+                },
+                "2.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 40.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 94.02,
+                  "p_timeout": 5.98
+                },
+                "2.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 38.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 97.64,
+                  "p_timeout": 2.36
+                }
+              },
+              "volume_participation": {
+                "max_participation_coin": "VVV",
+                "max_participation_pct": 43.1701,
+                "max_participation_ts_ms": 1788554100000,
+                "median_participation_pct": 0.052,
+                "p95_participation_pct": 1.4062,
+                "p99_participation_pct": 5.3242,
+                "total_traded_notional_usd": 223205.01,
+                "trade_count": 942,
+                "trades_gt_10pct_vol": 3,
+                "trades_gt_1pct_vol": 69,
+                "trades_without_1m_volume": 4,
+                "volume_coverage_frac": 0.9958,
+                "volume_covered_trades": 938
+              }
+            }
+          },
+          "pm03": {
+            "account_verified": true,
+            "drift_usd": 0.0,
+            "fill_count": 70,
+            "final_equity": 10227.133344545126,
+            "halted": false,
+            "net_pnl": 227.13334454512463,
+            "quantities": {
+              "BTC": 0.0,
+              "CASHCAT": -1883.431431965225,
+              "DOGE": 0.0,
+              "ETH": 0.0,
+              "HYPE": 9.290808481906,
+              "LIT": 0.0,
+              "NEAR": 0.0,
+              "SOL": 0.0,
+              "VVV": 0.0,
+              "XRP": 0.0
+            },
+            "realized_pnl": 130.6925374734888,
+            "tier1_7d_net": 227.13,
+            "total_costs": 6.23674619,
+            "window_utc": "first 7 OOS days; $0 deadband vs PM03 Decimal parity"
+          }
+        }
+      },
+      "optimization": {
+        "aliases": [
+          "W#107",
+          "W#111",
+          "W#190",
+          "W#312"
+        ],
+        "binding_constraint": "BaselineCap(DailyCVaR_99)",
+        "cap_scale": 0.082781,
+        "feasible": true,
+        "live_deployable": false,
+        "live_non_deployable_members": {
+          "W#190": [
+            "REJECT_UNMAPPED_MATERIAL",
+            "WITHDRAWN_LT_1000"
+          ]
+        },
+        "min_lot_warnings": [],
+        "netting_savings_usd": 0.0,
+        "size": 4,
+        "strict_min_notional_passed": true,
+        "train_daily_cvar_usd": 24.83,
+        "train_net_dd": 11.1978,
+        "train_net_usd": 560.53,
+        "train_peak_dd_usd": 50.06,
+        "train_uncapped_opt_k": [
+          0.7275776639656382,
+          0.5611376801907185,
+          0.04300260396536745,
+          0.23425940616553323
+        ],
+        "train_unit_dd_usd": [
+          799.0274954049994,
+          614.0670431000017,
+          14045.683705975014,
+          1712.4163845320006
+        ],
+        "train_worst_day_usd": 29.68
+      },
+      "train": {
+        "full": {
+          "deadbands": {
+            "15": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 929.62,
+                  "full_window_peak_gross_leverage": 0.4705,
+                  "full_window_peak_to_trough_dd_usd": -162.76,
+                  "full_window_static_floor_dd_usd": -16.54,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.4705,
+                  "peak_to_trough_dd_usd": -162.76,
+                  "static_floor_dd_usd": -16.54,
+                  "sweeps": 0,
+                  "terminal_net_usd": 800.71,
+                  "terminal_ts_ms": 1787380500000,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -82.27
+                }
+              }
+            }
+          }
+        },
+        "new": {
+          "deadbands": {
+            "15": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 552.35,
+                  "full_window_peak_gross_leverage": 0.3958,
+                  "full_window_peak_to_trough_dd_usd": -50.06,
+                  "full_window_static_floor_dd_usd": -26.16,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.3958,
+                  "peak_to_trough_dd_usd": -50.06,
+                  "static_floor_dd_usd": -26.16,
+                  "sweeps": 0,
+                  "terminal_net_usd": 552.35,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -28.95
+                }
+              }
+            }
+          }
+        }
+      },
+      "triada_conflicts": {
+        "coin_hours": 54.75,
+        "events": 43,
+        "symbols": [
+          "BTC",
+          "HYPE",
+          "NEAR",
+          "PUMP",
+          "VVV",
+          "ZEC"
+        ]
+      }
+    },
+    {
+      "aliases": [
+        "W#152",
+        "W#312",
+        "W#94"
+      ],
+      "baseline_k": [
+        0.007173115480052875,
+        0.03893134127240117,
+        2.073100196994028
+      ],
+      "index": 2,
+      "k": [
+        0.0013386392504151454,
+        0.03893134127240117,
+        0.778942560068045
+      ],
+      "oos": {
+        "full": {
+          "deadbands": {
+            "15": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 132.94,
+                  "full_window_peak_gross_leverage": 0.1037,
+                  "full_window_peak_to_trough_dd_usd": -34.34,
+                  "full_window_static_floor_dd_usd": -8.51,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.1037,
+                  "peak_to_trough_dd_usd": -34.34,
+                  "static_floor_dd_usd": -8.51,
+                  "sweeps": 0,
+                  "terminal_net_usd": 132.94,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -26.9
+                },
+                "2x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 114.87,
+                  "full_window_peak_gross_leverage": 0.1038,
+                  "full_window_peak_to_trough_dd_usd": -35.84,
+                  "full_window_static_floor_dd_usd": -8.98,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.1038,
+                  "peak_to_trough_dd_usd": -35.84,
+                  "static_floor_dd_usd": -8.98,
+                  "sweeps": 0,
+                  "terminal_net_usd": 114.87,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -27.24
+                },
+                "3x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 96.79,
+                  "full_window_peak_gross_leverage": 0.1039,
+                  "full_window_peak_to_trough_dd_usd": -40.38,
+                  "full_window_static_floor_dd_usd": -9.44,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.1039,
+                  "peak_to_trough_dd_usd": -40.38,
+                  "static_floor_dd_usd": -9.44,
+                  "sweeps": 0,
+                  "terminal_net_usd": 96.79,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -27.59
+                }
+              },
+              "funding_stress": {
+                "constant_1bp_8h": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": -4.9645,
+                  "full_window_net_usd": 127.98,
+                  "full_window_peak_gross_leverage": 0.1037,
+                  "full_window_peak_to_trough_dd_usd": -34.62,
+                  "full_window_static_floor_dd_usd": -8.72,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.1037,
+                  "peak_to_trough_dd_usd": -34.62,
+                  "static_floor_dd_usd": -8.72,
+                  "sweeps": 0,
+                  "terminal_net_usd": 127.98,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": -4.9645,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -27.05
+                },
+                "historical_usdt_proxy": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": -2.8257,
+                  "full_window_net_usd": 130.12,
+                  "full_window_peak_gross_leverage": 0.1037,
+                  "full_window_peak_to_trough_dd_usd": -34.47,
+                  "full_window_static_floor_dd_usd": -8.83,
+                  "full_window_sweeps": 0,
+                  "funding_covered_coins": 15,
+                  "funding_total_coins": 15,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.1037,
+                  "peak_to_trough_dd_usd": -34.47,
+                  "static_floor_dd_usd": -8.83,
+                  "sweeps": 0,
+                  "terminal_net_usd": 130.12,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": -2.8257,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -26.98
+                }
+              },
+              "mc": {
+                "1.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "1.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "1.5x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "1.5x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "2.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "2.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 78.5,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.08,
+                  "p_timeout": 99.92
+                }
+              },
+              "volume_participation": {
+                "max_participation_coin": "XMR",
+                "max_participation_pct": 250.0,
+                "max_participation_ts_ms": 1791482700000,
+                "median_participation_pct": 0.0423,
+                "p95_participation_pct": 1.3854,
+                "p99_participation_pct": 5.4585,
+                "total_traded_notional_usd": 27812.11,
+                "trade_count": 251,
+                "trades_gt_10pct_vol": 2,
+                "trades_gt_1pct_vol": 18,
+                "trades_without_1m_volume": 1,
+                "volume_coverage_frac": 0.996,
+                "volume_covered_trades": 250
+              }
+            },
+            "30": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 130.69,
+                  "full_window_peak_gross_leverage": 0.1015,
+                  "full_window_peak_to_trough_dd_usd": -33.86,
+                  "full_window_static_floor_dd_usd": -9.17,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.1015,
+                  "peak_to_trough_dd_usd": -33.86,
+                  "static_floor_dd_usd": -9.17,
+                  "sweeps": 0,
+                  "terminal_net_usd": 130.69,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -27.08
+                },
+                "2x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 113.01,
+                  "full_window_peak_gross_leverage": 0.1016,
+                  "full_window_peak_to_trough_dd_usd": -35.68,
+                  "full_window_static_floor_dd_usd": -9.58,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.1016,
+                  "peak_to_trough_dd_usd": -35.68,
+                  "static_floor_dd_usd": -9.58,
+                  "sweeps": 0,
+                  "terminal_net_usd": 113.01,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -27.39
+                },
+                "3x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 95.32,
+                  "full_window_peak_gross_leverage": 0.1018,
+                  "full_window_peak_to_trough_dd_usd": -40.08,
+                  "full_window_static_floor_dd_usd": -9.99,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.1018,
+                  "peak_to_trough_dd_usd": -40.08,
+                  "static_floor_dd_usd": -9.99,
+                  "sweeps": 0,
+                  "terminal_net_usd": 95.32,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -27.71
+                }
+              },
+              "mc": {
+                "1.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "1.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "1.5x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "1.5x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "2.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "2.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 85.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.12,
+                  "p_timeout": 99.88
+                }
+              },
+              "volume_participation": {
+                "max_participation_coin": "XMR",
+                "max_participation_pct": 361.1111,
+                "max_participation_ts_ms": 1791482700000,
+                "median_participation_pct": 0.0345,
+                "p95_participation_pct": 1.4088,
+                "p99_participation_pct": 3.6137,
+                "total_traded_notional_usd": 27205.6,
+                "trade_count": 210,
+                "trades_gt_10pct_vol": 1,
+                "trades_gt_1pct_vol": 17,
+                "trades_without_1m_volume": 1,
+                "volume_coverage_frac": 0.9952,
+                "volume_covered_trades": 209
+              }
+            }
+          }
+        },
+        "new": {
+          "deadbands": {
+            "15": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 132.94,
+                  "full_window_peak_gross_leverage": 0.1037,
+                  "full_window_peak_to_trough_dd_usd": -34.34,
+                  "full_window_static_floor_dd_usd": -8.51,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.1037,
+                  "peak_to_trough_dd_usd": -34.34,
+                  "static_floor_dd_usd": -8.51,
+                  "sweeps": 0,
+                  "terminal_net_usd": 132.94,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -26.9
+                },
+                "2x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 114.87,
+                  "full_window_peak_gross_leverage": 0.1038,
+                  "full_window_peak_to_trough_dd_usd": -35.84,
+                  "full_window_static_floor_dd_usd": -8.98,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.1038,
+                  "peak_to_trough_dd_usd": -35.84,
+                  "static_floor_dd_usd": -8.98,
+                  "sweeps": 0,
+                  "terminal_net_usd": 114.87,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -27.24
+                },
+                "3x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 96.79,
+                  "full_window_peak_gross_leverage": 0.1039,
+                  "full_window_peak_to_trough_dd_usd": -40.38,
+                  "full_window_static_floor_dd_usd": -9.44,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.1039,
+                  "peak_to_trough_dd_usd": -40.38,
+                  "static_floor_dd_usd": -9.44,
+                  "sweeps": 0,
+                  "terminal_net_usd": 96.79,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -27.59
+                }
+              },
+              "funding_stress": {
+                "constant_1bp_8h": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": -4.9645,
+                  "full_window_net_usd": 127.98,
+                  "full_window_peak_gross_leverage": 0.1037,
+                  "full_window_peak_to_trough_dd_usd": -34.62,
+                  "full_window_static_floor_dd_usd": -8.72,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.1037,
+                  "peak_to_trough_dd_usd": -34.62,
+                  "static_floor_dd_usd": -8.72,
+                  "sweeps": 0,
+                  "terminal_net_usd": 127.98,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": -4.9645,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -27.05
+                },
+                "historical_usdt_proxy": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": -2.8257,
+                  "full_window_net_usd": 130.12,
+                  "full_window_peak_gross_leverage": 0.1037,
+                  "full_window_peak_to_trough_dd_usd": -34.47,
+                  "full_window_static_floor_dd_usd": -8.83,
+                  "full_window_sweeps": 0,
+                  "funding_covered_coins": 15,
+                  "funding_total_coins": 15,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.1037,
+                  "peak_to_trough_dd_usd": -34.47,
+                  "static_floor_dd_usd": -8.83,
+                  "sweeps": 0,
+                  "terminal_net_usd": 130.12,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": -2.8257,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -26.98
+                }
+              },
+              "mc": {
+                "1.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "1.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "1.5x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "1.5x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "2.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "2.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 78.5,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.08,
+                  "p_timeout": 99.92
+                }
+              },
+              "volume_participation": {
+                "max_participation_coin": "XMR",
+                "max_participation_pct": 250.0,
+                "max_participation_ts_ms": 1791482700000,
+                "median_participation_pct": 0.0423,
+                "p95_participation_pct": 1.3854,
+                "p99_participation_pct": 5.4585,
+                "total_traded_notional_usd": 27812.11,
+                "trade_count": 251,
+                "trades_gt_10pct_vol": 2,
+                "trades_gt_1pct_vol": 18,
+                "trades_without_1m_volume": 1,
+                "volume_coverage_frac": 0.996,
+                "volume_covered_trades": 250
+              }
+            },
+            "30": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 130.69,
+                  "full_window_peak_gross_leverage": 0.1015,
+                  "full_window_peak_to_trough_dd_usd": -33.86,
+                  "full_window_static_floor_dd_usd": -9.17,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.1015,
+                  "peak_to_trough_dd_usd": -33.86,
+                  "static_floor_dd_usd": -9.17,
+                  "sweeps": 0,
+                  "terminal_net_usd": 130.69,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -27.08
+                },
+                "2x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 113.01,
+                  "full_window_peak_gross_leverage": 0.1016,
+                  "full_window_peak_to_trough_dd_usd": -35.68,
+                  "full_window_static_floor_dd_usd": -9.58,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.1016,
+                  "peak_to_trough_dd_usd": -35.68,
+                  "static_floor_dd_usd": -9.58,
+                  "sweeps": 0,
+                  "terminal_net_usd": 113.01,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -27.39
+                },
+                "3x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 95.32,
+                  "full_window_peak_gross_leverage": 0.1018,
+                  "full_window_peak_to_trough_dd_usd": -40.08,
+                  "full_window_static_floor_dd_usd": -9.99,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.1018,
+                  "peak_to_trough_dd_usd": -40.08,
+                  "static_floor_dd_usd": -9.99,
+                  "sweeps": 0,
+                  "terminal_net_usd": 95.32,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -27.71
+                }
+              },
+              "mc": {
+                "1.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "1.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "1.5x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "1.5x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "2.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": -1.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.0,
+                  "p_timeout": 100.0
+                },
+                "2.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 85.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 0.12,
+                  "p_timeout": 99.88
+                }
+              },
+              "volume_participation": {
+                "max_participation_coin": "XMR",
+                "max_participation_pct": 361.1111,
+                "max_participation_ts_ms": 1791482700000,
+                "median_participation_pct": 0.0345,
+                "p95_participation_pct": 1.4088,
+                "p99_participation_pct": 3.6137,
+                "total_traded_notional_usd": 27205.6,
+                "trade_count": 210,
+                "trades_gt_10pct_vol": 1,
+                "trades_gt_1pct_vol": 17,
+                "trades_without_1m_volume": 1,
+                "volume_coverage_frac": 0.9952,
+                "volume_covered_trades": 209
+              }
+            }
+          },
+          "pm03": {
+            "account_verified": true,
+            "drift_usd": -0.0,
+            "fill_count": 16,
+            "final_equity": 10001.285531622378,
+            "halted": false,
+            "net_pnl": 1.285531622378417,
+            "quantities": {
+              "BTC": 0.000436207834,
+              "ETH": 0.02165460317,
+              "HYPE": 0.0,
+              "XMR": 0.130862350091
+            },
+            "realized_pnl": 3.8270643717351147,
+            "tier1_7d_net": 1.29,
+            "total_costs": 0.34814765,
+            "window_utc": "first 7 OOS days; $0 deadband vs PM03 Decimal parity"
+          }
+        }
+      },
+      "optimization": {
+        "aliases": [
+          "W#152",
+          "W#312",
+          "W#94"
+        ],
+        "binding_constraint": "BaselineCap(Hard_Daily)",
+        "cap_scale": 0.156313,
+        "feasible": true,
+        "live_deployable": false,
+        "live_non_deployable_members": {
+          "W#94": [
+            "WITHDRAWN_LT_1000"
+          ]
+        },
+        "min_lot_warnings": [],
+        "netting_savings_usd": 0.0,
+        "size": 3,
+        "strict_min_notional_passed": true,
+        "train_daily_cvar_usd": 40.03,
+        "train_net_dd": 2.4403,
+        "train_net_usd": 158.07,
+        "train_peak_dd_usd": 64.77,
+        "train_uncapped_opt_k": [
+          0.008563839963288657,
+          0.2490602125327059,
+          4.983224138204775
+        ],
+        "train_unit_dd_usd": [
+          9293.962553935526,
+          1712.4163845320006,
+          32.15795684324983
+        ],
+        "train_worst_day_usd": 58.62
+      },
+      "train": {
+        "full": {
+          "deadbands": {
+            "15": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 195.7,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 155.89,
+                  "full_window_peak_gross_leverage": 0.3528,
+                  "full_window_peak_to_trough_dd_usd": -63.34,
+                  "full_window_static_floor_dd_usd": -53.05,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 1,
+                  "peak_gross_leverage": 0.3528,
+                  "peak_to_trough_dd_usd": -63.34,
+                  "static_floor_dd_usd": -53.05,
+                  "sweeps": 0,
+                  "terminal_net_usd": 155.89,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 1,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -57.33
+                }
+              }
+            }
+          }
+        },
+        "new": {
+          "deadbands": {
+            "15": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 195.7,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 155.89,
+                  "full_window_peak_gross_leverage": 0.3528,
+                  "full_window_peak_to_trough_dd_usd": -63.34,
+                  "full_window_static_floor_dd_usd": -53.05,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 1,
+                  "peak_gross_leverage": 0.3528,
+                  "peak_to_trough_dd_usd": -63.34,
+                  "static_floor_dd_usd": -53.05,
+                  "sweeps": 0,
+                  "terminal_net_usd": 155.89,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 1,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -57.33
+                }
+              }
+            }
+          }
+        }
+      },
+      "triada_conflicts": {
+        "coin_hours": 236.58,
+        "events": 24,
+        "symbols": [
+          "BTC",
+          "VVV",
+          "XMR",
+          "ZEC"
+        ]
+      }
+    },
+    {
+      "aliases": [
+        "W#111",
+        "W#152",
+        "W#312"
+      ],
+      "baseline_k": [
+        0.10856577863243169,
+        0.007173115480052875,
+        0.03893134127240117
+      ],
+      "index": 3,
+      "k": [
+        0.10856577863243169,
+        0.004802244940960148,
+        0.03273342161152428
+      ],
+      "oos": {
+        "full": {
+          "deadbands": {
+            "15": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 1139.43,
+                  "full_window_peak_gross_leverage": 0.9259,
+                  "full_window_peak_to_trough_dd_usd": -227.93,
+                  "full_window_static_floor_dd_usd": -42.83,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.5046,
+                  "peak_to_trough_dd_usd": -227.93,
+                  "static_floor_dd_usd": -42.83,
+                  "sweeps": 0,
+                  "terminal_net_usd": 800.3,
+                  "terminal_ts_ms": 1789411500000,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -108.16
+                },
+                "2x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 945.24,
+                  "full_window_peak_gross_leverage": 0.9339,
+                  "full_window_peak_to_trough_dd_usd": -237.11,
+                  "full_window_static_floor_dd_usd": -46.88,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.5465,
+                  "peak_to_trough_dd_usd": -229.58,
+                  "static_floor_dd_usd": -46.88,
+                  "sweeps": 0,
+                  "terminal_net_usd": 801.3,
+                  "terminal_ts_ms": 1789707300000,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -165.38
+                },
+                "3x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 751.06,
+                  "full_window_peak_gross_leverage": 0.942,
+                  "full_window_peak_to_trough_dd_usd": -251.28,
+                  "full_window_static_floor_dd_usd": -50.93,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.549,
+                  "peak_to_trough_dd_usd": -231.23,
+                  "static_floor_dd_usd": -50.93,
+                  "sweeps": 0,
+                  "terminal_net_usd": 803.67,
+                  "terminal_ts_ms": 1789921800000,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -167.92
+                }
+              },
+              "funding_stress": {
+                "constant_1bp_8h": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": -24.6835,
+                  "full_window_net_usd": 1114.74,
+                  "full_window_peak_gross_leverage": 0.9269,
+                  "full_window_peak_to_trough_dd_usd": -227.99,
+                  "full_window_static_floor_dd_usd": -43.23,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.5047,
+                  "peak_to_trough_dd_usd": -227.99,
+                  "static_floor_dd_usd": -43.23,
+                  "sweeps": 0,
+                  "terminal_net_usd": 801.24,
+                  "terminal_ts_ms": 1789417500000,
+                  "total_funding_usd": -5.7984,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -108.26
+                },
+                "historical_usdt_proxy": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": -10.9089,
+                  "full_window_net_usd": 1128.52,
+                  "full_window_peak_gross_leverage": 0.9264,
+                  "full_window_peak_to_trough_dd_usd": -228.07,
+                  "full_window_static_floor_dd_usd": -42.96,
+                  "full_window_sweeps": 0,
+                  "funding_covered_coins": 7,
+                  "funding_total_coins": 9,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.5047,
+                  "peak_to_trough_dd_usd": -228.07,
+                  "static_floor_dd_usd": -42.96,
+                  "sweeps": 0,
+                  "terminal_net_usd": 801.33,
+                  "terminal_ts_ms": 1789416900000,
+                  "total_funding_usd": -3.6936,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -108.35
+                }
+              },
+              "mc": {
+                "1.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 48.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 82.28,
+                  "p_timeout": 17.72
+                },
+                "1.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 41.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 94.36,
+                  "p_timeout": 5.64
+                },
+                "1.5x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 35.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 92.34,
+                  "p_timeout": 7.66
+                },
+                "1.5x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 28.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 98.84,
+                  "p_timeout": 1.16
+                },
+                "2.0x/75%-Chop": {
+                  "avg_sweeps": 0.31,
+                  "med_days_pass": 30.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.82,
+                  "p_pass": 91.16,
+                  "p_timeout": 8.02
+                },
+                "2.0x/Blended": {
+                  "avg_sweeps": 0.53,
+                  "med_days_pass": 25.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 1.46,
+                  "p_pass": 94.22,
+                  "p_timeout": 4.32
+                }
+              },
+              "volume_participation": {
+                "max_participation_coin": "XRP",
+                "max_participation_pct": 96.9643,
+                "max_participation_ts_ms": 1788598200000,
+                "median_participation_pct": 0.0665,
+                "p95_participation_pct": 2.2449,
+                "p99_participation_pct": 7.4398,
+                "total_traded_notional_usd": 298744.61,
+                "trade_count": 671,
+                "trades_gt_10pct_vol": 5,
+                "trades_gt_1pct_vol": 81,
+                "trades_without_1m_volume": 3,
+                "volume_coverage_frac": 0.9955,
+                "volume_covered_trades": 668
+              }
+            },
+            "30": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 1135.04,
+                  "full_window_peak_gross_leverage": 0.926,
+                  "full_window_peak_to_trough_dd_usd": -227.93,
+                  "full_window_static_floor_dd_usd": -42.83,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.5046,
+                  "peak_to_trough_dd_usd": -227.93,
+                  "static_floor_dd_usd": -42.83,
+                  "sweeps": 0,
+                  "terminal_net_usd": 800.57,
+                  "terminal_ts_ms": 1789416600000,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -108.16
+                },
+                "2x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 940.93,
+                  "full_window_peak_gross_leverage": 0.934,
+                  "full_window_peak_to_trough_dd_usd": -237.11,
+                  "full_window_static_floor_dd_usd": -46.88,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.5465,
+                  "peak_to_trough_dd_usd": -229.58,
+                  "static_floor_dd_usd": -46.88,
+                  "sweeps": 0,
+                  "terminal_net_usd": 800.08,
+                  "terminal_ts_ms": 1789707300000,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -165.38
+                },
+                "3x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 746.83,
+                  "full_window_peak_gross_leverage": 0.9421,
+                  "full_window_peak_to_trough_dd_usd": -251.28,
+                  "full_window_static_floor_dd_usd": -50.93,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.549,
+                  "peak_to_trough_dd_usd": -231.23,
+                  "static_floor_dd_usd": -50.93,
+                  "sweeps": 0,
+                  "terminal_net_usd": 802.51,
+                  "terminal_ts_ms": 1789921800000,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -167.92
+                }
+              },
+              "mc": {
+                "1.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 48.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 81.4,
+                  "p_timeout": 18.6
+                },
+                "1.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 41.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 94.68,
+                  "p_timeout": 5.32
+                },
+                "1.5x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 36.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 92.44,
+                  "p_timeout": 7.56
+                },
+                "1.5x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 28.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 98.78,
+                  "p_timeout": 1.22
+                },
+                "2.0x/75%-Chop": {
+                  "avg_sweeps": 0.29,
+                  "med_days_pass": 30.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.62,
+                  "p_pass": 90.74,
+                  "p_timeout": 8.64
+                },
+                "2.0x/Blended": {
+                  "avg_sweeps": 0.54,
+                  "med_days_pass": 25.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 1.68,
+                  "p_pass": 93.62,
+                  "p_timeout": 4.7
+                }
+              },
+              "volume_participation": {
+                "max_participation_coin": "XRP",
+                "max_participation_pct": 96.9643,
+                "max_participation_ts_ms": 1788598200000,
+                "median_participation_pct": 0.0691,
+                "p95_participation_pct": 2.2644,
+                "p99_participation_pct": 7.5235,
+                "total_traded_notional_usd": 298624.49,
+                "trade_count": 662,
+                "trades_gt_10pct_vol": 5,
+                "trades_gt_1pct_vol": 81,
+                "trades_without_1m_volume": 3,
+                "volume_coverage_frac": 0.9955,
+                "volume_covered_trades": 659
+              }
+            }
+          }
+        },
+        "new": {
+          "deadbands": {
+            "15": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 1128.45,
+                  "full_window_peak_gross_leverage": 0.9268,
+                  "full_window_peak_to_trough_dd_usd": -227.93,
+                  "full_window_static_floor_dd_usd": -15.07,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.5445,
+                  "peak_to_trough_dd_usd": -227.93,
+                  "static_floor_dd_usd": -15.07,
+                  "sweeps": 0,
+                  "terminal_net_usd": 802.92,
+                  "terminal_ts_ms": 1789628700000,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -162.85
+                },
+                "2x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 935.53,
+                  "full_window_peak_gross_leverage": 0.9347,
+                  "full_window_peak_to_trough_dd_usd": -237.11,
+                  "full_window_static_floor_dd_usd": -15.93,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.547,
+                  "peak_to_trough_dd_usd": -229.58,
+                  "static_floor_dd_usd": -15.93,
+                  "sweeps": 0,
+                  "terminal_net_usd": 802.86,
+                  "terminal_ts_ms": 1789719600000,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -165.38
+                },
+                "3x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 742.61,
+                  "full_window_peak_gross_leverage": 0.9427,
+                  "full_window_peak_to_trough_dd_usd": -251.28,
+                  "full_window_static_floor_dd_usd": -16.8,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.5494,
+                  "peak_to_trough_dd_usd": -231.23,
+                  "static_floor_dd_usd": -16.8,
+                  "sweeps": 0,
+                  "terminal_net_usd": 802.06,
+                  "terminal_ts_ms": 1790022300000,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -167.92
+                }
+              },
+              "funding_stress": {
+                "constant_1bp_8h": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": -24.1553,
+                  "full_window_net_usd": 1104.3,
+                  "full_window_peak_gross_leverage": 0.9277,
+                  "full_window_peak_to_trough_dd_usd": -227.99,
+                  "full_window_static_floor_dd_usd": -15.09,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.5448,
+                  "peak_to_trough_dd_usd": -227.99,
+                  "static_floor_dd_usd": -15.09,
+                  "sweeps": 0,
+                  "terminal_net_usd": 800.76,
+                  "terminal_ts_ms": 1789647000000,
+                  "total_funding_usd": -7.6029,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -163.27
+                },
+                "historical_usdt_proxy": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": -10.6895,
+                  "full_window_net_usd": 1117.76,
+                  "full_window_peak_gross_leverage": 0.9273,
+                  "full_window_peak_to_trough_dd_usd": -228.07,
+                  "full_window_static_floor_dd_usd": -15.09,
+                  "full_window_sweeps": 0,
+                  "funding_covered_coins": 7,
+                  "funding_total_coins": 9,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.5447,
+                  "peak_to_trough_dd_usd": -228.07,
+                  "static_floor_dd_usd": -15.09,
+                  "sweeps": 0,
+                  "terminal_net_usd": 800.14,
+                  "terminal_ts_ms": 1789636200000,
+                  "total_funding_usd": -4.13,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -163.04
+                }
+              },
+              "mc": {
+                "1.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 48.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 82.3,
+                  "p_timeout": 17.7
+                },
+                "1.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 41.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 94.46,
+                  "p_timeout": 5.54
+                },
+                "1.5x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 36.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 92.46,
+                  "p_timeout": 7.54
+                },
+                "1.5x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 29.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 98.88,
+                  "p_timeout": 1.12
+                },
+                "2.0x/75%-Chop": {
+                  "avg_sweeps": 0.31,
+                  "med_days_pass": 30.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.82,
+                  "p_pass": 91.36,
+                  "p_timeout": 7.82
+                },
+                "2.0x/Blended": {
+                  "avg_sweeps": 0.53,
+                  "med_days_pass": 26.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 1.48,
+                  "p_pass": 94.18,
+                  "p_timeout": 4.34
+                }
+              },
+              "volume_participation": {
+                "max_participation_coin": "XRP",
+                "max_participation_pct": 96.9643,
+                "max_participation_ts_ms": 1788598200000,
+                "median_participation_pct": 0.0663,
+                "p95_participation_pct": 2.2137,
+                "p99_participation_pct": 6.2543,
+                "total_traded_notional_usd": 296799.2,
+                "trade_count": 664,
+                "trades_gt_10pct_vol": 5,
+                "trades_gt_1pct_vol": 79,
+                "trades_without_1m_volume": 3,
+                "volume_coverage_frac": 0.9955,
+                "volume_covered_trades": 661
+              }
+            },
+            "30": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 1124.07,
+                  "full_window_peak_gross_leverage": 0.9269,
+                  "full_window_peak_to_trough_dd_usd": -227.93,
+                  "full_window_static_floor_dd_usd": -15.07,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.5446,
+                  "peak_to_trough_dd_usd": -227.93,
+                  "static_floor_dd_usd": -15.07,
+                  "sweeps": 0,
+                  "terminal_net_usd": 801.66,
+                  "terminal_ts_ms": 1789628700000,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -162.85
+                },
+                "2x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 931.23,
+                  "full_window_peak_gross_leverage": 0.9348,
+                  "full_window_peak_to_trough_dd_usd": -237.11,
+                  "full_window_static_floor_dd_usd": -15.93,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.547,
+                  "peak_to_trough_dd_usd": -229.58,
+                  "static_floor_dd_usd": -15.93,
+                  "sweeps": 0,
+                  "terminal_net_usd": 801.65,
+                  "terminal_ts_ms": 1789719600000,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -165.38
+                },
+                "3x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 738.38,
+                  "full_window_peak_gross_leverage": 0.9428,
+                  "full_window_peak_to_trough_dd_usd": -251.28,
+                  "full_window_static_floor_dd_usd": -16.8,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.5495,
+                  "peak_to_trough_dd_usd": -231.23,
+                  "static_floor_dd_usd": -16.8,
+                  "sweeps": 0,
+                  "terminal_net_usd": 800.9,
+                  "terminal_ts_ms": 1790022300000,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "PASS",
+                  "worst_daily_usd": -167.92
+                }
+              },
+              "mc": {
+                "1.0x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 49.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 81.2,
+                  "p_timeout": 18.8
+                },
+                "1.0x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 41.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 94.68,
+                  "p_timeout": 5.32
+                },
+                "1.5x/75%-Chop": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 36.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 92.42,
+                  "p_timeout": 7.58
+                },
+                "1.5x/Blended": {
+                  "avg_sweeps": 0.0,
+                  "med_days_pass": 29.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.0,
+                  "p_pass": 98.8,
+                  "p_timeout": 1.2
+                },
+                "2.0x/75%-Chop": {
+                  "avg_sweeps": 0.29,
+                  "med_days_pass": 30.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 0.58,
+                  "p_pass": 90.74,
+                  "p_timeout": 8.68
+                },
+                "2.0x/Blended": {
+                  "avg_sweeps": 0.54,
+                  "med_days_pass": 26.0,
+                  "p_fail_daily": 0.0,
+                  "p_fail_static": 1.66,
+                  "p_pass": 93.66,
+                  "p_timeout": 4.68
+                }
+              },
+              "volume_participation": {
+                "max_participation_coin": "XRP",
+                "max_participation_pct": 96.9643,
+                "max_participation_ts_ms": 1788598200000,
+                "median_participation_pct": 0.0686,
+                "p95_participation_pct": 2.2353,
+                "p99_participation_pct": 6.3861,
+                "total_traded_notional_usd": 296679.08,
+                "trade_count": 655,
+                "trades_gt_10pct_vol": 5,
+                "trades_gt_1pct_vol": 79,
+                "trades_without_1m_volume": 3,
+                "volume_coverage_frac": 0.9954,
+                "volume_covered_trades": 652
+              }
+            }
+          },
+          "pm03": {
+            "account_verified": true,
+            "drift_usd": -0.0,
+            "fill_count": 53,
+            "final_equity": 10538.457315251644,
+            "halted": false,
+            "net_pnl": 538.457315251644,
+            "quantities": {
+              "BTC": 0.0,
+              "CASHCAT": -4401.908060430575,
+              "ETH": 0.0,
+              "HYPE": 21.714241384273,
+              "SOL": 0.0,
+              "XRP": 0.0
+            },
+            "realized_pnl": 308.3717485335115,
+            "tier1_7d_net": 538.46,
+            "total_costs": 9.8898004,
+            "window_utc": "first 7 OOS days; $0 deadband vs PM03 Decimal parity"
+          }
+        }
+      },
+      "optimization": {
+        "aliases": [
+          "W#111",
+          "W#152",
+          "W#312"
+        ],
+        "binding_constraint": "BaselineCap(DailyCVaR_99)",
+        "cap_scale": 0.170527,
+        "feasible": true,
+        "live_deployable": true,
+        "live_non_deployable_members": {},
+        "min_lot_warnings": [],
+        "netting_savings_usd": 0.0,
+        "size": 3,
+        "strict_min_notional_passed": true,
+        "train_daily_cvar_usd": 51.16,
+        "train_net_dd": 7.2194,
+        "train_net_usd": 532.33,
+        "train_peak_dd_usd": 73.74,
+        "train_uncapped_opt_k": [
+          0.6366469241532324,
+          0.02816112507278962,
+          0.191953969736118
+        ],
+        "train_unit_dd_usd": [
+          614.0670431000017,
+          9293.962553935526,
+          1712.4163845320006
+        ],
+        "train_worst_day_usd": 52.22
+      },
+      "train": {
+        "full": {
+          "deadbands": {
+            "15": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 527.92,
+                  "full_window_peak_gross_leverage": 0.4973,
+                  "full_window_peak_to_trough_dd_usd": -72.98,
+                  "full_window_static_floor_dd_usd": -45.68,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.4973,
+                  "peak_to_trough_dd_usd": -72.98,
+                  "static_floor_dd_usd": -45.68,
+                  "sweeps": 0,
+                  "terminal_net_usd": 527.92,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -54.21
+                }
+              }
+            }
+          }
+        },
+        "new": {
+          "deadbands": {
+            "15": {
+              "cost_multipliers": {
+                "1x": {
+                  "deferred_notional_usd": 0.0,
+                  "full_window_funding_usd": 0.0,
+                  "full_window_net_usd": 527.92,
+                  "full_window_peak_gross_leverage": 0.4973,
+                  "full_window_peak_to_trough_dd_usd": -72.98,
+                  "full_window_static_floor_dd_usd": -45.68,
+                  "full_window_sweeps": 0,
+                  "gap_exits": 0,
+                  "peak_gross_leverage": 0.4973,
+                  "peak_to_trough_dd_usd": -72.98,
+                  "static_floor_dd_usd": -45.68,
+                  "sweeps": 0,
+                  "terminal_net_usd": 527.92,
+                  "terminal_ts_ms": null,
+                  "total_funding_usd": 0.0,
+                  "unpriced_open_steps": 0,
+                  "verdict": "TIMEOUT",
+                  "worst_daily_usd": -54.21
+                }
+              }
+            }
+          }
+        }
+      },
+      "triada_conflicts": {
+        "coin_hours": 44.67,
+        "events": 10,
+        "symbols": [
+          "BTC",
+          "VVV",
+          "ZEC"
+        ]
+      }
+    }
+  ],
+  "roster_sha256": "c4abfa90556928fd9abe7387a7853078d6e73ed6ecf595eeaa6ff5a19f2433fd",
+  "screened_wallets": 195,
+  "shortlist_count": 154,
+  "source_archive_sha256": "bd2badb79973aaf4be37aebaacafe1e484628359e947fa9e51a7ec0f84f33a55",
+  "status": "RETROSPECTIVE_SCENARIO",
+  "train_window": [
+    "2026-05-01",
+    "2026-09-01"
+  ],
+  "triada": {
+    "full": {
+      "deadbands": {
+        "15": {
+          "cost_multipliers": {
+            "1x": {
+              "deferred_notional_usd": 0.0,
+              "full_window_funding_usd": 0.0,
+              "full_window_net_usd": 1124.9,
+              "full_window_peak_gross_leverage": 0.5044,
+              "full_window_peak_to_trough_dd_usd": -520.04,
+              "full_window_static_floor_dd_usd": -52.36,
+              "full_window_sweeps": 0,
+              "gap_exits": 0,
+              "peak_gross_leverage": 0.2978,
+              "peak_to_trough_dd_usd": -373.68,
+              "static_floor_dd_usd": -52.36,
+              "sweeps": 0,
+              "terminal_net_usd": 800.75,
+              "terminal_ts_ms": 1789978800000,
+              "total_funding_usd": 0.0,
+              "unpriced_open_steps": 0,
+              "verdict": "PASS",
+              "worst_daily_usd": -161.27
+            },
+            "2x": {
+              "deferred_notional_usd": 0.0,
+              "full_window_funding_usd": 0.0,
+              "full_window_net_usd": 1110.57,
+              "full_window_peak_gross_leverage": 0.5048,
+              "full_window_peak_to_trough_dd_usd": -524.31,
+              "full_window_static_floor_dd_usd": -53.64,
+              "full_window_sweeps": 0,
+              "gap_exits": 0,
+              "peak_gross_leverage": 0.2979,
+              "peak_to_trough_dd_usd": -374.47,
+              "static_floor_dd_usd": -53.64,
+              "sweeps": 0,
+              "terminal_net_usd": 801.91,
+              "terminal_ts_ms": 1789979100000,
+              "total_funding_usd": 0.0,
+              "unpriced_open_steps": 0,
+              "verdict": "PASS",
+              "worst_daily_usd": -161.51
+            },
+            "3x": {
+              "deferred_notional_usd": 0.0,
+              "full_window_funding_usd": 0.0,
+              "full_window_net_usd": 1096.23,
+              "full_window_peak_gross_leverage": 0.5051,
+              "full_window_peak_to_trough_dd_usd": -528.58,
+              "full_window_static_floor_dd_usd": -54.93,
+              "full_window_sweeps": 0,
+              "gap_exits": 0,
+              "peak_gross_leverage": 0.298,
+              "peak_to_trough_dd_usd": -375.25,
+              "static_floor_dd_usd": -54.93,
+              "sweeps": 0,
+              "terminal_net_usd": 811.48,
+              "terminal_ts_ms": 1789980000000,
+              "total_funding_usd": 0.0,
+              "unpriced_open_steps": 0,
+              "verdict": "PASS",
+              "worst_daily_usd": -161.74
+            }
+          },
+          "funding_stress": {
+            "constant_1bp_8h": {
+              "deferred_notional_usd": 0.0,
+              "full_window_funding_usd": -16.9832,
+              "full_window_net_usd": 1107.92,
+              "full_window_peak_gross_leverage": 0.5053,
+              "full_window_peak_to_trough_dd_usd": -519.84,
+              "full_window_static_floor_dd_usd": -53.01,
+              "full_window_sweeps": 0,
+              "gap_exits": 0,
+              "peak_gross_leverage": 0.298,
+              "peak_to_trough_dd_usd": -378.39,
+              "static_floor_dd_usd": -53.01,
+              "sweeps": 0,
+              "terminal_net_usd": 803.83,
+              "terminal_ts_ms": 1789980000000,
+              "total_funding_usd": -14.3852,
+              "unpriced_open_steps": 0,
+              "verdict": "PASS",
+              "worst_daily_usd": -162.11
+            },
+            "historical_usdt_proxy": {
+              "deferred_notional_usd": 0.0,
+              "full_window_funding_usd": 6.4375,
+              "full_window_net_usd": 1131.34,
+              "full_window_peak_gross_leverage": 0.5048,
+              "full_window_peak_to_trough_dd_usd": -518.98,
+              "full_window_static_floor_dd_usd": -52.74,
+              "full_window_sweeps": 0,
+              "funding_covered_coins": 40,
+              "funding_total_coins": 41,
+              "gap_exits": 0,
+              "peak_gross_leverage": 0.298,
+              "peak_to_trough_dd_usd": -374.59,
+              "static_floor_dd_usd": -52.74,
+              "sweeps": 0,
+              "terminal_net_usd": 800.02,
+              "terminal_ts_ms": 1789979400000,
+              "total_funding_usd": -6.3941,
+              "unpriced_open_steps": 0,
+              "verdict": "PASS",
+              "worst_daily_usd": -161.47
+            }
+          },
+          "mc": {
+            "1.0x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 45.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.9,
+              "p_pass": 77.66,
+              "p_timeout": 21.44
+            },
+            "1.0x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 36.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.28,
+              "p_pass": 91.8,
+              "p_timeout": 7.92
+            },
+            "1.5x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 30.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 4.52,
+              "p_pass": 87.98,
+              "p_timeout": 7.5
+            },
+            "1.5x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 23.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 2.34,
+              "p_pass": 94.94,
+              "p_timeout": 2.72
+            },
+            "2.0x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 21.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 10.38,
+              "p_pass": 88.0,
+              "p_timeout": 1.62
+            },
+            "2.0x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 16.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 6.7,
+              "p_pass": 92.74,
+              "p_timeout": 0.56
+            }
+          },
+          "volume_participation": {
+            "max_participation_coin": "GMX",
+            "max_participation_pct": 375.0,
+            "max_participation_ts_ms": 1788220800000,
+            "median_participation_pct": 0.2041,
+            "p95_participation_pct": 7.3906,
+            "p99_participation_pct": 65.2963,
+            "total_traded_notional_usd": 22059.52,
+            "trade_count": 439,
+            "trades_gt_10pct_vol": 20,
+            "trades_gt_1pct_vol": 100,
+            "trades_without_1m_volume": 4,
+            "volume_coverage_frac": 0.9909,
+            "volume_covered_trades": 435
+          }
+        },
+        "30": {
+          "cost_multipliers": {
+            "1x": {
+              "deferred_notional_usd": 0.0,
+              "full_window_funding_usd": 0.0,
+              "full_window_net_usd": 1116.61,
+              "full_window_peak_gross_leverage": 0.5063,
+              "full_window_peak_to_trough_dd_usd": -518.18,
+              "full_window_static_floor_dd_usd": -52.05,
+              "full_window_sweeps": 0,
+              "gap_exits": 0,
+              "peak_gross_leverage": 0.2968,
+              "peak_to_trough_dd_usd": -369.57,
+              "static_floor_dd_usd": -52.05,
+              "sweeps": 0,
+              "terminal_net_usd": 800.63,
+              "terminal_ts_ms": 1789979400000,
+              "total_funding_usd": 0.0,
+              "unpriced_open_steps": 0,
+              "verdict": "PASS",
+              "worst_daily_usd": -160.81
+            },
+            "2x": {
+              "deferred_notional_usd": 0.0,
+              "full_window_funding_usd": 0.0,
+              "full_window_net_usd": 1102.47,
+              "full_window_peak_gross_leverage": 0.5067,
+              "full_window_peak_to_trough_dd_usd": -522.44,
+              "full_window_static_floor_dd_usd": -53.33,
+              "full_window_sweeps": 0,
+              "gap_exits": 0,
+              "peak_gross_leverage": 0.2969,
+              "peak_to_trough_dd_usd": -370.38,
+              "static_floor_dd_usd": -53.33,
+              "sweeps": 0,
+              "terminal_net_usd": 808.6,
+              "terminal_ts_ms": 1789980000000,
+              "total_funding_usd": 0.0,
+              "unpriced_open_steps": 0,
+              "verdict": "PASS",
+              "worst_daily_usd": -161.05
+            },
+            "3x": {
+              "deferred_notional_usd": 0.0,
+              "full_window_funding_usd": 0.0,
+              "full_window_net_usd": 1088.34,
+              "full_window_peak_gross_leverage": 0.507,
+              "full_window_peak_to_trough_dd_usd": -526.71,
+              "full_window_static_floor_dd_usd": -54.61,
+              "full_window_sweeps": 0,
+              "gap_exits": 0,
+              "peak_gross_leverage": 0.297,
+              "peak_to_trough_dd_usd": -371.18,
+              "static_floor_dd_usd": -54.61,
+              "sweeps": 0,
+              "terminal_net_usd": 805.23,
+              "terminal_ts_ms": 1789980000000,
+              "total_funding_usd": 0.0,
+              "unpriced_open_steps": 0,
+              "verdict": "PASS",
+              "worst_daily_usd": -161.28
+            }
+          },
+          "mc": {
+            "1.0x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 44.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.86,
+              "p_pass": 76.62,
+              "p_timeout": 22.52
+            },
+            "1.0x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 35.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.24,
+              "p_pass": 91.48,
+              "p_timeout": 8.28
+            },
+            "1.5x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 30.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 4.82,
+              "p_pass": 88.12,
+              "p_timeout": 7.06
+            },
+            "1.5x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 23.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 2.24,
+              "p_pass": 95.1,
+              "p_timeout": 2.66
+            },
+            "2.0x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 21.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 10.28,
+              "p_pass": 87.94,
+              "p_timeout": 1.78
+            },
+            "2.0x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 16.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 6.04,
+              "p_pass": 93.54,
+              "p_timeout": 0.42
+            }
+          },
+          "volume_participation": {
+            "max_participation_coin": "GMX",
+            "max_participation_pct": 375.0,
+            "max_participation_ts_ms": 1788220800000,
+            "median_participation_pct": 0.2693,
+            "p95_participation_pct": 10.2569,
+            "p99_participation_pct": 70.3645,
+            "total_traded_notional_usd": 21745.47,
+            "trade_count": 293,
+            "trades_gt_10pct_vol": 16,
+            "trades_gt_1pct_vol": 72,
+            "trades_without_1m_volume": 4,
+            "volume_coverage_frac": 0.9863,
+            "volume_covered_trades": 289
+          }
+        }
+      }
+    },
+    "k_source": "prop-production/bybit_executor.py static defaults, live runtime unverified",
+    "new": {
+      "deadbands": {
+        "15": {
+          "cost_multipliers": {
+            "1x": {
+              "deferred_notional_usd": 6987.3,
+              "full_window_funding_usd": 0.0,
+              "full_window_net_usd": 561.89,
+              "full_window_peak_gross_leverage": 0.4074,
+              "full_window_peak_to_trough_dd_usd": -451.25,
+              "full_window_static_floor_dd_usd": -43.79,
+              "full_window_sweeps": 0,
+              "gap_exits": 0,
+              "peak_gross_leverage": 0.4074,
+              "peak_to_trough_dd_usd": -451.25,
+              "static_floor_dd_usd": -43.79,
+              "sweeps": 0,
+              "terminal_net_usd": 561.89,
+              "terminal_ts_ms": null,
+              "total_funding_usd": 0.0,
+              "unpriced_open_steps": 0,
+              "verdict": "TIMEOUT",
+              "worst_daily_usd": -208.91
+            },
+            "2x": {
+              "deferred_notional_usd": 6987.3,
+              "full_window_funding_usd": 0.0,
+              "full_window_net_usd": 549.81,
+              "full_window_peak_gross_leverage": 0.4079,
+              "full_window_peak_to_trough_dd_usd": -452.92,
+              "full_window_static_floor_dd_usd": -45.23,
+              "full_window_sweeps": 0,
+              "gap_exits": 0,
+              "peak_gross_leverage": 0.4079,
+              "peak_to_trough_dd_usd": -452.92,
+              "static_floor_dd_usd": -45.23,
+              "sweeps": 0,
+              "terminal_net_usd": 549.81,
+              "terminal_ts_ms": null,
+              "total_funding_usd": 0.0,
+              "unpriced_open_steps": 0,
+              "verdict": "TIMEOUT",
+              "worst_daily_usd": -209.07
+            },
+            "3x": {
+              "deferred_notional_usd": 6987.3,
+              "full_window_funding_usd": 0.0,
+              "full_window_net_usd": 537.73,
+              "full_window_peak_gross_leverage": 0.4083,
+              "full_window_peak_to_trough_dd_usd": -454.6,
+              "full_window_static_floor_dd_usd": -46.68,
+              "full_window_sweeps": 0,
+              "gap_exits": 0,
+              "peak_gross_leverage": 0.4083,
+              "peak_to_trough_dd_usd": -454.6,
+              "static_floor_dd_usd": -46.68,
+              "sweeps": 0,
+              "terminal_net_usd": 537.73,
+              "terminal_ts_ms": null,
+              "total_funding_usd": 0.0,
+              "unpriced_open_steps": 0,
+              "verdict": "TIMEOUT",
+              "worst_daily_usd": -209.24
+            }
+          },
+          "funding_stress": {
+            "constant_1bp_8h": {
+              "deferred_notional_usd": 6987.3,
+              "full_window_funding_usd": 17.381,
+              "full_window_net_usd": 579.27,
+              "full_window_peak_gross_leverage": 0.4067,
+              "full_window_peak_to_trough_dd_usd": -449.17,
+              "full_window_static_floor_dd_usd": -44.93,
+              "full_window_sweeps": 0,
+              "gap_exits": 0,
+              "peak_gross_leverage": 0.4067,
+              "peak_to_trough_dd_usd": -449.17,
+              "static_floor_dd_usd": -44.93,
+              "sweeps": 0,
+              "terminal_net_usd": 579.27,
+              "terminal_ts_ms": null,
+              "total_funding_usd": 17.381,
+              "unpriced_open_steps": 0,
+              "verdict": "TIMEOUT",
+              "worst_daily_usd": -208.26
+            },
+            "historical_usdt_proxy": {
+              "deferred_notional_usd": 6987.3,
+              "full_window_funding_usd": 25.4102,
+              "full_window_net_usd": 587.3,
+              "full_window_peak_gross_leverage": 0.4066,
+              "full_window_peak_to_trough_dd_usd": -449.84,
+              "full_window_static_floor_dd_usd": -44.19,
+              "full_window_sweeps": 0,
+              "funding_covered_coins": 40,
+              "funding_total_coins": 41,
+              "gap_exits": 0,
+              "peak_gross_leverage": 0.4066,
+              "peak_to_trough_dd_usd": -449.84,
+              "static_floor_dd_usd": -44.19,
+              "sweeps": 0,
+              "terminal_net_usd": 587.3,
+              "terminal_ts_ms": null,
+              "total_funding_usd": 25.4102,
+              "unpriced_open_steps": 0,
+              "verdict": "TIMEOUT",
+              "worst_daily_usd": -208.43
+            }
+          },
+          "mc": {
+            "1.0x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 61.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.04,
+              "p_pass": 69.48,
+              "p_timeout": 30.48
+            },
+            "1.0x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 63.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.02,
+              "p_pass": 66.26,
+              "p_timeout": 33.72
+            },
+            "1.5x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 42.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.74,
+              "p_pass": 89.18,
+              "p_timeout": 10.08
+            },
+            "1.5x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 45.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.3,
+              "p_pass": 89.76,
+              "p_timeout": 9.94
+            },
+            "2.0x/75%-Chop": {
+              "avg_sweeps": 1.54,
+              "med_days_pass": 50.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 8.18,
+              "p_pass": 28.04,
+              "p_timeout": 63.78
+            },
+            "2.0x/Blended": {
+              "avg_sweeps": 0.93,
+              "med_days_pass": 49.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 1.68,
+              "p_pass": 54.38,
+              "p_timeout": 43.94
+            }
+          },
+          "volume_participation": {
+            "max_participation_coin": "FET",
+            "max_participation_pct": 220.4646,
+            "max_participation_ts_ms": 1791237900000,
+            "median_participation_pct": 0.1914,
+            "p95_participation_pct": 6.497,
+            "p99_participation_pct": 61.691,
+            "total_traded_notional_usd": 18585.42,
+            "trade_count": 406,
+            "trades_gt_10pct_vol": 18,
+            "trades_gt_1pct_vol": 90,
+            "trades_without_1m_volume": 4,
+            "volume_coverage_frac": 0.9901,
+            "volume_covered_trades": 402
+          }
+        },
+        "30": {
+          "cost_multipliers": {
+            "1x": {
+              "deferred_notional_usd": 9902.5,
+              "full_window_funding_usd": 0.0,
+              "full_window_net_usd": 560.23,
+              "full_window_peak_gross_leverage": 0.3997,
+              "full_window_peak_to_trough_dd_usd": -450.48,
+              "full_window_static_floor_dd_usd": -43.56,
+              "full_window_sweeps": 0,
+              "gap_exits": 0,
+              "peak_gross_leverage": 0.3997,
+              "peak_to_trough_dd_usd": -450.48,
+              "static_floor_dd_usd": -43.56,
+              "sweeps": 0,
+              "terminal_net_usd": 560.23,
+              "terminal_ts_ms": null,
+              "total_funding_usd": 0.0,
+              "unpriced_open_steps": 0,
+              "verdict": "TIMEOUT",
+              "worst_daily_usd": -206.44
+            },
+            "2x": {
+              "deferred_notional_usd": 9902.5,
+              "full_window_funding_usd": 0.0,
+              "full_window_net_usd": 548.3,
+              "full_window_peak_gross_leverage": 0.4002,
+              "full_window_peak_to_trough_dd_usd": -452.15,
+              "full_window_static_floor_dd_usd": -45.0,
+              "full_window_sweeps": 0,
+              "gap_exits": 0,
+              "peak_gross_leverage": 0.4002,
+              "peak_to_trough_dd_usd": -452.15,
+              "static_floor_dd_usd": -45.0,
+              "sweeps": 0,
+              "terminal_net_usd": 548.3,
+              "terminal_ts_ms": null,
+              "total_funding_usd": 0.0,
+              "unpriced_open_steps": 0,
+              "verdict": "TIMEOUT",
+              "worst_daily_usd": -206.59
+            },
+            "3x": {
+              "deferred_notional_usd": 9902.5,
+              "full_window_funding_usd": 0.0,
+              "full_window_net_usd": 536.37,
+              "full_window_peak_gross_leverage": 0.4006,
+              "full_window_peak_to_trough_dd_usd": -453.83,
+              "full_window_static_floor_dd_usd": -46.45,
+              "full_window_sweeps": 0,
+              "gap_exits": 0,
+              "peak_gross_leverage": 0.4006,
+              "peak_to_trough_dd_usd": -453.83,
+              "static_floor_dd_usd": -46.45,
+              "sweeps": 0,
+              "terminal_net_usd": 536.37,
+              "terminal_ts_ms": null,
+              "total_funding_usd": 0.0,
+              "unpriced_open_steps": 0,
+              "verdict": "TIMEOUT",
+              "worst_daily_usd": -206.73
+            }
+          },
+          "mc": {
+            "1.0x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 61.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.0,
+              "p_pass": 67.06,
+              "p_timeout": 32.94
+            },
+            "1.0x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 65.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.02,
+              "p_pass": 67.74,
+              "p_timeout": 32.24
+            },
+            "1.5x/75%-Chop": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 42.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.78,
+              "p_pass": 88.88,
+              "p_timeout": 10.34
+            },
+            "1.5x/Blended": {
+              "avg_sweeps": 0.0,
+              "med_days_pass": 44.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 0.18,
+              "p_pass": 91.3,
+              "p_timeout": 8.52
+            },
+            "2.0x/75%-Chop": {
+              "avg_sweeps": 1.1,
+              "med_days_pass": 43.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 48.68,
+              "p_pass": 18.68,
+              "p_timeout": 32.64
+            },
+            "2.0x/Blended": {
+              "avg_sweeps": 0.81,
+              "med_days_pass": 46.0,
+              "p_fail_daily": 0.0,
+              "p_fail_static": 20.46,
+              "p_pass": 42.16,
+              "p_timeout": 37.38
+            }
+          },
+          "volume_participation": {
+            "max_participation_coin": "FIL",
+            "max_participation_pct": 183.3333,
+            "max_participation_ts_ms": 1791573300000,
+            "median_participation_pct": 0.214,
+            "p95_participation_pct": 9.4393,
+            "p99_participation_pct": 51.6601,
+            "total_traded_notional_usd": 18355.57,
+            "trade_count": 267,
+            "trades_gt_10pct_vol": 13,
+            "trades_gt_1pct_vol": 63,
+            "trades_without_1m_volume": 4,
+            "volume_coverage_frac": 0.985,
+            "volume_covered_trades": 263
+          }
+        }
+      }
+    }
+  }
+}

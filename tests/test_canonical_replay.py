@@ -336,3 +336,509 @@ def test_load_registry_universe_queries_all_configured_non_excluded(tmp_path: Pa
     records_with_ref, sha2 = cr.load_registry_universe(db_path, include_aliases=("UNCFG",))
     assert [r.wallet_id for r in records_with_ref] == [1, 3, 4]
     assert sha1 != sha2
+
+
+def test_guardian_min_trade_notional_usd_skips_small_deltas_but_allows_full_close() -> None:
+    n = 8
+    grid = _grid_ms(n)
+    t_open = np.full((1, n), 100.0)
+    m_close = np.full((1, n), 100.0)
+
+    # Bar 1: $10 open (< $15) -> skipped when min_trade_notional_usd=15
+    # Bar 2: $20 open (>= $15) -> executed
+    # Bar 3: $25 scale (+$5 delta < $15) -> skipped, stays at $20
+    # Bar 4: target stays 0.25 (still +$5 delta < $15 for deadband), price rises to 110 -> PnL on 0.20 = +$2.00, vs +$2.50 without deadband
+    # Bar 5: full close to 0.0 -> bypasses deadband and closes cleanly
+    targets = np.array([[0.0, 0.10, 0.20, 0.25, 0.25, 0.0, 0.0, 0.0]], dtype=np.float64)
+    m_close[0, 4:] = 110.0
+    t_open[0, 5:] = 110.0
+
+    spec_deadband = cr.GuardianSpec(
+        profit_target=50_000.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=50_000.0,
+        cost_bps=0.0,
+        min_trade_notional_usd=15.0,
+    )
+    res_db, _ = cr.simulate_guardian_challenge(["BTC"], targets, t_open, m_close, grid, spec_deadband)
+
+    # Bar 1 skipped (0.0); Bar 2 fills 0.20 ($20); Bar 3 skipped (stays 0.20);
+    # Bar 4 marks to 110 (+$2.00); Bar 5 closes 0.20 at 110 (no further PnL).
+    assert res_db.step_pnl[1] == 0.0
+    assert res_db.step_pnl[3] == 0.0
+    assert res_db.full_window_net_usd == pytest.approx(2.0, abs=1e-9)
+
+    # Compare with default min_trade_notional_usd=0.0 (all deltas execute, including Bar 3 0.25 -> +$2.50)
+    spec_default = cr.GuardianSpec(
+        profit_target=50_000.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=50_000.0,
+        cost_bps=0.0,
+    )
+    res_raw, _ = cr.simulate_guardian_challenge(["BTC"], targets, t_open, m_close, grid, spec_default)
+    assert res_raw.full_window_net_usd == pytest.approx(2.5, abs=1e-9)
+
+    # Verify full close bypasses deadband even when closing position < $15 notional
+    small_close_targets = np.array([[0.0, 0.20, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], dtype=np.float64)
+    t_drop = np.full((1, n), 100.0)
+    m_drop = np.full((1, n), 100.0)
+    m_drop[0, 2:] = 50.0
+    t_drop[0, 2:] = 50.0  # closing 0.20 at $50 = $10 notional (< $15), must still close!
+    m_drop[0, 4:] = 10.0
+    res_close, _ = cr.simulate_guardian_challenge(["BTC"], small_close_targets, t_drop, m_drop, grid, spec_deadband)
+    assert res_close.step_pnl[4] == 0.0
+    assert res_close.full_window_net_usd == pytest.approx(-10.0, abs=1e-9)
+
+
+def test_simulate_guardian_reuses_first_pass_on_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
+    n = 5 * 288
+    grid = _grid_ms(n)
+    t_open = np.full((1, n), 100.0)
+    m_close = np.full((1, n), 100.0)
+    targets = np.zeros((1, n))
+    targets[0, 5:50] = 1.0
+    m_close[0, 20:50] = 110.0
+    t_open[0, 21:50] = 110.0
+    m_close[0, 50:] = 110.0
+    t_open[0, 50:] = 110.0
+
+    calls: list[bool] = []
+    real_exec = cr._execute_guardian_pass
+
+    def counting_exec(*args, **kwargs):
+        calls.append(bool(kwargs.get("stop_on_terminal")))
+        return real_exec(*args, **kwargs)
+
+    monkeypatch.setattr(cr, "_execute_guardian_pass", counting_exec)
+    spec_timeout = cr.GuardianSpec(profit_target=800.0)
+    res_to, blocks_to = cr.simulate_guardian_challenge(["BTC"], targets, t_open, m_close, grid, spec_timeout)
+
+    assert res_to.verdict == "TIMEOUT"
+    assert res_to.terminal_step is None
+    assert calls == [True]
+
+    # Compare against an explicit continuous pass to ensure 100% metric & MC block parity.
+    cont_raw = real_exec(["BTC"], targets, t_open, m_close, grid, spec_timeout, stop_on_terminal=False)
+    assert res_to.full_window_net_usd == cont_raw["full_window_net_usd"]
+    assert res_to.terminal_net_usd == cont_raw["terminal_net_usd"]
+    np.testing.assert_allclose(res_to.step_pnl, cont_raw["step_pnl"])
+    np.testing.assert_allclose(res_to.equity_curve, cont_raw["eq_curve"])
+    expected_blocks = cr.extract_mc_daily_blocks(
+        cont_raw["step_pnl"], cont_raw["swept_flags"], grid, spec_timeout
+    )
+    for got_blk, exp_blk in zip(blocks_to, expected_blocks, strict=True):
+        np.testing.assert_array_equal(got_blk, exp_blk)
+
+    # Confirm PASS still triggers the second continuous pass for uncorrupted MC daily blocks.
+    calls.clear()
+    spec_pass = cr.GuardianSpec(profit_target=5.0)
+    res_pass, _ = cr.simulate_guardian_challenge(["BTC"], targets, t_open, m_close, grid, spec_pass)
+    assert res_pass.verdict == "PASS"
+    assert calls == [True, False]
+
+
+def test_guardian_sweep_obeys_exit_first_precedence() -> None:
+    n = 10
+    grid = _grid_ms(n)
+    spec = cr.GuardianSpec(
+        profit_target=50_000.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=400.0,
+        cost_bps=10.0,
+    )
+
+    # 1. Carried BTC +10 triggers sweep on bar 3 (100 -> 58 = -420); concurrent BTC scale-up (+20)
+    #    and new ETH entry (+10 at 100 -> 95) on bar 3 must NOT be admitted & liquidated.
+    t_open = np.full((2, n), 100.0)
+    m_close = np.full((2, n), 100.0)
+    targets = np.zeros((2, n))
+    targets[0, 1:3] = 10.0
+    targets[0, 3:] = 20.0
+    targets[1, 3:] = 10.0
+    m_close[0, 3:] = 58.0
+    t_open[0, 4:] = 58.0
+    m_close[1, 3:] = 95.0
+    t_open[1, 4:] = 95.0
+
+    res, _ = cr.simulate_guardian_challenge(["BTC", "ETH"], targets, t_open, m_close, grid, spec)
+    assert res.sweeps == 1
+    assert res.step_pnl[1] == pytest.approx(-1.0, abs=1e-9)
+    assert res.step_pnl[3] == pytest.approx(-420.58, abs=1e-9)
+    assert res.full_window_net_usd == pytest.approx(-421.58, abs=1e-9)
+
+    # 2. Open-time breach on bar 3 (t_open drops to 58 immediately) also blocks concurrent ETH open.
+    t_open_gap = np.full((2, n), 100.0)
+    m_close_gap = np.full((2, n), 100.0)
+    t_open_gap[0, 3:] = 58.0
+    m_close_gap[0, 3:] = 58.0
+    m_close_gap[1, 3:] = 95.0
+    t_open_gap[1, 4:] = 95.0
+    res_gap, _ = cr.simulate_guardian_challenge(
+        ["BTC", "ETH"], targets, t_open_gap, m_close_gap, grid, spec
+    )
+    assert res_gap.sweeps == 1
+    assert res_gap.step_pnl[3] == pytest.approx(-420.58, abs=1e-9)
+    assert res_gap.full_window_net_usd == pytest.approx(-421.58, abs=1e-9)
+
+    # 3. Exit/reduction executes first at bar 3 open (+10 -> +5) and keeps loss above sweep limit.
+    targets_red = np.zeros((1, n))
+    targets_red[0, 1:3] = 10.0
+    targets_red[0, 3:] = 5.0
+    t_open_red = np.full((1, n), 100.0)
+    m_close_red = np.full((1, n), 100.0)
+    m_close_red[0, 3:] = 58.0
+    t_open_red[0, 4:] = 58.0
+    res_red, _ = cr.simulate_guardian_challenge(
+        ["BTC"], targets_red, t_open_red, m_close_red, grid, spec
+    )
+    assert res_red.sweeps == 0
+    assert res_red.step_pnl[3] == pytest.approx(-210.50, abs=1e-9)
+
+
+def test_guardian_missing_trade_open_forced_reset_applies_gap_haircut() -> None:
+    n = 8
+    grid = _grid_ms(n)
+    # Two coins open +10 at 100 on bar 1.
+    # Bar 3: BTC crashes at open (t_open=50, m_close=50 -> -500 triggers open sweep),
+    # while ETH has missing trade_open (NaN) and optimistic m_close=120.
+    # Forced reset on ETH must NOT silently fill at T+4 close (120) with +200 gain;
+    # it must apply conservative gap_exit_haircut_bps (50 bps) + DEFAULT_FEE_BPS (4.5 bps).
+    t_open = np.full((2, n), 100.0)
+    m_close = np.full((2, n), 100.0)
+    targets = np.zeros((2, n))
+    targets[:, 1:] = 10.0
+
+    t_open[0, 3:] = 50.0
+    m_close[0, 3:] = 50.0
+    t_open[1, 3] = np.nan
+    m_close[1, 3:] = 120.0
+    t_open[1, 4:] = 120.0
+
+    spec = cr.GuardianSpec(
+        profit_target=50_000.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=400.0,
+        cost_bps=10.0,
+    )
+    res, _ = cr.simulate_guardian_challenge(["BTC", "ETH"], targets, t_open, m_close, grid, spec)
+
+    assert res.sweeps == 1
+    assert res.forced_gap_exits == 1
+    assert res.unpriced_open_steps == 1
+    # Bar 1 entry: -1.00 - 1.00 = -2.00
+    # Bar 3 BTC flatten at open 50: -500.0 - 10 * 50 * 0.001 = -500.50
+    # Bar 3 ETH forced gap flatten (ref_px=min(100,120)=100 -> exit_px=99.5):
+    #   10*(99.5 - 100) - 10*99.5*0.00045 = -5.44775
+    expected_bar3 = -500.50 - 5.44775
+    assert res.step_pnl[3] == pytest.approx(expected_bar3, abs=1e-9)
+    assert res.full_window_net_usd == pytest.approx(round(-2.0 + expected_bar3, 2), abs=1e-9)
+
+    # Short-side check: ETH is short -10 with optimistic m_close=80 while t_open=NaN -> still penalized.
+    t_short = np.full((2, n), 100.0)
+    m_short = np.full((2, n), 100.0)
+    tgt_short = np.zeros((2, n))
+    tgt_short[0, 1:] = 10.0
+    tgt_short[1, 1:] = -10.0
+    t_short[0, 3:] = 50.0
+    m_short[0, 3:] = 50.0
+    t_short[1, 3] = np.nan
+    m_short[1, 3:] = 80.0
+    t_short[1, 4:] = 80.0
+    res_s, _ = cr.simulate_guardian_challenge(["BTC", "ETH"], tgt_short, t_short, m_short, grid, spec)
+    assert res_s.forced_gap_exits == 1
+    assert res_s.unpriced_open_steps == 1
+    # ETH short (ref_px=max(100,80)=100 -> exit_px=100.5): -10*(100.5 - 100) - 10*100.5*0.00045 = -5.45225
+    assert res_s.step_pnl[3] == pytest.approx(-500.50 - 5.45225, abs=1e-9)
+
+
+def test_guardian_lot_step_quantization_and_30usd_deadband_parity() -> None:
+    n = 8
+    grid = _grid_ms(n)
+    t_open = np.full((1, n), 100.0)
+    m_close = np.full((1, n), 100.0)
+    # Bar 1: 0.15 -> step 0.1 < min_amount 0.2 -> skipped
+    # Bar 2: 0.38 -> step 0.3 >= min_amount 0.2 -> fills 0.3
+    # Bar 3: 0.45 -> delta 0.15 -> step 0.1 < min_amount 0.2 -> skipped (stays 0.3)
+    # Bar 4: price rises 100 -> 110 -> +3.00 PnL (vs +4.50 unquantized)
+    # Bar 5: full close to 0.0 -> closes cleanly
+    targets = np.array([[0.0, 0.15, 0.38, 0.45, 0.45, 0.0, 0.0, 0.0]], dtype=np.float64)
+    m_close[0, 4:] = 110.0
+    t_open[0, 5:] = 110.0
+
+    spec_q = cr.GuardianSpec(
+        profit_target=50_000.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=50_000.0,
+        cost_bps=0.0,
+        amount_step=0.1,
+        min_amount=0.2,
+    )
+    res_q, _ = cr.simulate_guardian_challenge(["BTC"], targets, t_open, m_close, grid, spec_q)
+    assert res_q.step_pnl[1] == 0.0
+    assert res_q.step_pnl[4] == pytest.approx(3.0, abs=1e-9)
+    assert res_q.full_window_net_usd == pytest.approx(3.0, abs=1e-9)
+
+    # Per-coin quantization + $30 notional deadband parity
+    t_pair = np.vstack([np.full(n, 1000.0), np.full(n, 100.0)])
+    m_pair = np.vstack([np.full(n, 1000.0), np.full(n, 100.0)])
+    pair_targets = np.zeros((2, n))
+    # Bar 1: BTC 0.029 -> step 0.02 ($20 < $30 deadband -> skipped); ETH 0.25 -> step 0.2 ($20 < $30 -> skipped)
+    pair_targets[0, 1] = 0.029
+    pair_targets[1, 1] = 0.25
+    # Bar 2: BTC 0.039 -> step 0.03 ($30 >= $30 -> fills 0.03); ETH 0.35 -> step 0.3 ($30 >= $30 -> fills 0.3)
+    pair_targets[0, 2:5] = 0.039
+    pair_targets[1, 2:5] = 0.35
+    # Bar 3: ETH drops to 50 (0.3 * 50 = $15 < $30), BTC stays at 1000 -> PnL = -15.0
+    m_pair[1, 3:] = 50.0
+    t_pair[1, 4:] = 50.0
+    # Bar 5: full close to 0.0 -> bypasses $30 deadband even though ETH is only $15!
+    # Bar 6: ETH drops to 10 -> must NOT suffer further loss because bar 5 closed it.
+    m_pair[1, 6:] = 10.0
+
+    spec_pair = cr.GuardianSpec(
+        profit_target=50_000.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=50_000.0,
+        cost_bps=0.0,
+        min_trade_notional_usd=30.0,
+        amount_step_by_coin={"BTC": 0.01, "ETH": 0.1},
+        min_amount_by_coin={"BTC": 0.01, "ETH": 0.1},
+    )
+    res_pair, _ = cr.simulate_guardian_challenge(
+        ["BTC", "ETH"], pair_targets, t_pair, m_pair, grid, spec_pair
+    )
+    assert res_pair.step_pnl[1] == 0.0
+    assert res_pair.step_pnl[3] == pytest.approx(-15.0, abs=1e-9)
+    assert res_pair.step_pnl[6] == 0.0
+    assert res_pair.full_window_net_usd == pytest.approx(-15.0, abs=1e-9)
+
+    # Verify halt flatten bypasses $30 deadband even when held position is worth < $30.
+    halt_targets = np.zeros((2, n))
+    halt_targets[0, 1:] = 0.5  # $500 BTC
+    halt_targets[1, 1:] = 0.35  # 0.3 ETH ($30)
+    t_halt = np.vstack([np.full(n, 1000.0), np.full(n, 100.0)])
+    m_halt = np.vstack([np.full(n, 1000.0), np.full(n, 100.0)])
+    # Bar 2: ETH drops to 50 ($15 < $30 deadband), BTC drops to 100 (-$450 triggers sweep).
+    m_halt[0, 2:] = 100.0
+    t_halt[0, 3:] = 100.0
+    m_halt[1, 2:] = 50.0
+    t_halt[1, 3:] = 50.0
+    m_halt[1, 4:] = 10.0  # If ETH wasn't closed by halt flatten, bar 4 would lose more!
+    spec_halt = cr.GuardianSpec(
+        profit_target=50_000.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=400.0,
+        cost_bps=0.0,
+        min_trade_notional_usd=30.0,
+        amount_step_by_coin={"BTC": 0.01, "ETH": 0.1},
+        min_amount_by_coin={"BTC": 0.01, "ETH": 0.1},
+    )
+    res_halt, _ = cr.simulate_guardian_challenge(
+        ["BTC", "ETH"], halt_targets, t_halt, m_halt, grid, spec_halt
+    )
+    assert res_halt.sweeps == 1
+    assert res_halt.step_pnl[4] == 0.0
+    assert res_halt.full_window_net_usd == pytest.approx(-465.0, abs=1e-9)
+
+
+def test_guardian_tracks_peak_gross_leverage_and_enforces_optional_cap() -> None:
+    n = 10
+    grid = _grid_ms(n)
+    t_open = np.full((2, n), 100.0)
+    m_close = np.full((2, n), 100.0)
+    targets = np.zeros((2, n))
+    targets[0, 1:4] = 150.0  # $15,000
+    targets[1, 1:4] = 100.0  # $10,000 -> total $25,000 = 2.5x on $10k eq
+    targets[0, 4:7] = 50.0  # partial reduce to $5,000
+    targets[1, 4:7] = 0.0  # full close ETH
+
+    spec_uncapped = cr.GuardianSpec(
+        profit_target=50_000.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=50_000.0,
+        cost_bps=0.0,
+    )
+    res_un, _ = cr.simulate_guardian_challenge(
+        ["BTC", "ETH"], targets, t_open, m_close, grid, spec_uncapped
+    )
+    assert res_un.peak_gross_leverage == pytest.approx(2.5, abs=1e-9)
+    assert res_un.full_window_peak_gross_leverage == pytest.approx(2.5, abs=1e-9)
+
+    # With max_gross_leverage=1.5 and non-zero costs + lot steps, entry scales down to <= 1.5x.
+    spec_capped = cr.GuardianSpec(
+        profit_target=50_000.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=50_000.0,
+        cost_bps=10.0,
+        amount_step=1.0,
+        max_gross_leverage=1.5,
+    )
+    res_cap, _ = cr.simulate_guardian_challenge(
+        ["BTC", "ETH"], targets, t_open, m_close, grid, spec_capped
+    )
+    assert 1.4 <= res_cap.peak_gross_leverage <= 1.5
+    assert 1.4 <= res_cap.full_window_peak_gross_leverage <= 1.5
+
+    # Terminal PASS on bar 2 at 1.0x followed by 2.5x on bar 5 separates terminal vs full-window leverage.
+    t_split = np.full((2, n), 100.0)
+    m_split = np.full((2, n), 100.0)
+    tgt_split = np.zeros((2, n))
+    tgt_split[0, 1:] = 100.0  # 1.0x ($10k)
+    m_split[0, 2:] = 110.0  # +1000 PASS on bar 2 (eq = 11,000, lev = 11,000 / 11,000 = 1.0)
+    t_split[0, 3:] = 110.0
+    tgt_split[1, 5:] = 220.0  # 2.0x additional on ETH after PASS
+    spec_pass = cr.GuardianSpec(
+        profit_target=800.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=50_000.0,
+        cost_bps=0.0,
+    )
+    res_pass, _ = cr.simulate_guardian_challenge(
+        ["BTC", "ETH"], tgt_split, t_split, m_split, grid, spec_pass
+    )
+    assert res_pass.verdict == "PASS"
+    assert res_pass.terminal_step == 2
+    assert res_pass.peak_gross_leverage == pytest.approx(1.0, abs=1e-9)
+    assert res_pass.full_window_peak_gross_leverage == pytest.approx(3.0, abs=1e-9)
+
+
+def test_guardian_cost_multipliers_and_perpetual_funding_modeling() -> None:
+    n = 12
+    grid = _grid_ms(n)
+    t_open = np.full((1, n), 100.0)
+    m_close = np.full((1, n), 100.0)
+    targets = np.zeros((1, n))
+    targets[0, 1:11] = 100.0  # $10,000 long for 10 bars (bars 1..10), flat at bar 11
+
+    # 1. Cost multipliers 1x / 2x / 3x scale round-trip transaction costs linearly.
+    # Round-trip notional = $20,000 at 10 bps = $20 at 1x, $40 at 2x, $60 at 3x.
+    nets = []
+    for mult in (1.0, 2.0, 3.0):
+        spec_c = cr.GuardianSpec(
+            profit_target=50_000.0,
+            max_static_dd=50_000.0,
+            daily_loss_limit=50_000.0,
+            guardian_sweep_loss=50_000.0,
+            cost_bps=10.0,
+            cost_multiplier=mult,
+        )
+        res_c, _ = cr.simulate_guardian_challenge(["BTC"], targets, t_open, m_close, grid, spec_c)
+        nets.append(res_c.full_window_net_usd)
+    assert nets == pytest.approx([-20.0, -40.0, -60.0], abs=1e-9)
+
+    # 2. Positive funding_bps_per_8h: longs pay, shorts receive (9.6 bps/8h = 0.1 bps/5m bar = $0.10/bar on $10k).
+    spec_f1 = cr.GuardianSpec(
+        profit_target=50_000.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=50_000.0,
+        cost_bps=0.0,
+        funding_bps_per_8h=9.6,
+        funding_multiplier=1.0,
+    )
+    res_long, _ = cr.simulate_guardian_challenge(["BTC"], targets, t_open, m_close, grid, spec_f1)
+    assert res_long.total_funding_usd == pytest.approx(-1.0, abs=1e-9)
+    assert res_long.full_window_net_usd == pytest.approx(-1.0, abs=1e-9)
+
+    res_short, _ = cr.simulate_guardian_challenge(["BTC"], -targets, t_open, m_close, grid, spec_f1)
+    assert res_short.total_funding_usd == pytest.approx(1.0, abs=1e-9)
+    assert res_short.full_window_net_usd == pytest.approx(1.0, abs=1e-9)
+
+    spec_f2 = cr.GuardianSpec(
+        profit_target=50_000.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=50_000.0,
+        cost_bps=0.0,
+        funding_bps_per_8h=9.6,
+        funding_multiplier=2.0,
+    )
+    res_f2, _ = cr.simulate_guardian_challenge(["BTC"], targets, t_open, m_close, grid, spec_f2)
+    assert res_f2.total_funding_usd == pytest.approx(-2.0, abs=1e-9)
+
+    # 3. Per-bar funding_rates array supports coin-specific rates and terminal vs full-window separation.
+    t2 = np.full((2, n), 100.0)
+    m2 = np.full((2, n), 100.0)
+    m2[0, 2:] = 110.0  # BTC rises +10 on 100 units = +1000 PASS at bar 2
+    t2[0, 3:] = 110.0
+    tgt2 = np.zeros((2, n))
+    tgt2[0, 1:6] = 100.0
+    tgt2[1, 1:6] = -50.0  # ETH short $5k
+    rates = np.zeros((2, n))
+    rates[0, :] = 0.0001  # 1 bps per bar paid by BTC long
+    rates[1, :] = 0.0002  # 2 bps per bar received by ETH short
+
+    spec_p = cr.GuardianSpec(
+        profit_target=800.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=50_000.0,
+        cost_bps=0.0,
+    )
+    res_p, _ = cr.simulate_guardian_challenge(
+        ["BTC", "ETH"], tgt2, t2, m2, grid, spec_p, funding_rates=rates
+    )
+    assert res_p.verdict == "PASS"
+    assert res_p.terminal_step == 2
+    # Bars 1..2: BTC pays 100*100*1e-4 + 100*110*1e-4 = 1.0 + 1.1 = 2.1; ETH receives 2*(50*100*2e-4) = 2.0 -> -0.10
+    assert res_p.total_funding_usd == pytest.approx(-0.1, abs=1e-9)
+    # Bars 1..5: BTC pays 1.0 + 4*1.1 = 5.4; ETH receives 5*1.0 = 5.0 -> -0.40
+    assert res_p.full_window_funding_usd == pytest.approx(-0.4, abs=1e-9)
+
+    with pytest.raises(ValueError, match="INVALID_FUNDING_RATES_SHAPE"):
+        cr.simulate_guardian_challenge(
+            ["BTC", "ETH"], tgt2, t2, m2, grid, spec_p, funding_rates=np.zeros((3, n))
+        )
+
+
+def test_guardian_executed_deltas_reflect_sweep_halt_deadband_and_leverage_cap() -> None:
+    n = 295  # crosses UTC 00:05 daily reset at bar 289
+    grid = _grid_ms(n)
+    t_open = np.full((1, n), 100.0)
+    m_close = np.full((1, n), 100.0)
+    targets = np.zeros((1, n))
+
+    # Bar 1: open 10.0 ($1,000); bar 2: tiny +0.10 ($10 < $25 deadband) -> skipped!
+    targets[0, 1] = 10.0
+    targets[0, 2] = 10.1
+    # Bar 3: price drops $50 on 10.0 -> -$500 <= -$400 sweep -> flatten -10.0 & halt until reset
+    m_close[0, 3:] = 50.0
+    t_open[0, 4:] = 50.0
+    targets[0, 3:292] = 10.0
+    # Bar 292 (after reset): flat -> re-enter new position 40.0 ($2,000 on ~$500 eq -> capped by 1.5x leverage)
+    targets[0, 292] = 0.0
+    targets[0, 293] = 40.0
+
+    spec = cr.GuardianSpec(
+        initial_equity=1_000.0,
+        profit_target=50_000.0,
+        max_static_dd=50_000.0,
+        daily_loss_limit=50_000.0,
+        guardian_sweep_loss=400.0,
+        cost_bps=0.0,
+        min_trade_notional_usd=25.0,
+        max_gross_leverage=1.5,
+        reenter_after_sweep="new_only",
+    )
+    res, _ = cr.simulate_guardian_challenge(["BTC"], targets, t_open, m_close, grid, spec)
+
+    assert res.executed_deltas is not None
+    assert res.executed_deltas.shape == (1, n)
+    assert res.executed_deltas[0, 1] == pytest.approx(10.0, abs=1e-9)
+    assert res.executed_deltas[0, 2] == pytest.approx(0.0, abs=1e-9)  # deadband skipped
+    assert res.executed_deltas[0, 3] == pytest.approx(-10.0, abs=1e-9)  # sweep flattened
+    assert np.allclose(res.executed_deltas[0, 4:293], 0.0, atol=1e-12)  # blocked + new_only stale
+    # Re-entry at bar 293 capped at <= 1.5x * $500 / $50 = 15.0 (strictly < raw 40.0)
+    assert 0.0 < res.executed_deltas[0, 293] <= 15.0 + 1e-9
+    assert res.executed_deltas[0, 293] < 40.0
+
