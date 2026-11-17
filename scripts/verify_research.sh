@@ -14,14 +14,18 @@ uv run --frozen --group dev ruff check \
     tests/test_canonical_replay.py \
     tests/test_study_data.py \
     tests/test_cft_v4_study.py \
-    tests/test_ops_boundaries.py
+    tests/test_ops_boundaries.py \
+    tests/test_cross_repo_pins.py \
+    tests/test_phase1_underwriting_and_sizing.py
 
 uv run --frozen --group dev pytest -q \
     tests/test_pod_constructor.py \
     tests/test_canonical_replay.py \
     tests/test_study_data.py \
     tests/test_cft_v4_study.py \
-    tests/test_ops_boundaries.py
+    tests/test_ops_boundaries.py \
+    tests/test_cross_repo_pins.py \
+    tests/test_phase1_underwriting_and_sizing.py
 
 # Guard against accidental drift in repository-wide non-legacy tests too.
 uv run --frozen --group dev pytest -q

@@ -884,7 +884,8 @@ def _append_oos_cache_rows(
             )
         )
     if block_sink is not None:
-        is_chop, d_end, d_max, d_min, d_swp, d_mf = blocks
+        is_chop, d_end, d_max, d_min, d_swp, d_mf = blocks[:6]
+        d_min_bal = blocks[6] if len(blocks) >= 7 else d_min
         n_d = int(d_end.size)
         if n_d > 0:
             block_sink.append(
@@ -899,6 +900,7 @@ def _append_oos_cache_rows(
                         "day_end_usd": d_end,
                         "day_max_usd": d_max,
                         "day_min_usd": d_min,
+                        "day_min_vs_bal_usd": d_min_bal,
                         "day_swept": d_swp,
                         "day_max_first": d_mf,
                     }

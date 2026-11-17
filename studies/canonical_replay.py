@@ -18,19 +18,24 @@ reports reuse one audited implementation rather than duplicating ad-hoc simulato
 from __future__ import annotations
 
 import hashlib
+import json
 import math
 import sqlite3
-from collections.abc import Mapping, Sequence
+import subprocess
+import tomllib
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal as D
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import numpy as np
 import polars as pl
+from copytrade_pm import wallet_registry as pm_registry
 from copytrade_pm.pm03_account import Account, Instrument, Rulebook
 from copytrade_pm.pm03_execution import CostModel, MarketObservation, execute_targets
+from copytrade_pm.pm_research_contracts import RetrospectiveEvidence
 
 PolicyType = Literal["new", "full"]
 DEFAULT_COST_BPS = 6.5
@@ -87,6 +92,98 @@ class ReconstructedGrid:
 
 
 @dataclass(frozen=True)
+class AsOfUniverseResult:
+    """Point-in-time or explicitly labeled retrospective universe snapshot."""
+
+    records: list[WalletRecord]
+    roster_sha256: str
+    registry_inventory_sha256: str
+    asof_utc: str
+    mode: Literal["PIT_STRICT_ASOF", "RETROSPECTIVE_ASOF_MASKED"]
+    retrospective_evidence: dict[str, Any] | None
+
+
+def _parse_reset_hhmm(value: str | None) -> tuple[int, int]:
+    """Parse canonical ``HH:MM`` UTC reset schedule, defaulting UNKNOWN to 00:00."""
+    if value is None:
+        return 0, 0
+    raw = str(value).strip()
+    if not raw or raw.upper() == "UNKNOWN":
+        return 0, 0
+    if ":" not in raw:
+        raise ValueError(f"INVALID_RESET_TIME:{value}")
+    hh_s, mm_s = raw.split(":", 1)
+    if not (hh_s.isdigit() and mm_s.isdigit() and len(hh_s) == 2 and len(mm_s) == 2):
+        raise ValueError(f"INVALID_RESET_TIME:{value}")
+    hh, mm = int(hh_s), int(mm_s)
+    if not (0 <= hh < 24 and 0 <= mm < 60):
+        raise ValueError(f"INVALID_RESET_TIME:{value}")
+    return hh, mm
+
+
+def check_cross_repo_pin_status(
+    trading_ops_root: Path | str,
+    prop_production_root: Path | str | None = None,
+    copytrade_pm_root: Path | str | None = None,
+) -> dict[str, Any]:
+    """Compare ``trading-ops`` copytrade-pm pin against ``prop-production/compatibility.json``."""
+    ops_toml = Path(trading_ops_root) / "pyproject.toml"
+    pyproject = tomllib.loads(ops_toml.read_text(encoding="utf-8"))
+    trading_ops_rev = str(pyproject["tool"]["uv"]["sources"]["copytrade-pm"]["rev"])
+
+    compat_commit: str | None = None
+    contracts: dict[str, Any] = {}
+    if prop_production_root is not None:
+        compat_path = Path(prop_production_root) / "src" / "prop_production" / "compatibility.json"
+        compat = json.loads(compat_path.read_text(encoding="utf-8"))
+        compat_commit = str(compat["repositories"]["copytrade-pm"]["commit"])
+        contracts = dict(compat.get("contracts", {}))
+
+    if compat_commit is None:
+        return {
+            "trading_ops_rev": trading_ops_rev,
+            "prop_production_pin": None,
+            "ancestry_valid": None,
+            "promotion_ready": False,
+            "status": "NO_COMPATIBILITY_MANIFEST",
+            "contracts": contracts,
+        }
+
+    if trading_ops_rev == compat_commit:
+        ancestry_valid = True
+        status = "SYNCED"
+    elif copytrade_pm_root is not None and Path(copytrade_pm_root).exists():
+        proc = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(copytrade_pm_root),
+                "merge-base",
+                "--is-ancestor",
+                compat_commit,
+                trading_ops_rev,
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        ancestry_valid = proc.returncode == 0
+        status = "PRODUCTION_PIN_PROMOTION_PENDING" if ancestry_valid else "DIVERGED_PIN_ERROR"
+    else:
+        ancestry_valid = False
+        status = "DIVERGED_PIN_ERROR"
+
+    return {
+        "trading_ops_rev": trading_ops_rev,
+        "prop_production_pin": compat_commit,
+        "ancestry_valid": ancestry_valid,
+        "promotion_ready": trading_ops_rev == compat_commit,
+        "status": status,
+        "contracts": contracts,
+    }
+
+
+@dataclass(frozen=True)
 class GuardianSpec:
     """Prop-firm challenge and internal Guardian risk specification."""
 
@@ -121,6 +218,68 @@ class GuardianSpec:
             0.0 < float(self.guardian_sweep_rate) < 1.0
         ):
             raise ValueError(f"INVALID_GUARDIAN_SWEEP_RATE:{self.guardian_sweep_rate}")
+
+    @classmethod
+    def from_challenge_spec(
+        cls,
+        spec: Any,
+        *,
+        scale: float = 1.0,
+        use_balance_rate: bool = True,
+        **overrides: Any,
+    ) -> GuardianSpec:
+        """Build ``GuardianSpec`` from a canonical ``ChallengeRulebookSpec`` or mapping."""
+        if scale <= 0.0:
+            raise ValueError(f"RULEBOOK_SCALE_POSITIVE:{scale}")
+        get = spec.get if isinstance(spec, Mapping) else lambda k, d=None: getattr(spec, k, d)
+        trailing_basis = str(get("trailing_basis", "")).upper()
+        if trailing_basis != "STATIC":
+            raise ValueError(f"UNSUPPORTED_TRAILING_BASIS:{trailing_basis}")
+        raw_daily_basis = str(get("daily_basis", "")).upper()
+        if raw_daily_basis == "BALANCE":
+            daily_loss_basis: Literal["balance", "equity"] = "balance"
+        elif raw_daily_basis == "EQUITY":
+            daily_loss_basis = "equity"
+        else:
+            raise ValueError(f"UNSUPPORTED_DAILY_BASIS:{raw_daily_basis}")
+
+        initial_base = float(get("initial"))
+        daily_base = float(get("daily_loss"))
+        static_base = float(get("trailing_loss"))
+        raw_target = get("target")
+        if "profit_target" in overrides:
+            target_usd = float(overrides["profit_target"])
+        elif raw_target is None or str(raw_target).upper() in ("NONE", "N/A", "UNKNOWN"):
+            raise ValueError(f"CHALLENGE_PROFIT_TARGET_UNSPECIFIED:{raw_target}")
+        else:
+            target_usd = float(raw_target) * float(scale)
+
+        initial_usd = initial_base * float(scale)
+        daily_usd = daily_base * float(scale)
+        static_usd = static_base * float(scale)
+        sweep_usd = 0.8 * daily_usd
+        reset_h, reset_m = _parse_reset_hhmm(get("reset_time_hhmm", "00:00"))
+        if use_balance_rate and daily_loss_basis == "balance":
+            daily_rate: float | None = daily_base / initial_base
+            sweep_rate: float | None = 0.8 * daily_rate
+        else:
+            daily_rate = None
+            sweep_rate = None
+
+        kwargs: dict[str, Any] = {
+            "initial_equity": initial_usd,
+            "profit_target": target_usd,
+            "max_static_dd": static_usd,
+            "daily_loss_limit": daily_usd,
+            "guardian_sweep_loss": sweep_usd,
+            "reset_utc_hour": reset_h,
+            "reset_utc_minute": reset_m,
+            "daily_loss_basis": daily_loss_basis,
+            "daily_loss_rate": daily_rate,
+            "guardian_sweep_rate": sweep_rate,
+        }
+        kwargs.update(overrides)
+        return cls(**kwargs)
 
 
 @dataclass
@@ -164,6 +323,190 @@ def roster_digest(records: Sequence[WalletRecord]) -> str:
 def is_hl_perp_coin(coin: str) -> bool:
     """Return True for main-DEX perpetual symbols (exclude spot ``@/#`` and HIP-3 ``dex:``)."""
     return bool(coin) and not coin.startswith(("@", "#")) and "/" not in coin and ":" not in coin
+
+
+def _parse_utc_us(value: str | datetime) -> int:
+    """Parse an ISO-8601 UTC timestamp or tz-aware datetime into integer UTC microseconds."""
+    if isinstance(value, datetime):
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("UTC_OFFSET_REQUIRED")
+        dt = value.astimezone(UTC)
+    elif isinstance(value, str):
+        parsed = datetime.fromisoformat(value.strip())
+        if parsed.tzinfo is None or parsed.utcoffset() is None:
+            raise ValueError("UTC_OFFSET_REQUIRED")
+        dt = parsed.astimezone(UTC)
+    else:
+        raise TypeError(f"Unsupported timestamp type: {type(value).__name__}")
+    return round(dt.timestamp() * 1_000_000.0)
+
+
+def _table_exists(con: sqlite3.Connection, table_name: str) -> bool:
+    row = con.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+        (table_name,),
+    ).fetchone()
+    return row is not None
+
+
+def _compute_inventory_digest(con: sqlite3.Connection) -> str:
+    """Compute canonical SHA-256 over authoritative registry tables present in SQLite."""
+    fingerprint = hashlib.sha256()
+    for table in pm_registry.AUTHORITATIVE_INVENTORY_TABLES:
+        if not _table_exists(con, table):
+            continue
+        rows = sorted(
+            json.dumps(row, sort_keys=True, separators=(",", ":"))
+            for row in con.execute(f"SELECT * FROM {table}").fetchall()
+        )
+        fingerprint.update(table.encode("ascii") + b"\0")
+        for row in rows:
+            fingerprint.update(row.encode("utf-8") + b"\n")
+    return fingerprint.hexdigest()
+
+
+def load_universe_asof(
+    registry_db: Path | str,
+    asof_utc: str | datetime,
+    *,
+    mode: Literal["PIT_STRICT_ASOF", "RETROSPECTIVE_ASOF_MASKED"] = "PIT_STRICT_ASOF",
+    pre_asof_active_addresses: Collection[str] | None = None,
+    include_aliases: Sequence[str] = (),
+    strict_schema: bool = True,
+) -> AsOfUniverseResult:
+    """Load candidate universe as of ``asof_utc`` under strict PIT or labeled retrospective mode."""
+    if mode not in ("PIT_STRICT_ASOF", "RETROSPECTIVE_ASOF_MASKED"):
+        raise ValueError(f"INVALID_UNIVERSE_MODE:{mode}")
+    asof_us = _parse_utc_us(asof_utc)
+    asof_dt = datetime.fromtimestamp(asof_us / 1_000_000.0, tz=UTC)
+    asof_iso = asof_dt.isoformat()
+
+    db_path = Path(registry_db).expanduser()
+    if not db_path.exists():
+        raise FileNotFoundError(f"Registry DB not found: {db_path}")
+
+    con = sqlite3.connect(f"file:{db_path.resolve()}?mode=ro", uri=True)
+    try:
+        con.execute("BEGIN")
+        integrity = con.execute("PRAGMA integrity_check").fetchone()[0]
+        if integrity != "ok":
+            raise ValueError(f"REGISTRY_INTEGRITY_FAILED:{integrity}")
+        if con.execute("PRAGMA foreign_key_check").fetchone() is not None:
+            raise ValueError("REGISTRY_FOREIGN_KEYS_FAILED")
+        if strict_schema:
+            if not _table_exists(con, "schema_migrations"):
+                raise ValueError("REGISTRY_SCHEMA_VERSION_MISMATCH:missing_schema_migrations")
+            max_ver = con.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0]
+            if max_ver != 8:
+                raise ValueError(f"REGISTRY_SCHEMA_VERSION_MISMATCH:{max_ver}")
+
+        inventory_sha = _compute_inventory_digest(con)
+        wallet_rows = con.execute(
+            "SELECT wallet_id, lower(address) FROM wallets ORDER BY wallet_id"
+        ).fetchall()
+
+        cohort_times: dict[int, list[int]] = {}
+        if _table_exists(con, "cohort_memberships"):
+            for wid, known_at in con.execute(
+                "SELECT wallet_id, known_at FROM cohort_memberships"
+            ).fetchall():
+                cohort_times.setdefault(int(wid), []).append(_parse_utc_us(known_at))
+
+        monitoring_info: dict[int, tuple[bool, int | None]] = {}
+        if _table_exists(con, "monitoring"):
+            cols = {r[1] for r in con.execute("PRAGMA table_info(monitoring)").fetchall()}
+            if "known_at" in cols:
+                for wid, cfg, known_at in con.execute(
+                    "SELECT wallet_id, configured, known_at FROM monitoring"
+                ).fetchall():
+                    k_us = _parse_utc_us(known_at) if known_at is not None else None
+                    monitoring_info[int(wid)] = (bool(cfg), k_us)
+            else:
+                for wid, cfg in con.execute("SELECT wallet_id, configured FROM monitoring").fetchall():
+                    monitoring_info[int(wid)] = (bool(cfg), None)
+
+        excl_times: dict[int, list[int]] = {}
+        if _table_exists(con, "exclusions"):
+            cols = {r[1] for r in con.execute("PRAGMA table_info(exclusions)").fetchall()}
+            if "known_at" in cols:
+                for wid, known_at in con.execute(
+                    "SELECT wallet_id, known_at FROM exclusions"
+                ).fetchall():
+                    excl_times.setdefault(int(wid), []).append(_parse_utc_us(known_at))
+            else:
+                for (wid,) in con.execute("SELECT wallet_id FROM exclusions").fetchall():
+                    excl_times.setdefault(int(wid), []).append(asof_us)
+
+        aliases_by_wid: dict[int, list[tuple[int, int, str]]] = {}
+        if _table_exists(con, "wallet_aliases"):
+            for wid, alias, known_at, rid in con.execute(
+                "SELECT wallet_id, alias, known_at, rowid FROM wallet_aliases"
+            ).fetchall():
+                aliases_by_wid.setdefault(int(wid), []).append(
+                    (_parse_utc_us(known_at), int(rid), str(alias))
+                )
+    finally:
+        con.close()
+
+    wanted_aliases = set(include_aliases)
+    active_addr_set = (
+        {a.lower() for a in pre_asof_active_addresses}
+        if pre_asof_active_addresses is not None
+        else None
+    )
+
+    records: list[WalletRecord] = []
+    for wid_raw, addr_raw in wallet_rows:
+        wid = int(wid_raw)
+        address = str(addr_raw).lower()
+        is_excl = any(t <= asof_us for t in excl_times.get(wid, ()))
+        if is_excl:
+            continue
+
+        alias_rows = aliases_by_wid.get(wid, ())
+        asof_aliases = [row for row in alias_rows if row[0] <= asof_us]
+        if asof_aliases:
+            alias: str | None = max(asof_aliases, key=lambda r: (r[0], r[1]))[2]
+        elif mode == "RETROSPECTIVE_ASOF_MASKED" and alias_rows:
+            alias = max(alias_rows, key=lambda r: (r[0], r[1]))[2]
+        else:
+            alias = None
+
+        mon_cfg, mon_k_us = monitoring_info.get(wid, (False, None))
+        c_times = cohort_times.get(wid, ())
+
+        if mode == "PIT_STRICT_ASOF":
+            in_cohort = any(t <= asof_us for t in c_times)
+            in_mon = mon_cfg and (mon_k_us is not None and mon_k_us <= asof_us)
+            keep = in_cohort or in_mon
+        else:
+            has_membership = bool(c_times) or mon_cfg or (alias is not None and alias in wanted_aliases)
+            has_pre_activity = active_addr_set is None or (address in active_addr_set)
+            keep = has_membership and has_pre_activity
+
+        if keep:
+            records.append(
+                WalletRecord(
+                    wallet_id=wid,
+                    address=address,
+                    alias=alias,
+                    configured=bool(mon_cfg or c_times),
+                    excluded=False,
+                )
+            )
+
+    if mode == "PIT_STRICT_ASOF" and not records:
+        raise ValueError(f"EMPTY_PIT_UNIVERSE_BEFORE_RECEIPT_EPOCH:{asof_iso}")
+
+    retro_wire = RetrospectiveEvidence().as_wire() if mode == "RETROSPECTIVE_ASOF_MASKED" else None
+    return AsOfUniverseResult(
+        records=records,
+        roster_sha256=roster_digest(records),
+        registry_inventory_sha256=inventory_sha,
+        asof_utc=asof_iso,
+        mode=mode,
+        retrospective_evidence=retro_wire,
+    )
 
 
 def load_registry_universe(
@@ -358,8 +701,24 @@ def reconstruct_positions_on_grid(
     ix = np.searchsorted(times, grid_ms, side="left") - 1
 
     if policy == "full":
-        pre_first_fill = float(initial_anchor_pos) if initial_anchor_pos is not None else 0.0
-        pos = np.where(ix >= 0, post[np.clip(ix, 0, len(times) - 1)], pre_first_fill)
+        if not unanchored:
+            pre_first_fill = float(initial_anchor_pos) if initial_anchor_pos is not None else 0.0
+            pos = np.where(ix >= 0, post[np.clip(ix, 0, len(times) - 1)], pre_first_fill)
+        else:
+            eff_post = np.zeros(len(times), dtype=np.float64)
+            synced = False
+            prev = first_pre
+            for i in range(len(times)):
+                after = float(post[i])
+                if not synced:
+                    is_same_side_inc = (prev * after > 1e-12) and (abs(after) > abs(prev) + eps)
+                    is_fresh_open = (abs(prev) <= eps) and (abs(after) > eps)
+                    is_flip = (prev * after) < -1e-12
+                    if is_same_side_inc or is_fresh_open or is_flip:
+                        synced = True
+                eff_post[i] = after if synced else 0.0
+                prev = after
+            pos = np.where(ix >= 0, eff_post[np.clip(ix, 0, len(times) - 1)], 0.0)
         return ReconstructedGrid(
             timestamps_ms=grid_ms,
             pos=pos.astype(np.float64),
@@ -406,6 +765,7 @@ def replay_coin_targets_vectorized(
     cost_bps: float = DEFAULT_COST_BPS,
     gap_exit_haircut_bps: float = GAP_EXIT_HAIRCUT_BPS,
     fee_bps: float = DEFAULT_FEE_BPS,
+    initial_pos: float = 0.0,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, dict[str, float]]:
     """Simulate causal per-bar fills, fees, and pair-local stale-mark exits on a 1-coin target."""
     n = int(targets.size)
@@ -418,8 +778,9 @@ def replay_coin_targets_vectorized(
     gross = np.zeros(n, dtype=np.float64)
     cost = np.zeros(n, dtype=np.float64)
 
-    cur_pos = 0.0
+    cur_pos = float(initial_pos)
     prev_mark = np.nan
+    outage_fenced_snap: float | None = None
     forced_exits = 0
     unpriced_open_steps = 0
     deferred_notional_usd = 0.0
@@ -433,6 +794,7 @@ def replay_coin_targets_vectorized(
         if not np.isfinite(m_close):
             if abs(cur_pos) > 1e-12:
                 unpriced_open_steps += 1
+                snap_val = want if abs(want) > 1e-9 else cur_pos
                 if np.isfinite(prev_mark) and prev_mark > 0:
                     direction = 1.0 if cur_pos > 0 else -1.0
                     exit_px = prev_mark * (1.0 - direction * haircut_rate)
@@ -441,8 +803,15 @@ def replay_coin_targets_vectorized(
                     delta[j] = -cur_pos
                     cur_pos = 0.0
                     forced_exits += 1
+                    outage_fenced_snap = snap_val
             pos[j] = cur_pos
             continue
+
+        if outage_fenced_snap is not None:
+            if abs(want) <= 1e-9 or (want * outage_fenced_snap < -1e-12):
+                outage_fenced_snap = None
+            else:
+                want = 0.0
 
         desired = want
         if abs(want - cur_pos) > 1e-9 and not np.isfinite(t_open):
@@ -518,8 +887,13 @@ def build_unit_replay_by_alias(
             if recon.unanchored_pre_inventory:
                 diag["unanchored_coins"] += 1
 
+            anchor_val = anchors.get(coin) if policy == "full" else None
             pos, delta, gross, cost, stats = replay_coin_targets_vectorized(
-                recon.pos, trade_open, mark_close, cost_bps=cost_bps
+                recon.pos,
+                trade_open,
+                mark_close,
+                cost_bps=cost_bps,
+                initial_pos=float(anchor_val) if anchor_val is not None else 0.0,
             )
             diag["forced_gap_exits"] += int(stats["forced_gap_exits"])
             diag["unpriced_open_steps"] += int(stats["unpriced_open_steps"])
@@ -545,6 +919,12 @@ def build_unit_replay_by_alias(
         unit_frames[alias] = wallet_frames
         diagnostics[alias] = diag
     return unit_frames, diagnostics
+
+
+def _reset_day_index(ts_ms: int, reset_hour: int, reset_minute: int) -> int:
+    """Return reset-shifted UTC epoch day index so sparse grids never miss a reset."""
+    offset_ms = ((reset_hour * 3600) + (reset_minute * 60)) * 1000
+    return (int(ts_ms) - offset_ms) // 86_400_000
 
 
 def _is_reset_bar(ts_ms: int, reset_hour: int, reset_minute: int) -> bool:
@@ -861,13 +1241,22 @@ def _execute_guardian_pass(
 
     step_pnl = np.zeros(n, dtype=np.float64)
     eq_curve = np.zeros(n, dtype=np.float64)
+    bal_curve = np.zeros(n, dtype=np.float64)
+    cashday_curve = np.zeros(n, dtype=np.float64)
     swept_flags = np.zeros(n, dtype=bool)
     executed_deltas = np.zeros((nc, n), dtype=np.float64)
+    cur_day_idx = (
+        _reset_day_index(int(timestamps_ms[0]), spec.reset_utc_hour, spec.reset_utc_minute)
+        if n > 0
+        else 0
+    )
 
     for j in range(n):
         prev_pos = pos.copy()
         ts_ms = int(timestamps_ms[j])
-        if j > 0 and _is_reset_bar(ts_ms, spec.reset_utc_hour, spec.reset_utc_minute):
+        new_day_idx = _reset_day_index(ts_ms, spec.reset_utc_hour, spec.reset_utc_minute)
+        if j > 0 and new_day_idx > cur_day_idx:
+            cur_day_idx = new_day_idx
             cashday = balance if spec.daily_loss_basis == "balance" else eq
             eff_daily_limit = _effective_allowance(
                 cashday, spec.daily_loss_limit, spec.daily_loss_rate
@@ -884,6 +1273,8 @@ def _execute_guardian_pass(
                 terminal_net = eq - spec.initial_equity
                 if stop_on_terminal:
                     eq_curve[j:] = eq
+                    bal_curve[j:] = balance
+                    cashday_curve[j:] = cashday
                     break
 
         p = trade_open[:, j]
@@ -916,6 +1307,10 @@ def _execute_guardian_pass(
             if not np.isfinite(m_c):
                 if abs(cur) > 1e-12:
                     unpriced_open_steps += 1
+                    adm_c = float(admitted[ci])
+                    snap_c = adm_c if abs(adm_c) > 1e-9 else (
+                        float(raw_want[ci]) if abs(float(raw_want[ci])) > 1e-9 else cur
+                    )
                     if np.isfinite(prev_m) and prev_m > 0:
                         direction = 1.0 if cur > 0 else -1.0
                         exit_px = prev_m * (1.0 - direction * haircut_rate)
@@ -925,6 +1320,9 @@ def _execute_guardian_pass(
                         entry_px[ci] = 0.0
                         pos[ci] = 0.0
                         forced_gap_exits += 1
+                        if spec.reenter_after_sweep == "new_only":
+                            coin_eligible[ci] = False
+                            sweep_snapshot[ci] = snap_c
                 continue
 
             priced[ci] = True
@@ -953,7 +1351,17 @@ def _execute_guardian_pass(
             p1_arr[ci] = 0.0 if blocked_until_reset else _split_exit_first_phase1(cur, desired_c)
 
         bar_pnl = outage_pnl
-        if not blocked_until_reset and (eq + outage_pnl + open_mtm - cashday) <= -eff_sweep_loss:
+        eq_open = eq + outage_pnl + open_mtm
+        swept_at_open = (not blocked_until_reset) and ((eq_open - cashday) <= -eff_sweep_loss)
+        if not swept_at_open:
+            min_eq = min(min_eq, eq_open)
+            peak_to_trough_dd = min(peak_to_trough_dd, eq_open - peak)
+            worst_daily = min(worst_daily, eq_open - cashday)
+        hit_static_open = (not swept_at_open) and (
+            eq_open <= (spec.initial_equity - spec.max_static_dd)
+        )
+        hit_daily_open = (not swept_at_open) and ((eq_open - cashday) <= -eff_daily_limit)
+        if swept_at_open:
             # Open-time sweep breach: flatten carried positions at open without admitting entries.
             gross_open = 0.0
             for ci in range(nc):
@@ -1026,6 +1434,8 @@ def _execute_guardian_pass(
                         cur = float(pos[ci])
                         exec_px = exec_px_arr[ci]
                         m_c = float(m[ci])
+                        t_c = float(p[ci])
+                        prev_m = float(prev_mark[ci])
                         p1_c = p1_arr[ci]
                         realized1, new_entry1 = _apply_fill_to_basis(
                             cur, p1_c, float(entry_px[ci]), exec_px
@@ -1033,11 +1443,22 @@ def _execute_guardian_pass(
                         balance += realized1 - abs(p1_c - cur) * exec_px * cost_rate
                         if funding_mat is not None and abs(p1_c) > 1e-12:
                             balance += -p1_c * m_c * float(funding_mat[ci, j])
-                        realized2, _ = _apply_fill_to_basis(p1_c, 0.0, new_entry1, m_c)
-                        balance += realized2 - abs(p1_c) * m_c * cost_rate
+                        if np.isfinite(t_c) or abs(p1_c) <= 1e-12:
+                            realized2, _ = _apply_fill_to_basis(p1_c, 0.0, new_entry1, m_c)
+                            balance += realized2 - abs(p1_c) * m_c * cost_rate
+                            flatten_cost += abs(p1_c) * m_c * cost_rate
+                        else:
+                            _, exit_px = _conservative_gap_exit_price(
+                                p1_c, prev_m, m_c, haircut_rate
+                            )
+                            realized2, _ = _apply_fill_to_basis(p1_c, 0.0, new_entry1, exit_px)
+                            balance += realized2 - abs(p1_c) * exit_px * fee_rate
+                            p1_pnl += p1_c * (exit_px - m_c)
+                            flatten_cost += abs(p1_c) * exit_px * fee_rate
+                            unpriced_open_steps += 1
+                            forced_gap_exits += 1
                         entry_px[ci] = 0.0
                         gross_p1 += abs(p1_c) * m_c
-                        flatten_cost += abs(p1_c) * m_c * cost_rate
                         pos[ci] = 0.0
                         prev_mark[ci] = m_c
                 peak_gross_leverage = max(
@@ -1148,14 +1569,16 @@ def _execute_guardian_pass(
         executed_deltas[:, j] = pos - prev_pos
         step_pnl[j] = bar_pnl
         eq_curve[j] = eq
+        bal_curve[j] = balance
+        cashday_curve[j] = cashday
         peak = max(peak, eq)
         min_eq = min(min_eq, eq)
         peak_to_trough_dd = min(peak_to_trough_dd, eq - peak)
         worst_daily = min(worst_daily, eq - cashday)
 
         hit_pass = (eq - spec.initial_equity) >= spec.profit_target
-        hit_static = eq <= (spec.initial_equity - spec.max_static_dd)
-        hit_daily = (eq - cashday) <= -eff_daily_limit
+        hit_static = hit_static_open or (eq <= (spec.initial_equity - spec.max_static_dd))
+        hit_daily = hit_daily_open or ((eq - cashday) <= -eff_daily_limit)
 
         if terminal_step is None and (hit_pass or hit_static or hit_daily):
             if hit_static:
@@ -1170,6 +1593,8 @@ def _execute_guardian_pass(
             if stop_on_terminal:
                 if j + 1 < n:
                     eq_curve[j + 1 :] = eq
+                    bal_curve[j + 1 :] = balance
+                    cashday_curve[j + 1 :] = cashday
                 break
 
     if terminal_step is None:
@@ -1193,6 +1618,8 @@ def _execute_guardian_pass(
         "total_funding_usd": round(total_funding_usd, 4),
         "step_pnl": step_pnl,
         "eq_curve": eq_curve,
+        "balance_curve": bal_curve,
+        "cashday_curve": cashday_curve,
         "swept_flags": swept_flags,
         "executed_deltas": executed_deltas,
     }
@@ -1205,21 +1632,33 @@ def extract_mc_daily_blocks(
     spec: GuardianSpec,
     *,
     chop_mask: np.ndarray | None = None,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    balance_curve: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Partition continuous 5m PnL into reset-aligned daily blocks for ``pod_constructor`` MC."""
     n = int(timestamps_ms.size)
-    reset_indices = [
-        j
-        for j in range(n)
-        if _is_reset_bar(int(timestamps_ms[j]), spec.reset_utc_hour, spec.reset_utc_minute)
-    ]
-    if not reset_indices:
+    if n == 0:
         raise ValueError("NO_DAILY_RESET_BOUNDARIES_FOR_MC")
 
-    starts = reset_indices
-    if starts[0] > 0:
-        # Align cleanly to UTC reset boundary rather than partial pre-reset sliver.
-        pass
+    day_indices = np.array(
+        [_reset_day_index(int(timestamps_ms[j]), spec.reset_utc_hour, spec.reset_utc_minute) for j in range(n)],
+        dtype=np.int64,
+    )
+    starts = [
+        j
+        for j in range(n)
+        if (j == 0 and _is_reset_bar(int(timestamps_ms[0]), spec.reset_utc_hour, spec.reset_utc_minute))
+        or (j > 0 and day_indices[j] > day_indices[j - 1])
+    ]
+    if not starts:
+        starts = [0]
+    elif starts[0] > 0:
+        s0 = starts[0]
+        if (
+            s0 >= 12
+            or bool(np.any(np.abs(step_pnl[:s0]) > 1e-12))
+            or bool(np.any(swept_flags[:s0]))
+        ):
+            starts = [0, *starts]
 
     day_chop: list[bool] = []
     day_end: list[float] = []
@@ -1227,20 +1666,54 @@ def extract_mc_daily_blocks(
     day_min: list[float] = []
     day_swp: list[int] = []
     day_mf: list[bool] = []
+    day_min_vs_bal: list[float] = []
 
     step_bars = 288
+    cum_all = np.cumsum(step_pnl)
     for idx_pos, s_idx in enumerate(starts):
-        next_start = starts[idx_pos + 1] if idx_pos + 1 < len(starts) else (s_idx + step_bars)
+        next_start = starts[idx_pos + 1] if idx_pos + 1 < len(starts) else n
         e_idx = min(n, next_start)
-        if (e_idx - s_idx) < (step_bars - 12):
+        if e_idx <= s_idx:
             continue
+
+        eq_prev = spec.initial_equity + (float(cum_all[s_idx - 1]) if s_idx > 0 else 0.0)
+        if spec.daily_loss_basis == "balance" and balance_curve is not None:
+            cashday_s = float(balance_curve[s_idx - 1]) if s_idx > 0 else spec.initial_equity
+            unrl_carry = eq_prev - cashday_s
+        else:
+            cashday_s = eq_prev
+            unrl_carry = 0.0
+
+        eff_daily_s = _effective_allowance(cashday_s, spec.daily_loss_limit, spec.daily_loss_rate)
         seg = step_pnl[s_idx:e_idx]
         cum = np.cumsum(seg)
+        d_min_eq = float(np.min(cum))
+        d_min_bal_raw = float(min(unrl_carry, float(np.min(unrl_carry + cum))))
+        if (
+            spec.daily_loss_rate is not None
+            and spec.daily_loss_basis == "balance"
+            and eff_daily_s > 0.0
+            and abs(eff_daily_s - spec.daily_loss_limit) > 1e-12
+        ):
+            d_min_bal = d_min_bal_raw * (spec.daily_loss_limit / eff_daily_s)
+        else:
+            d_min_bal = d_min_bal_raw
+
+        hit_breach_partial = (
+            (d_min_bal <= -spec.daily_loss_limit)
+            or ((eq_prev + d_min_eq) <= (spec.initial_equity - spec.max_static_dd))
+            or bool(np.any(swept_flags[s_idx:e_idx]))
+        )
+        is_short_sliver = (e_idx - s_idx) < (step_bars - 12)
+        if is_short_sliver and len(day_end) > 0 and not hit_breach_partial:
+            continue
+
         day_end.append(float(cum[-1]))
         day_max.append(float(np.max(cum)))
-        day_min.append(float(np.min(cum)))
+        day_min.append(d_min_eq)
         day_swp.append(int(np.any(swept_flags[s_idx:e_idx])))
         day_mf.append(bool(np.argmax(cum) < np.argmin(cum)))
+        day_min_vs_bal.append(d_min_bal)
         if chop_mask is not None:
             day_chop.append(bool(np.mean(chop_mask[s_idx:e_idx]) >= 0.5))
         else:
@@ -1253,6 +1726,7 @@ def extract_mc_daily_blocks(
         np.asarray(day_min, dtype=np.float64),
         np.asarray(day_swp, dtype=np.int32),
         np.asarray(day_mf, dtype=bool),
+        np.asarray(day_min_vs_bal, dtype=np.float64),
     )
 
 
@@ -1297,6 +1771,7 @@ def simulate_guardian_challenge(
         timestamps_ms,
         spec,
         chop_mask=chop_mask,
+        balance_curve=cont["balance_curve"],
     )
     result = ChallengeRunResult(
         verdict=term["verdict"],

@@ -426,7 +426,11 @@ def test_simulate_guardian_reuses_first_pass_on_timeout(monkeypatch: pytest.Monk
     np.testing.assert_allclose(res_to.step_pnl, cont_raw["step_pnl"])
     np.testing.assert_allclose(res_to.equity_curve, cont_raw["eq_curve"])
     expected_blocks = cr.extract_mc_daily_blocks(
-        cont_raw["step_pnl"], cont_raw["swept_flags"], grid, spec_timeout
+        cont_raw["step_pnl"],
+        cont_raw["swept_flags"],
+        grid,
+        spec_timeout,
+        balance_curve=cont_raw["balance_curve"],
     )
     for got_blk, exp_blk in zip(blocks_to, expected_blocks, strict=True):
         np.testing.assert_array_equal(got_blk, exp_blk)

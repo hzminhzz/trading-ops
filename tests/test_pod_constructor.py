@@ -493,6 +493,7 @@ def test_build_tensor_compact_defaults_fast_path_and_from_arrays_parity() -> Non
         {"W1": {"BTC": df_btc}, "W2": {"ETH": df_eth}},
         ts_5m,
         pod_equity_usd=10_000.0,
+        include_sym_net_ret=False,
     )
     assert compact.notional_frac.dtype == np.float32
     assert compact.delta_notional_frac.dtype == np.float32
