@@ -101,6 +101,9 @@ class GuardianSpec:
     funding_multiplier: float = 1.0
     reset_utc_hour: int = 0
     reset_utc_minute: int = 5
+    daily_loss_basis: Literal["balance", "equity"] = "balance"
+    daily_loss_rate: float | None = None
+    guardian_sweep_rate: float | None = None
     reenter_after_sweep: Literal["new_only", "immediate_target"] = "new_only"
     min_trade_notional_usd: float = 0.0
     amount_step: float = 0.0
@@ -108,6 +111,16 @@ class GuardianSpec:
     amount_step_by_coin: Mapping[str, float] | None = None
     min_amount_by_coin: Mapping[str, float] | None = None
     max_gross_leverage: float | None = None
+
+    def __post_init__(self) -> None:
+        if self.daily_loss_basis not in ("balance", "equity"):
+            raise ValueError(f"INVALID_DAILY_LOSS_BASIS:{self.daily_loss_basis}")
+        if self.daily_loss_rate is not None and not (0.0 < float(self.daily_loss_rate) < 1.0):
+            raise ValueError(f"INVALID_DAILY_LOSS_RATE:{self.daily_loss_rate}")
+        if self.guardian_sweep_rate is not None and not (
+            0.0 < float(self.guardian_sweep_rate) < 1.0
+        ):
+            raise ValueError(f"INVALID_GUARDIAN_SWEEP_RATE:{self.guardian_sweep_rate}")
 
 
 @dataclass
@@ -578,6 +591,20 @@ def _split_exit_first_phase1(cur: float, desired: float, *, eps: float = 1e-12) 
     return cur
 
 
+def _conservative_gap_exit_price(
+    cur: float,
+    prev_m: float,
+    m_c: float,
+    haircut_rate: float,
+) -> tuple[float, float]:
+    """Return ``(ref_mark, exit_px)`` for a conservative forced-flatten when open trade price is missing."""
+    direction = 1.0 if cur > 0 else -1.0
+    if np.isfinite(prev_m) and prev_m > 0:
+        ref_px = min(prev_m, m_c) if cur > 0 else max(prev_m, m_c)
+        return prev_m, ref_px * (1.0 - direction * haircut_rate)
+    return m_c, m_c * (1.0 - direction * haircut_rate)
+
+
 def _conservative_gap_exit_pnl(
     cur: float,
     prev_m: float,
@@ -586,13 +613,41 @@ def _conservative_gap_exit_pnl(
     fee_rate: float,
 ) -> float:
     """Compute conservative forced-flatten PnL when ``trade_open`` is unavailable."""
-    direction = 1.0 if cur > 0 else -1.0
-    if np.isfinite(prev_m) and prev_m > 0:
-        ref_px = min(prev_m, m_c) if cur > 0 else max(prev_m, m_c)
-        exit_px = ref_px * (1.0 - direction * haircut_rate)
-        return cur * (exit_px - prev_m) - abs(cur) * exit_px * fee_rate
-    exit_px = m_c * (1.0 - direction * haircut_rate)
-    return cur * (exit_px - m_c) - abs(cur) * exit_px * fee_rate
+    base_mark, exit_px = _conservative_gap_exit_price(cur, prev_m, m_c, haircut_rate)
+    return cur * (exit_px - base_mark) - abs(cur) * exit_px * fee_rate
+
+
+def _apply_fill_to_basis(
+    cur_pos: float,
+    new_pos: float,
+    cur_entry: float,
+    px: float,
+    *,
+    eps: float = 1e-12,
+) -> tuple[float, float]:
+    """Update weighted-average entry price and return closed realized PnL."""
+    delta = new_pos - cur_pos
+    if abs(delta) <= eps:
+        return 0.0, (0.0 if abs(new_pos) <= eps else cur_entry)
+    realized = 0.0
+    if abs(cur_pos) > eps and cur_pos * delta < 0.0:
+        close_qty = min(abs(cur_pos), abs(delta))
+        direction = 1.0 if cur_pos > 0.0 else -1.0
+        realized += close_qty * (px - cur_entry) * direction
+    if abs(new_pos) <= eps:
+        return realized, 0.0
+    if abs(cur_pos) <= eps or cur_pos * new_pos < 0.0:
+        return realized, px
+    if cur_pos * delta > 0.0:
+        return realized, (abs(cur_pos) * cur_entry + abs(delta) * px) / abs(new_pos)
+    return realized, cur_entry
+
+
+def _effective_allowance(cashday: float, fixed_limit: float, rate: float | None) -> float:
+    """Compute dollar daily/sweep allowance from fixed amount or reset-basis percentage."""
+    if rate is not None:
+        return max(0.0, cashday * float(rate))
+    return float(fixed_limit)
 
 
 def _quantize_order_target(
@@ -777,12 +832,16 @@ def _execute_guardian_pass(
     )
 
     pos = np.zeros(nc, dtype=np.float64)
+    entry_px = np.zeros(nc, dtype=np.float64)
     prev_mark = np.full(nc, np.nan, dtype=np.float64)
     sweep_snapshot = np.zeros(nc, dtype=np.float64)
     coin_eligible = np.ones(nc, dtype=bool)
 
     eq = spec.initial_equity
+    balance = spec.initial_equity
     cashday = spec.initial_equity
+    eff_daily_limit = _effective_allowance(cashday, spec.daily_loss_limit, spec.daily_loss_rate)
+    eff_sweep_loss = _effective_allowance(cashday, spec.guardian_sweep_loss, spec.guardian_sweep_rate)
     peak = spec.initial_equity
     min_eq = spec.initial_equity
     peak_to_trough_dd = 0.0
@@ -809,8 +868,23 @@ def _execute_guardian_pass(
         prev_pos = pos.copy()
         ts_ms = int(timestamps_ms[j])
         if j > 0 and _is_reset_bar(ts_ms, spec.reset_utc_hour, spec.reset_utc_minute):
-            cashday = eq
+            cashday = balance if spec.daily_loss_basis == "balance" else eq
+            eff_daily_limit = _effective_allowance(
+                cashday, spec.daily_loss_limit, spec.daily_loss_rate
+            )
+            eff_sweep_loss = _effective_allowance(
+                cashday, spec.guardian_sweep_loss, spec.guardian_sweep_rate
+            )
             blocked_until_reset = False
+            worst_daily = min(worst_daily, eq - cashday)
+            if terminal_step is None and (eq - cashday) <= -eff_daily_limit:
+                verdict = "FAIL_DAILY"
+                terminal_step = j
+                terminal_ts_ms = ts_ms
+                terminal_net = eq - spec.initial_equity
+                if stop_on_terminal:
+                    eq_curve[j:] = eq
+                    break
 
         p = trade_open[:, j]
         m = mark_close[:, j]
@@ -846,6 +920,9 @@ def _execute_guardian_pass(
                         direction = 1.0 if cur > 0 else -1.0
                         exit_px = prev_m * (1.0 - direction * haircut_rate)
                         outage_pnl += cur * (exit_px - prev_m) - abs(cur) * exit_px * fee_rate
+                        realized, _ = _apply_fill_to_basis(cur, 0.0, float(entry_px[ci]), exit_px)
+                        balance += realized - abs(cur) * exit_px * fee_rate
+                        entry_px[ci] = 0.0
                         pos[ci] = 0.0
                         forced_gap_exits += 1
                 continue
@@ -876,7 +953,7 @@ def _execute_guardian_pass(
             p1_arr[ci] = 0.0 if blocked_until_reset else _split_exit_first_phase1(cur, desired_c)
 
         bar_pnl = outage_pnl
-        if not blocked_until_reset and (eq + outage_pnl + open_mtm - cashday) <= -spec.guardian_sweep_loss:
+        if not blocked_until_reset and (eq + outage_pnl + open_mtm - cashday) <= -eff_sweep_loss:
             # Open-time sweep breach: flatten carried positions at open without admitting entries.
             gross_open = 0.0
             for ci in range(nc):
@@ -892,12 +969,18 @@ def _execute_guardian_pass(
                         if np.isfinite(prev_m):
                             bar_pnl += cur * (t_c - prev_m)
                         bar_pnl -= abs(cur) * t_c * cost_rate
+                        realized, _ = _apply_fill_to_basis(cur, 0.0, float(entry_px[ci]), t_c)
+                        balance += realized - abs(cur) * t_c * cost_rate
                     else:
+                        _, exit_px = _conservative_gap_exit_price(cur, prev_m, m_c, haircut_rate)
                         bar_pnl += _conservative_gap_exit_pnl(
                             cur, prev_m, m_c, haircut_rate, fee_rate
                         )
+                        realized, _ = _apply_fill_to_basis(cur, 0.0, float(entry_px[ci]), exit_px)
+                        balance += realized - abs(cur) * exit_px * fee_rate
                         unpriced_open_steps += 1
                         forced_gap_exits += 1
+                entry_px[ci] = 0.0
                 pos[ci] = 0.0
                 prev_mark[ci] = m_c
             peak_gross_leverage = max(
@@ -934,16 +1017,29 @@ def _execute_guardian_pass(
                         p1_pnl += f_c
                         p1_funding += f_c
 
-            if not blocked_until_reset and (eq + p1_pnl - cashday) <= -spec.guardian_sweep_loss:
+            if not blocked_until_reset and (eq + p1_pnl - cashday) <= -eff_sweep_loss:
                 # Exit-first sweep breach: exits/reductions settled, new opens/increases blocked.
                 flatten_cost = 0.0
                 gross_p1 = 0.0
                 for ci in range(nc):
                     if priced[ci]:
-                        gross_p1 += abs(p1_arr[ci]) * float(m[ci])
-                        flatten_cost += abs(p1_arr[ci]) * float(m[ci]) * cost_rate
+                        cur = float(pos[ci])
+                        exec_px = exec_px_arr[ci]
+                        m_c = float(m[ci])
+                        p1_c = p1_arr[ci]
+                        realized1, new_entry1 = _apply_fill_to_basis(
+                            cur, p1_c, float(entry_px[ci]), exec_px
+                        )
+                        balance += realized1 - abs(p1_c - cur) * exec_px * cost_rate
+                        if funding_mat is not None and abs(p1_c) > 1e-12:
+                            balance += -p1_c * m_c * float(funding_mat[ci, j])
+                        realized2, _ = _apply_fill_to_basis(p1_c, 0.0, new_entry1, m_c)
+                        balance += realized2 - abs(p1_c) * m_c * cost_rate
+                        entry_px[ci] = 0.0
+                        gross_p1 += abs(p1_c) * m_c
+                        flatten_cost += abs(p1_c) * m_c * cost_rate
                         pos[ci] = 0.0
-                        prev_mark[ci] = float(m[ci])
+                        prev_mark[ci] = m_c
                 peak_gross_leverage = max(
                     peak_gross_leverage, _calc_gross_leverage(gross_p1, eq + p1_pnl)
                 )
@@ -990,9 +1086,13 @@ def _execute_guardian_pass(
                     p1_c = p1_arr[ci]
                     desired_c = desired_arr[ci]
                     if blocked_until_reset and abs(cur) > 1e-12 and not np.isfinite(float(p[ci])):
+                        _, exit_px = _conservative_gap_exit_price(cur, prev_m, m_c, haircut_rate)
                         bar_pnl += _conservative_gap_exit_pnl(
                             cur, prev_m, m_c, haircut_rate, fee_rate
                         )
+                        realized, _ = _apply_fill_to_basis(cur, 0.0, float(entry_px[ci]), exit_px)
+                        balance += realized - abs(cur) * exit_px * fee_rate
+                        entry_px[ci] = 0.0
                         unpriced_open_steps += 1
                         forced_gap_exits += 1
                         pos[ci] = 0.0
@@ -1000,13 +1100,18 @@ def _execute_guardian_pass(
                         continue
                     if np.isfinite(prev_m):
                         bar_pnl += cur * (exec_px - prev_m)
-                    bar_pnl += desired_c * (m_c - exec_px) - (
-                        abs(p1_c - cur) + abs(desired_c - p1_c)
-                    ) * exec_px * cost_rate
+                    trade_cost = (abs(p1_c - cur) + abs(desired_c - p1_c)) * exec_px * cost_rate
+                    bar_pnl += desired_c * (m_c - exec_px) - trade_cost
+                    realized, new_entry = _apply_fill_to_basis(
+                        cur, desired_c, float(entry_px[ci]), exec_px
+                    )
+                    balance += realized - trade_cost
                     if funding_mat is not None and abs(desired_c) > 1e-12:
                         f_c = -desired_c * m_c * float(funding_mat[ci, j])
                         bar_pnl += f_c
                         bar_funding += f_c
+                        balance += f_c
+                    entry_px[ci] = new_entry
                     pos[ci] = desired_c
                     prev_mark[ci] = m_c
                     gross_close += abs(desired_c) * m_c
@@ -1016,9 +1121,17 @@ def _execute_guardian_pass(
                 peak_gross_leverage = max(
                     peak_gross_leverage, _calc_gross_leverage(gross_close, eq)
                 )
-                if not blocked_until_reset and (eq - cashday) <= -spec.guardian_sweep_loss:
+                if not blocked_until_reset and (eq - cashday) <= -eff_sweep_loss:
                     valid_open = priced & (np.abs(pos) > 1e-12)
                     flatten_cost = float(np.sum(np.abs(pos[valid_open]) * m[valid_open])) * cost_rate
+                    for ci in np.flatnonzero(valid_open):
+                        m_c = float(m[ci])
+                        cur_open = float(pos[ci])
+                        realized, _ = _apply_fill_to_basis(
+                            cur_open, 0.0, float(entry_px[ci]), m_c
+                        )
+                        balance += realized - abs(cur_open) * m_c * cost_rate
+                        entry_px[ci] = 0.0
                     bar_pnl -= flatten_cost
                     eq -= flatten_cost
                     sweeps, blocked_until_reset = _record_sweep_halt(
@@ -1042,7 +1155,7 @@ def _execute_guardian_pass(
 
         hit_pass = (eq - spec.initial_equity) >= spec.profit_target
         hit_static = eq <= (spec.initial_equity - spec.max_static_dd)
-        hit_daily = (eq - cashday) <= -spec.daily_loss_limit
+        hit_daily = (eq - cashday) <= -eff_daily_limit
 
         if terminal_step is None and (hit_pass or hit_static or hit_daily):
             if hit_static:

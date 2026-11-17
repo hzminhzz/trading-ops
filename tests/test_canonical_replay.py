@@ -842,3 +842,123 @@ def test_guardian_executed_deltas_reflect_sweep_halt_deadband_and_leverage_cap()
     assert 0.0 < res.executed_deltas[0, 293] <= 15.0 + 1e-9
     assert res.executed_deltas[0, 293] < 40.0
 
+
+def test_guardian_spec_validates_daily_loss_basis_and_rates() -> None:
+    with pytest.raises(ValueError, match="INVALID_DAILY_LOSS_BASIS"):
+        cr.GuardianSpec(daily_loss_basis="invalid")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="INVALID_DAILY_LOSS_RATE"):
+        cr.GuardianSpec(daily_loss_rate=0.0)
+    with pytest.raises(ValueError, match="INVALID_DAILY_LOSS_RATE"):
+        cr.GuardianSpec(daily_loss_rate=1.0)
+    with pytest.raises(ValueError, match="INVALID_GUARDIAN_SWEEP_RATE"):
+        cr.GuardianSpec(guardian_sweep_rate=-0.1)
+
+
+def test_guardian_balance_reset_vs_equity_reset_overnight_counterexample() -> None:
+    # Q11 overnight counterexample (zero costs):
+    # Day 1: Position 1 loses $100 and closes before 00:05 UTC reset -> balance = $9,900.
+    #        Position 2 opens +10 at $100 and marks to $80 before Day 2 00:05 reset -> equity = $9,700.
+    # Day 2: Position 2 drops to $49.90 (equity = $9,399; -$301 from reset equity, -$501 from $9,900 balance).
+    #        Also test $50.40 (equity = $9,404 -> breaches 5% of $9,900 = $9,405, not fixed $500 = $9,400).
+    n = 310  # bar 289 is Day 2 00:05 UTC reset
+    grid = _grid_ms(n)
+    t_open = np.full((2, n), 100.0)
+    m_close = np.full((2, n), 100.0)
+    targets = np.zeros((2, n))
+
+    # Coin 0 (Position 1): long 10 bars 10..19, drops to 90 at bar 15 and closes at bar 20 -> -$100 realized
+    targets[0, 10:20] = 10.0
+    m_close[0, 15:] = 90.0
+    t_open[0, 16:] = 90.0
+
+    # Coin 1 (Position 2): long 10 from bar 100 onward, marks to 80 before Day 2 reset (bar 288)
+    targets[1, 100:] = 10.0
+    m_close[1, 200:295] = 80.0
+    t_open[1, 201:296] = 80.0
+    # Drop after reset at bar 295 -> equity falls to $9,399 (10 * 49.90 + 9,900 - 1,000 = 9,399)
+    m_close[1, 295:] = 49.90
+    t_open[1, 296:] = 49.90
+
+    # 1. Fixed $500 balance-reset (with high sweep cap so FAIL_DAILY is isolated cleanly)
+    spec_bal_fixed = cr.GuardianSpec(
+        cost_bps=0.0,
+        daily_loss_limit=500.0,
+        guardian_sweep_loss=10_000.0,
+        daily_loss_basis="balance",
+    )
+    res_bal, _ = cr.simulate_guardian_challenge(["C0", "C1"], targets, t_open, m_close, grid, spec_bal_fixed)
+    assert res_bal.verdict == "FAIL_DAILY"
+    assert res_bal.terminal_step == 295
+    assert res_bal.worst_daily_usd == pytest.approx(-501.0, abs=1e-9)
+
+    # 2. Default Guardian sweep ($400) + balance-reset catches sweep & breach accurately
+    spec_bal_default = cr.GuardianSpec(cost_bps=0.0)
+    res_bal_sw, _ = cr.simulate_guardian_challenge(
+        ["C0", "C1"], targets, t_open, m_close, grid, spec_bal_default
+    )
+    assert res_bal_sw.verdict == "FAIL_DAILY"
+    assert res_bal_sw.sweeps == 1
+
+    # 3. Equity-reset fails to detect the -$501 cumulative daily loss from $9,900 balance
+    spec_eq_legacy = cr.GuardianSpec(
+        cost_bps=0.0,
+        daily_loss_limit=500.0,
+        guardian_sweep_loss=400.0,
+        daily_loss_basis="equity",
+    )
+    res_eq, _ = cr.simulate_guardian_challenge(
+        ["C0", "C1"], targets, t_open, m_close, grid, spec_eq_legacy
+    )
+    assert res_eq.verdict == "TIMEOUT"
+    assert res_eq.sweeps == 0
+    assert res_eq.worst_daily_usd == pytest.approx(-301.0, abs=1e-9)
+
+    # 4. 5% reset-balance rate limit ($9,900 * 0.95 = $9,405): equity = $9,404 breaches rate limit
+    m_rate = m_close.copy()
+    t_rate = t_open.copy()
+    m_rate[1, 295:] = 50.40  # equity = $9,404 (between $9,400 fixed and $9,405 5% floor)
+    t_rate[1, 296:] = 50.40
+    res_rate_hit, _ = cr.simulate_guardian_challenge(
+        ["C0", "C1"],
+        targets,
+        t_rate,
+        m_rate,
+        grid,
+        cr.GuardianSpec(
+            cost_bps=0.0,
+            daily_loss_rate=0.05,
+            guardian_sweep_loss=10_000.0,
+            daily_loss_basis="balance",
+        ),
+    )
+    assert res_rate_hit.verdict == "FAIL_DAILY"
+    assert res_rate_hit.terminal_step == 295
+
+    res_fixed_miss, _ = cr.simulate_guardian_challenge(
+        ["C0", "C1"],
+        targets,
+        t_rate,
+        m_rate,
+        grid,
+        spec_bal_fixed,
+    )
+    assert res_fixed_miss.verdict == "TIMEOUT"
+
+    # 5. Instant reset-boundary breach: realized +$300 (balance=$10,300) while holding -$550 loser (eq=$9,750)
+    #    Before Day 2 reset, daily loss vs $10,000 is -$250 (< $500). At 00:05 reset, cashday=$10,300 -> -$550 breach!
+    m_inst = np.full((2, n), 100.0)
+    t_inst = np.full((2, n), 100.0)
+    tgt_inst = np.zeros((2, n))
+    tgt_inst[0, 10:20] = 10.0
+    m_inst[0, 15:] = 130.0
+    t_inst[0, 16:] = 130.0  # +$300 realized -> balance = $10,300
+    tgt_inst[1, 100:] = 10.0
+    m_inst[1, 200:] = 45.0
+    t_inst[1, 201:] = 45.0  # -$550 open uPnL -> eq = $9,750 (-$250 vs Day 1 $10k)
+    res_inst, _ = cr.simulate_guardian_challenge(
+        ["C0", "C1"], tgt_inst, t_inst, m_inst, grid, spec_bal_fixed
+    )
+    assert res_inst.verdict == "FAIL_DAILY"
+    assert res_inst.terminal_step == 289
+    assert res_inst.worst_daily_usd == pytest.approx(-550.0, abs=1e-9)
+

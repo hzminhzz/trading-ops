@@ -162,6 +162,16 @@ def test_vectorized_episode_reconstruction_edge_cases_and_bounded_memory() -> No
         ]
     )
     assert eps["ep_symbol_notional"] == pytest.approx(expected_sym_notional, abs=1e-12)
+    assert eps["ep_start_bar"].tolist() == [0, 4, 1, 6, 12, 17]
+    assert eps["ep_end_bar"].tolist() == [3, 6, 7, 9, 13, 20]
+    assert eps["ep_pnl_end_bar"].tolist() == [4, 6, 8, 10, 14, 20]
+    assert eps["ep_left_censored"].tolist() == [False, False, False, False, False, False]
+    assert eps["ep_right_censored"].tolist() == [False, False, False, False, False, True]
+    assert eps["ep_uncensored"].tolist() == [True, True, True, True, True, False]
+
+    eps_unc = pc.reconstruct_execution_episodes(tensor, uncensored_only=True)[0]
+    assert eps_unc["ep_pnl"].size == 5
+    assert eps_unc["ep_pnl"] == pytest.approx([-0.001, 0.002, 0.003, 0.0, 0.001], abs=1e-12)
 
     # Bounded memory check: stage1_audit_traders must not allocate full dense (N, S, T) copies
     n_t, n_s, n_b = 40, 80, 2000  # dense float32 = 25.6 MB, dense float64 = 51.2 MB
@@ -364,7 +374,7 @@ def test_sparse_overlap_netting_exactness() -> None:
     solo_cache, t_ov, d_ov = pc._build_sparse_overlap_cache(d_notional, solo_net)
     day_slices = pc._daily_reset_slices(ts, bpd, cfg.reset_bar_offset)
 
-    ret_fast, _, _, _, _, sav_fast = pc._evaluate_weights_unit_scale(
+    ret_fast, _, _, _, _, _, sav_fast = pc._evaluate_weights_unit_scale(
         weights, solo_cache, t_ov, d_ov, cost_rate, day_slices, cfg
     )
 
@@ -652,7 +662,8 @@ def test_discover_diverse_pods_screens_tilter_clusters_and_respects_barriers() -
     assert baselines[top_pod.pod_indices[0]].mae_p95 > 0.0
     assert top_pod.cdar_95 <= cfg.cdar_buffer_frac * cfg.max_dd_frac + 1e-9
     assert top_pod.daily_cvar_99 <= cfg.daily_cvar_buffer_frac * cfg.daily_loss_frac + 1e-9
-    assert top_pod.max_static_dd <= cfg.hard_dd_buffer_frac * cfg.max_dd_frac + 1e-9
+    assert top_pod.peak_to_trough_dd <= cfg.hard_dd_buffer_frac * cfg.max_dd_frac + 1e-9
+    assert top_pod.static_floor_dd <= top_pod.peak_to_trough_dd + 1e-12
     assert top_pod.max_daily_loss <= cfg.hard_daily_buffer_frac * cfg.daily_loss_frac + 1e-9
     assert diag["distance_matrix"].shape[0] >= 4
 
@@ -884,3 +895,289 @@ def test_roster_episode_cusum_detects_decay_and_tilt() -> None:
         )
     assert state.status == "KILL_CONTAIN_0X"
     assert len(state.reasons) >= 1
+
+
+def test_censored_and_overlapping_episodes_excluded_and_causal_tilt() -> None:
+    n_bars = 80
+    ts = _make_timestamps(1)[:n_bars]
+    notional = np.zeros((1, 3, n_bars), dtype=np.float64)
+    d_notional = np.zeros((1, 3, n_bars), dtype=np.float64)
+    sym_net = np.zeros((1, 3, n_bars), dtype=np.float64)
+
+    # BTC (sym 0):
+    # - Left-censored carry at bar 0..3 (delta[0]=0 -> pre0 != 0), closed at bar 4: MUST be censored!
+    notional[0, 0, 0:4] = 1.0
+    d_notional[0, 0, 4] = -1.0
+    sym_net[0, 0, 1:5] = -0.002
+
+    # - Ep A (uncensored): bars 5..29, closes at bar 30 (known=31) with LOSS (-0.01)
+    notional[0, 0, 5:30] = 0.4
+    d_notional[0, 0, 5] = 0.4
+    d_notional[0, 0, 30] = -0.4
+    sym_net[0, 0, 6:31] = -0.0004  # 25 * -0.0004 = -0.010
+
+    # - Ep D (uncensored): opens at bar 35 (AFTER A's loss known at 31, BEFORE B closes at 41!), size 1.5, WIN
+    notional[0, 0, 35:45] = 1.5
+    d_notional[0, 0, 35] = 1.5
+    d_notional[0, 0, 45] = -1.5
+    sym_net[0, 0, 36:46] = 0.002
+
+    # ETH (sym 1):
+    # - Ep B (overlapping, uncensored): opens at bar 10 (BEFORE A closes!), size 2.0, closes WIN at 40 (known=41)
+    #   Crucial: Ep B must NOT be treated as opened after A's loss despite closing after A!
+    notional[0, 1, 10:40] = 2.0
+    d_notional[0, 1, 10] = 2.0
+    d_notional[0, 1, 40] = -2.0
+    sym_net[0, 1, 11:41] = 0.001
+
+    # SOL (sym 2):
+    # - Ep C (uncensored): opens at bar 50 (after B & D wins), size 0.5, closes WIN at bar 60
+    notional[0, 2, 50:60] = 0.5
+    d_notional[0, 2, 50] = 0.5
+    d_notional[0, 2, 60] = -0.5
+    sym_net[0, 2, 51:61] = 0.001
+
+    # - Right-censored open at slice end: bars 65..79 (size 0.35), still open at cutoff!
+    notional[0, 2, 65:80] = 0.35
+    d_notional[0, 2, 65] = 0.35
+    sym_net[0, 2, 66:80] = 0.0005
+
+    net = np.sum(sym_net, axis=1)
+    tensor = pc.UnitCopy5mTensor(
+        aliases=("OVERLAP",),
+        symbols=("BTC", "ETH", "SOL"),
+        timestamps_ms=ts,
+        notional_frac=notional,
+        delta_notional_frac=d_notional,
+        gross_ret_frac=net.copy(),
+        net_ret_frac=net,
+        sym_net_ret_frac=sym_net,
+    )
+
+    eps_all = pc.reconstruct_execution_episodes(tensor)[0]
+    assert eps_all["ep_pnl"].size == 6
+    assert int(np.sum(eps_all["ep_left_censored"])) == 1
+    assert int(np.sum(eps_all["ep_right_censored"])) == 1
+    assert int(np.sum(eps_all["ep_uncensored"])) == 4
+
+    cfg = pc.PodConstructorConfig(min_episodes=4, max_tilt_multiplier=2.0, min_active_bar_frac=0.1)
+    passed_ids, metrics, _ = pc.stage1_audit_traders(tensor, cfg)
+    m = metrics[0]
+    assert m.num_episodes == 4
+    assert m.censored_episodes == 2
+    assert m.left_censored_episodes == 1
+    assert m.right_censored_episodes == 1
+    assert m.open_exposure_at_cutoff == pytest.approx(0.35, abs=1e-6)
+    # Only Ep D (1.5) opened after A's loss; only Ep C (0.5) opened after a win -> 1.5 / 0.5 = 3.0!
+    assert m.tilt_status == "FAIL"
+    assert m.tilt_multiplier == pytest.approx(3.0, abs=1e-6)
+    assert passed_ids == []
+    assert "martingale_tilt" in m.reject_reason
+
+
+def test_unknown_tilt_never_fabricates_pass_or_one() -> None:
+    n_bars = 120
+    ts = _make_timestamps(1)[:n_bars]
+
+    # Trader 0 ("ALL_LOSS"): 4 closed losing episodes, 0 wins (q10-evidence counterexample)
+    # Trader 1 ("ALL_WIN"): 4 closed winning episodes, 0 losses
+    notional = np.zeros((2, 1, n_bars), dtype=np.float64)
+    d_notional = np.zeros((2, 1, n_bars), dtype=np.float64)
+    sym_net = np.zeros((2, 1, n_bars), dtype=np.float64)
+
+    for ep in range(4):
+        s_b = 5 + ep * 20
+        e_b = s_b + 10
+        notional[0, 0, s_b:e_b] = 0.5
+        d_notional[0, 0, s_b] = 0.5
+        d_notional[0, 0, e_b] = -0.5
+        sym_net[0, 0, s_b + 1 : e_b + 1] = -0.001
+
+        notional[1, 0, s_b:e_b] = 0.5
+        d_notional[1, 0, s_b] = 0.5
+        d_notional[1, 0, e_b] = -0.5
+        sym_net[1, 0, s_b + 1 : e_b + 1] = 0.001
+
+    net = np.sum(sym_net, axis=1)
+    tensor = pc.UnitCopy5mTensor(
+        aliases=("ALL_LOSS", "ALL_WIN"),
+        symbols=("BTC",),
+        timestamps_ms=ts,
+        notional_frac=notional,
+        delta_notional_frac=d_notional,
+        gross_ret_frac=net.copy(),
+        net_ret_frac=net,
+        sym_net_ret_frac=sym_net,
+    )
+
+    cfg_strict = pc.PodConstructorConfig(min_episodes=4, min_active_bar_frac=0.1, reject_unknown_tilt=True)
+    passed_strict, m_strict, _ = pc.stage1_audit_traders(tensor, cfg_strict)
+    assert passed_strict == []
+    assert m_strict[0].tilt_multiplier is None
+    assert m_strict[0].tilt_status == "UNKNOWN"
+    assert not m_strict[0].passed_behavioral_gate
+    assert "tilt_unknown" in m_strict[0].reject_reason
+
+    assert m_strict[1].tilt_multiplier is None
+    assert m_strict[1].tilt_status == "UNKNOWN"
+    assert not m_strict[1].passed_behavioral_gate
+    assert "tilt_unknown" in m_strict[1].reject_reason
+
+    # Ablation toggle: even when reject_unknown_tilt=False, UNKNOWN is never rewritten to 1.0
+    cfg_ablate = pc.PodConstructorConfig(min_episodes=4, min_active_bar_frac=0.1, reject_unknown_tilt=False)
+    passed_ablate, m_ablate, _ = pc.stage1_audit_traders(tensor, cfg_ablate)
+    assert passed_ablate == [1]
+    assert m_ablate[1].tilt_multiplier is None
+    assert m_ablate[1].tilt_status == "UNKNOWN"
+
+
+def test_distinct_peak_to_trough_and_static_floor_drawdowns() -> None:
+    # Q11 counterexample: 10000 -> 10800 (+0.08) -> 10100 (-0.07)
+    # Peak-to-trough DD = 0.07 ($700); static-floor DD below initial equity = 0.0 ($0).
+    cum = np.array([0.0, 0.08, 0.01], dtype=np.float64)
+    _, peak_dd, static_dd, _ = pc.compute_drawdown_metrics(cum, alpha=0.95)
+    assert peak_dd == pytest.approx(0.07, abs=1e-12)
+    assert static_dd == pytest.approx(0.0, abs=1e-12)
+
+    n_bars = 288 * 2
+    ts = _make_timestamps(2)
+    notional = np.zeros((3, 1, n_bars), dtype=np.float64)
+    d_notional = np.zeros((3, 1, n_bars), dtype=np.float64)
+    sym_net = np.zeros((3, 1, n_bars), dtype=np.float64)
+
+    for ti in range(3):
+        # Ep1 (bar 10..30): big gain +0.08
+        notional[ti, 0, 10:30] = 0.5
+        d_notional[ti, 0, 10] = 0.5
+        d_notional[ti, 0, 30] = -0.5
+        sym_net[ti, 0, 20] = 0.08
+        # Ep2 (bar 60..80): loss -0.07 -> cumulative stays +0.01 above initial 0.0!
+        notional[ti, 0, 60:80] = 0.5
+        d_notional[ti, 0, 60] = 0.5
+        d_notional[ti, 0, 80] = -0.5
+        sym_net[ti, 0, 70] = -0.07
+        # Ep3..4 (bar 120..200): small wins
+        notional[ti, 0, 120:140] = 0.5
+        d_notional[ti, 0, 120] = 0.5
+        d_notional[ti, 0, 140] = -0.5
+        sym_net[ti, 0, 130] = 0.02
+        notional[ti, 0, 160:180] = 0.5
+        d_notional[ti, 0, 160] = 0.5
+        d_notional[ti, 0, 180] = -0.5
+        sym_net[ti, 0, 170] = 0.02
+
+    net = np.sum(sym_net, axis=1)
+    tensor = pc.UnitCopy5mTensor(
+        aliases=("A", "B", "C"),
+        symbols=("BTC",),
+        timestamps_ms=ts,
+        notional_frac=notional,
+        delta_notional_frac=d_notional,
+        gross_ret_frac=net.copy(),
+        net_ret_frac=net,
+        sym_net_ret_frac=sym_net,
+    )
+    cfg = pc.PodConstructorConfig(pod_size=3, min_episodes=4, min_active_bar_frac=0.05)
+    _, metrics, _ = pc.stage1_audit_traders(tensor, cfg)
+    for m in metrics:
+        assert m.standalone_peak_to_trough_dd == pytest.approx(0.07, abs=1e-12)
+        assert m.standalone_static_floor_dd == pytest.approx(0.0, abs=1e-12)
+
+    sized = pc.size_pod_dual_barrier((0, 1, 2), tensor, metrics, cfg)
+    assert sized.peak_to_trough_dd > 0.0
+    assert sized.static_floor_dd == pytest.approx(0.0, abs=1e-12)
+    assert sized.static_floor_dd < sized.peak_to_trough_dd
+
+
+def test_infeasible_risk_share_bounds_raise_instead_of_relaxing() -> None:
+    tensor = _synthetic_multi_regime_tensor(n_days=16)
+    cfg_audit = pc.PodConstructorConfig(min_episodes=4, reject_unknown_tilt=False)
+    _, metrics, _ = pc.stage1_audit_traders(tensor, cfg_audit)
+
+    # 2 seats with max_risk_share=0.45 => 0.90 < 1.0 (previously silently relaxed!)
+    with pytest.raises(ValueError, match="INFEASIBLE_RISK_SHARE_BOUNDS"):
+        pc.size_pod_dual_barrier(
+            (0, 2),
+            tensor,
+            metrics,
+            pc.PodConstructorConfig(pod_size=2, min_risk_share=0.15, max_risk_share=0.45),
+        )
+
+    # 3 seats with min_risk_share=0.40 => 1.20 > 1.0
+    with pytest.raises(ValueError, match="INFEASIBLE_RISK_SHARE_BOUNDS"):
+        pc.size_pod_dual_barrier(
+            (0, 2, 3),
+            tensor,
+            metrics,
+            pc.PodConstructorConfig(pod_size=3, min_risk_share=0.40, max_risk_share=0.60),
+        )
+
+    # min_risk_share > max_risk_share
+    with pytest.raises(ValueError, match="INFEASIBLE_RISK_SHARE_BOUNDS"):
+        pc.size_pod_dual_barrier(
+            (0, 2, 3),
+            tensor,
+            metrics,
+            pc.PodConstructorConfig(pod_size=3, min_risk_share=0.50, max_risk_share=0.30),
+        )
+
+
+def test_migrated_study_callers_handle_unknown_tilt_and_distinct_dd() -> None:
+    import importlib.util
+
+    studies_dir = Path(__file__).resolve().parents[1] / "studies"
+    base = _synthetic_multi_regime_tensor(n_days=24)
+    n_t, n_s, n_b = base.notional_frac.shape
+    notional = np.zeros((n_t + 1, n_s, n_b), dtype=np.float64)
+    d_notional = np.zeros((n_t + 1, n_s, n_b), dtype=np.float64)
+    gross = np.zeros((n_t + 1, n_b), dtype=np.float64)
+    net = np.zeros((n_t + 1, n_b), dtype=np.float64)
+    notional[:n_t] = base.notional_frac
+    d_notional[:n_t] = base.delta_notional_frac
+    gross[:n_t] = base.gross_ret_frac
+    net[:n_t] = base.net_ret_frac
+    for ep in range(10):
+        sb = 20 + ep * 400
+        eb = sb + 20
+        notional[n_t, 0, sb:eb] = 0.2
+        d_notional[n_t, 0, sb] = 0.2
+        d_notional[n_t, 0, eb] = -0.2
+        gross[n_t, sb + 1 : eb] = 0.001
+        net[n_t, sb + 1 : eb] = 0.001
+    tensor = pc.UnitCopy5mTensor(
+        aliases=(*base.aliases, "ALL_WIN_UNKNOWN"),
+        symbols=base.symbols,
+        timestamps_ms=base.timestamps_ms,
+        notional_frac=notional,
+        delta_notional_frac=d_notional,
+        gross_ret_frac=gross,
+        net_ret_frac=net,
+        chop_mask=base.chop_mask,
+    )
+    cfg = pc.PodConstructorConfig(pod_size=3, min_episodes=8, min_active_bar_frac=0.005)
+    passed_ids, metrics, _ = pc.stage1_audit_traders(tensor, cfg)
+    dist_mat, comps = pc.compute_crowding_distance_matrix(passed_ids, tensor, cfg)
+
+    v1_path = studies_dir / "2026-11-16__cft__10k__canonical-full-universe.py"
+    v1_spec = importlib.util.spec_from_file_location("cft_v1_caller", v1_path)
+    assert v1_spec and v1_spec.loader
+    v1_mod = importlib.util.module_from_spec(v1_spec)
+    v1_spec.loader.exec_module(v1_mod)
+    v1_cands, v1_audit = v1_mod.train_pods(tensor)
+    assert len(v1_cands) >= 1
+    assert "train_static_floor_dd_usd" in v1_cands[0]
+    unk_rej = next(r for r in v1_audit["3"]["rejected"] if r["alias"] == "ALL_WIN_UNKNOWN")
+    assert unk_rej["tilt"] is None
+    assert unk_rej["tilt_status"] == "UNKNOWN"
+
+    q3_path = studies_dir / "2026-11-17__cft__10k__sleeve-vs-upgma.py"
+    q3_spec = importlib.util.spec_from_file_location("cft_q3_caller", q3_path)
+    assert q3_spec and q3_spec.loader
+    q3_mod = importlib.util.module_from_spec(q3_spec)
+    q3_spec.loader.exec_module(q3_mod)
+    a_rows, _ = q3_mod.upgma_candidates(tensor, metrics, passed_ids, dist_mat, cfg)
+    b_rows, _ = q3_mod.sleeve_candidates(tensor, metrics, passed_ids, dist_mat, comps["psi_pos"], cfg)
+    c_rows, _ = q3_mod.baseline_candidates(tensor, metrics, passed_ids, cfg)
+    assert a_rows and c_rows
+    assert "train_static_floor_dd_usd" in a_rows[0]
+    assert isinstance(b_rows, list)

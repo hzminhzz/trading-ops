@@ -1,0 +1,2475 @@
+{
+  "coin_universe": {
+    "oos_coins_not_in_train_by_alias": {
+      "W#107": [],
+      "W#117": [
+        "PENDLE",
+        "UNI"
+      ],
+      "W#264": [
+        "DOGE",
+        "XMR",
+        "XRP"
+      ],
+      "W111": [
+        "AVAX",
+        "BNB",
+        "NEAR",
+        "PONS",
+        "SAND",
+        "ZEC"
+      ],
+      "W312": [
+        "AVAX",
+        "HYPE",
+        "NEAR",
+        "ZEC"
+      ],
+      "Whale_0x5f94": [
+        "ATOM",
+        "BNB",
+        "ENA"
+      ]
+    },
+    "train_eligible_coins_by_alias": {
+      "W#107": 9,
+      "W#117": 13,
+      "W#264": 2,
+      "W111": 7,
+      "W312": 3,
+      "Whale_0x5f94": 26
+    }
+  },
+  "coverage": {
+    "archive_days": 184,
+    "behavioral_pass": 11,
+    "censored_runs": {
+      "fallback_wallets": 0,
+      "left": 0,
+      "right": 26,
+      "uncensored": 858
+    },
+    "combos_admitted": 6,
+    "combos_tested": 6,
+    "mark_valid_frac": {
+      "AAVE": 1.0,
+      "ADA": 1.0,
+      "APT": 1.0,
+      "ATOM": null,
+      "AVAX": 1.0,
+      "BCH": 1.0,
+      "BNB": 1.0,
+      "BTC": 1.0,
+      "CASHCAT": 0.61305,
+      "CRV": 0.99943,
+      "DOGE": 1.0,
+      "DOT": 1.0,
+      "EIGEN": 0.99657,
+      "ENA": 1.0,
+      "ETH": 1.0,
+      "ETHFI": 1.0,
+      "GRAM": 0.65874,
+      "GRASS": 1.0,
+      "HYPE": 1.0,
+      "JTO": 0.99592,
+      "LIT": 1.0,
+      "MON": 0.99855,
+      "MORPHO": 1.0,
+      "NEAR": 1.0,
+      "ONDO": 1.0,
+      "OP": 0.99585,
+      "PENDLE": 0.99532,
+      "PONS": 0.33609,
+      "PUMP": 1.0,
+      "PURR": 0.99996,
+      "SAND": null,
+      "SEI": 0.99783,
+      "SOL": 1.0,
+      "STRK": 1.0,
+      "SUI": 1.0,
+      "TRUMP": 0.99528,
+      "UNI": 1.0,
+      "VVV": 1.0,
+      "WLFI": 0.9973,
+      "XMR": 1.0,
+      "XPL": 1.0,
+      "XRP": 1.0,
+      "ZEC": 1.0,
+      "kPEPE": 0.99581
+    },
+    "max_ts_ms": 1793491136040,
+    "min_ts_ms": 1777594205446,
+    "missing_days": [],
+    "shortlist": 30,
+    "sleeve_counts": {
+      "intraday_tactical": 8,
+      "multi_day_swing": 2,
+      "positional": 1
+    },
+    "sleeve_status": "OK",
+    "unlabeled": 0
+  },
+  "dominance": {
+    "matrix": {
+      "A_upgma>C_baseline": false,
+      "C_baseline>A_upgma": false
+    },
+    "verdict": "GAP_INVALIDATED_NO_COMPARISON"
+  },
+  "method_status": {
+    "A_upgma": "OK",
+    "B_sleeve": "OK",
+    "C_baseline": "OK"
+  },
+  "oos": {
+    "full": {
+      "A_upgma": [
+        {
+          "boundary_nonzero_targets": 2,
+          "coins": 17,
+          "deferred_notional_usd": 0.0,
+          "forced_gap_exits": 0,
+          "full_window_net_usd": 804.14,
+          "full_window_peak_to_trough_dd_usd": -213.85,
+          "full_window_static_floor_dd_usd": -24.17,
+          "gap_invalidated": false,
+          "peak_gross_leverage": 0.7478,
+          "peak_to_trough_dd_usd": -213.85,
+          "static_floor_dd_usd": -24.17,
+          "sweeps": 0,
+          "terminal_net_usd": 806.47,
+          "terminal_step": 16954,
+          "train": {
+            "aliases": [
+              "W#107",
+              "W111",
+              "W312"
+            ],
+            "binding": "DailyCVaR_99",
+            "cap_scale": 0.098581,
+            "capped_k": [
+              0.08343475919170422,
+              0.06272834470771523,
+              0.020758259525037247
+            ],
+            "feasible": true,
+            "indices": [
+              4,
+              27,
+              28
+            ],
+            "member_contributions": [
+              {
+                "abs_net_share": 0.4368,
+                "alias": "W#107",
+                "avg_weighted_gross_notional_frac": 0.00233068,
+                "capped_k": 0.0834347592,
+                "solo_weighted_net_usd": 236.2
+              },
+              {
+                "abs_net_share": 0.5265,
+                "alias": "W111",
+                "avg_weighted_gross_notional_frac": 0.0082989,
+                "capped_k": 0.0627283447,
+                "solo_weighted_net_usd": 284.74
+              },
+              {
+                "abs_net_share": 0.0367,
+                "alias": "W312",
+                "avg_weighted_gross_notional_frac": 0.00425218,
+                "capped_k": 0.0207582595,
+                "solo_weighted_net_usd": 19.83
+              }
+            ],
+            "member_diagnostics": [
+              {
+                "alias": "W#107",
+                "oos_coins": 9,
+                "oos_coins_not_in_train": [],
+                "train_coins": 9,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 2,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "W111",
+                "oos_coins": 13,
+                "oos_coins_not_in_train": [
+                  "AVAX",
+                  "BNB",
+                  "NEAR",
+                  "PONS",
+                  "SAND",
+                  "ZEC"
+                ],
+                "train_coins": 7,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 0,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "W312",
+                "oos_coins": 7,
+                "oos_coins_not_in_train": [
+                  "AVAX",
+                  "HYPE",
+                  "NEAR",
+                  "ZEC"
+                ],
+                "train_coins": 3,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 1,
+                "train_unpriced_open_steps": 0
+              }
+            ],
+            "min_lot_warnings": [],
+            "oos_coin_mismatch": 10,
+            "raw_k": [
+              0.8463594028443129,
+              0.6363142278178086,
+              0.2105710893865041
+            ],
+            "size": 3,
+            "train_daily_cvar_usd": 29.57,
+            "train_gap_flagged": false,
+            "train_max_dd_usd": 58.07,
+            "train_net_over_dd": 9.3131,
+            "train_net_usd": 540.77,
+            "train_worst_day_usd": 31.77
+          },
+          "unpriced_open_steps": 0,
+          "verdict": "PASS",
+          "worst_daily_usd": -171.34
+        }
+      ],
+      "B_sleeve": [
+        {
+          "boundary_nonzero_targets": 19,
+          "coins": 38,
+          "deferred_notional_usd": 6606.0,
+          "forced_gap_exits": 1,
+          "full_window_net_usd": 301.42,
+          "full_window_peak_to_trough_dd_usd": -222.74,
+          "full_window_static_floor_dd_usd": -36.85,
+          "gap_invalidated": true,
+          "peak_gross_leverage": 0.2267,
+          "peak_to_trough_dd_usd": -222.74,
+          "static_floor_dd_usd": -36.85,
+          "sweeps": 0,
+          "terminal_net_usd": 301.42,
+          "terminal_step": null,
+          "train": {
+            "aliases": [
+              "W#117",
+              "W#264",
+              "Whale_0x5f94"
+            ],
+            "binding": "Max_K_Cap",
+            "cap_scale": 0.239105,
+            "capped_k": [
+              0.006493739994059826,
+              1.1955260516940118,
+              6.876076194842548e-05
+            ],
+            "disjoint_coin_pairs": 0,
+            "feasible": true,
+            "has_unknown_pair": false,
+            "indices": [
+              5,
+              17,
+              29
+            ],
+            "member_contributions": [
+              {
+                "abs_net_share": 0.4654,
+                "alias": "W#117",
+                "avg_weighted_gross_notional_frac": 0.02030628,
+                "capped_k": 0.00649374,
+                "solo_weighted_net_usd": 241.47
+              },
+              {
+                "abs_net_share": 0.2562,
+                "alias": "W#264",
+                "avg_weighted_gross_notional_frac": 0.00695685,
+                "capped_k": 1.1955260517,
+                "solo_weighted_net_usd": 132.92
+              },
+              {
+                "abs_net_share": 0.2784,
+                "alias": "Whale_0x5f94",
+                "avg_weighted_gross_notional_frac": 0.02077705,
+                "capped_k": 6.87608e-05,
+                "solo_weighted_net_usd": 144.4
+              }
+            ],
+            "member_diagnostics": [
+              {
+                "alias": "W#117",
+                "oos_coins": 15,
+                "oos_coins_not_in_train": [
+                  "PENDLE",
+                  "UNI"
+                ],
+                "train_coins": 13,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 2,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "W#264",
+                "oos_coins": 5,
+                "oos_coins_not_in_train": [
+                  "DOGE",
+                  "XMR",
+                  "XRP"
+                ],
+                "train_coins": 2,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 1,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "Whale_0x5f94",
+                "oos_coins": 29,
+                "oos_coins_not_in_train": [
+                  "ATOM",
+                  "BNB",
+                  "ENA"
+                ],
+                "train_coins": 26,
+                "train_forced_gap_exits": 1,
+                "train_gap_flagged": true,
+                "train_unanchored_coins": 13,
+                "train_unpriced_open_steps": 1
+              }
+            ],
+            "min_lot_warnings": [],
+            "oos_coin_mismatch": 8,
+            "pairs": [
+              {
+                "common_coins": 1,
+                "concurrent_days": 58,
+                "crowded": false,
+                "disjoint_coins": false,
+                "dist": 0.7564,
+                "psi_pos": 0.5939,
+                "unknown": false
+              },
+              {
+                "common_coins": 5,
+                "concurrent_days": 46,
+                "crowded": false,
+                "disjoint_coins": false,
+                "dist": 0.4993,
+                "psi_pos": -0.0071,
+                "unknown": false
+              },
+              {
+                "common_coins": 2,
+                "concurrent_days": 79,
+                "crowded": false,
+                "disjoint_coins": false,
+                "dist": 0.8371,
+                "psi_pos": -0.2863,
+                "unknown": false
+              }
+            ],
+            "raw_k": [
+              0.02715850476390063,
+              5.0,
+              0.00028757533911952097
+            ],
+            "size": 3,
+            "train_daily_cvar_usd": 55.49,
+            "train_gap_flagged": true,
+            "train_max_dd_usd": 81.88,
+            "train_net_over_dd": 6.3359,
+            "train_net_usd": 518.79,
+            "train_worst_day_usd": 66.95,
+            "unknown_pairs": 0
+          },
+          "unpriced_open_steps": 1,
+          "verdict": "TIMEOUT",
+          "worst_daily_usd": -70.27
+        }
+      ],
+      "C_baseline": [
+        {
+          "boundary_nonzero_targets": 3,
+          "coins": 24,
+          "deferred_notional_usd": 0.0,
+          "forced_gap_exits": 0,
+          "full_window_net_usd": 771.4,
+          "full_window_peak_to_trough_dd_usd": -211.22,
+          "full_window_static_floor_dd_usd": -30.05,
+          "gap_invalidated": false,
+          "peak_gross_leverage": 0.7489,
+          "peak_to_trough_dd_usd": -211.22,
+          "static_floor_dd_usd": -30.05,
+          "sweeps": 0,
+          "terminal_net_usd": 771.4,
+          "terminal_step": null,
+          "train": {
+            "aliases": [
+              "W111",
+              "W#117",
+              "W#107"
+            ],
+            "binding": "DailyCVaR_99",
+            "cap_scale": 0.107612,
+            "capped_k": [
+              0.06272834470771523,
+              0.0013373307958374657,
+              0.08343475919170422
+            ],
+            "feasible": true,
+            "indices": [
+              27,
+              5,
+              4
+            ],
+            "member_contributions": [
+              {
+                "abs_net_share": 0.499,
+                "alias": "W111",
+                "avg_weighted_gross_notional_frac": 0.0082989,
+                "capped_k": 0.0627283447,
+                "solo_weighted_net_usd": 284.74
+              },
+              {
+                "abs_net_share": 0.0871,
+                "alias": "W#117",
+                "avg_weighted_gross_notional_frac": 0.00418191,
+                "capped_k": 0.0013373308,
+                "solo_weighted_net_usd": 49.73
+              },
+              {
+                "abs_net_share": 0.4139,
+                "alias": "W#107",
+                "avg_weighted_gross_notional_frac": 0.00233068,
+                "capped_k": 0.0834347592,
+                "solo_weighted_net_usd": 236.2
+              }
+            ],
+            "member_diagnostics": [
+              {
+                "alias": "W111",
+                "oos_coins": 13,
+                "oos_coins_not_in_train": [
+                  "AVAX",
+                  "BNB",
+                  "NEAR",
+                  "PONS",
+                  "SAND",
+                  "ZEC"
+                ],
+                "train_coins": 7,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 0,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "W#117",
+                "oos_coins": 15,
+                "oos_coins_not_in_train": [
+                  "PENDLE",
+                  "UNI"
+                ],
+                "train_coins": 13,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 2,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "W#107",
+                "oos_coins": 9,
+                "oos_coins_not_in_train": [],
+                "train_coins": 9,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 2,
+                "train_unpriced_open_steps": 0
+              }
+            ],
+            "min_lot_warnings": [],
+            "oos_coin_mismatch": 8,
+            "raw_k": [
+              0.5829134124284634,
+              0.012427365354205015,
+              0.7753311588596973
+            ],
+            "size": 3,
+            "train_daily_cvar_usd": 32.28,
+            "train_gap_flagged": false,
+            "train_max_dd_usd": 67.99,
+            "train_net_over_dd": 8.3939,
+            "train_net_usd": 570.67,
+            "train_worst_day_usd": 37.27
+          },
+          "unpriced_open_steps": 0,
+          "verdict": "TIMEOUT",
+          "worst_daily_usd": -169.91
+        }
+      ]
+    },
+    "new": {
+      "A_upgma": [
+        {
+          "boundary_nonzero_targets": 0,
+          "coins": 17,
+          "deferred_notional_usd": 0.0,
+          "forced_gap_exits": 0,
+          "full_window_net_usd": 797.9,
+          "full_window_peak_to_trough_dd_usd": -213.85,
+          "full_window_static_floor_dd_usd": -9.17,
+          "gap_invalidated": false,
+          "peak_gross_leverage": 0.7483,
+          "peak_to_trough_dd_usd": -213.85,
+          "static_floor_dd_usd": -9.17,
+          "sweeps": 0,
+          "terminal_net_usd": 800.23,
+          "terminal_step": 16954,
+          "train": {
+            "aliases": [
+              "W#107",
+              "W111",
+              "W312"
+            ],
+            "binding": "DailyCVaR_99",
+            "cap_scale": 0.098581,
+            "capped_k": [
+              0.08343475919170422,
+              0.06272834470771523,
+              0.020758259525037247
+            ],
+            "feasible": true,
+            "indices": [
+              4,
+              27,
+              28
+            ],
+            "member_contributions": [
+              {
+                "abs_net_share": 0.4368,
+                "alias": "W#107",
+                "avg_weighted_gross_notional_frac": 0.00233068,
+                "capped_k": 0.0834347592,
+                "solo_weighted_net_usd": 236.2
+              },
+              {
+                "abs_net_share": 0.5265,
+                "alias": "W111",
+                "avg_weighted_gross_notional_frac": 0.0082989,
+                "capped_k": 0.0627283447,
+                "solo_weighted_net_usd": 284.74
+              },
+              {
+                "abs_net_share": 0.0367,
+                "alias": "W312",
+                "avg_weighted_gross_notional_frac": 0.00425218,
+                "capped_k": 0.0207582595,
+                "solo_weighted_net_usd": 19.83
+              }
+            ],
+            "member_diagnostics": [
+              {
+                "alias": "W#107",
+                "oos_coins": 9,
+                "oos_coins_not_in_train": [],
+                "train_coins": 9,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 2,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "W111",
+                "oos_coins": 13,
+                "oos_coins_not_in_train": [
+                  "AVAX",
+                  "BNB",
+                  "NEAR",
+                  "PONS",
+                  "SAND",
+                  "ZEC"
+                ],
+                "train_coins": 7,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 0,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "W312",
+                "oos_coins": 7,
+                "oos_coins_not_in_train": [
+                  "AVAX",
+                  "HYPE",
+                  "NEAR",
+                  "ZEC"
+                ],
+                "train_coins": 3,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 1,
+                "train_unpriced_open_steps": 0
+              }
+            ],
+            "min_lot_warnings": [],
+            "oos_coin_mismatch": 10,
+            "raw_k": [
+              0.8463594028443129,
+              0.6363142278178086,
+              0.2105710893865041
+            ],
+            "size": 3,
+            "train_daily_cvar_usd": 29.57,
+            "train_gap_flagged": false,
+            "train_max_dd_usd": 58.07,
+            "train_net_over_dd": 9.3131,
+            "train_net_usd": 540.77,
+            "train_worst_day_usd": 31.77
+          },
+          "unpriced_open_steps": 0,
+          "verdict": "PASS",
+          "worst_daily_usd": -171.34
+        },
+        {
+          "boundary_nonzero_targets": 0,
+          "coins": 26,
+          "deferred_notional_usd": 0.0,
+          "forced_gap_exits": 0,
+          "full_window_net_usd": 890.73,
+          "full_window_peak_to_trough_dd_usd": -205.5,
+          "full_window_static_floor_dd_usd": -7.93,
+          "gap_invalidated": false,
+          "peak_gross_leverage": 0.702,
+          "peak_to_trough_dd_usd": -205.5,
+          "static_floor_dd_usd": -7.93,
+          "sweeps": 0,
+          "terminal_net_usd": 800.12,
+          "terminal_step": 12852,
+          "train": {
+            "aliases": [
+              "W#174",
+              "W111",
+              "W312"
+            ],
+            "binding": "DailyCVaR_99",
+            "cap_scale": 0.163515,
+            "capped_k": [
+              0.5982416963338943,
+              0.046574417731426856,
+              0.0313616883591738
+            ],
+            "feasible": true,
+            "indices": [
+              8,
+              27,
+              28
+            ],
+            "member_contributions": [
+              {
+                "abs_net_share": 0.4586,
+                "alias": "W#174",
+                "avg_weighted_gross_notional_frac": 0.00183506,
+                "capped_k": 0.5982416963,
+                "solo_weighted_net_usd": 204.43
+              },
+              {
+                "abs_net_share": 0.4742,
+                "alias": "W111",
+                "avg_weighted_gross_notional_frac": 0.00616175,
+                "capped_k": 0.0465744177,
+                "solo_weighted_net_usd": 211.41
+              },
+              {
+                "abs_net_share": 0.0672,
+                "alias": "W312",
+                "avg_weighted_gross_notional_frac": 0.00642422,
+                "capped_k": 0.0313616884,
+                "solo_weighted_net_usd": 29.96
+              }
+            ],
+            "member_diagnostics": [
+              {
+                "alias": "W#174",
+                "oos_coins": 18,
+                "oos_coins_not_in_train": [
+                  "BNB",
+                  "HBAR"
+                ],
+                "train_coins": 16,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 0,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "W111",
+                "oos_coins": 13,
+                "oos_coins_not_in_train": [
+                  "AVAX",
+                  "BNB",
+                  "NEAR",
+                  "PONS",
+                  "SAND",
+                  "ZEC"
+                ],
+                "train_coins": 7,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 0,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "W312",
+                "oos_coins": 7,
+                "oos_coins_not_in_train": [
+                  "AVAX",
+                  "HYPE",
+                  "NEAR",
+                  "ZEC"
+                ],
+                "train_coins": 3,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 1,
+                "train_unpriced_open_steps": 0
+              }
+            ],
+            "min_lot_warnings": [],
+            "oos_coin_mismatch": 12,
+            "raw_k": [
+              3.658638658590346,
+              0.28483298014458336,
+              0.1917972052645025
+            ],
+            "size": 3,
+            "train_daily_cvar_usd": 49.05,
+            "train_gap_flagged": false,
+            "train_max_dd_usd": 63.51,
+            "train_net_over_dd": 7.0194,
+            "train_net_usd": 445.8,
+            "train_worst_day_usd": 50.11
+          },
+          "unpriced_open_steps": 0,
+          "verdict": "PASS",
+          "worst_daily_usd": -199.7
+        },
+        {
+          "boundary_nonzero_targets": 0,
+          "coins": 27,
+          "deferred_notional_usd": 0.0,
+          "forced_gap_exits": 0,
+          "full_window_net_usd": 447.06,
+          "full_window_peak_to_trough_dd_usd": -132.25,
+          "full_window_static_floor_dd_usd": -9.03,
+          "gap_invalidated": false,
+          "peak_gross_leverage": 0.5685,
+          "peak_to_trough_dd_usd": -132.25,
+          "static_floor_dd_usd": -9.03,
+          "sweeps": 0,
+          "terminal_net_usd": 447.06,
+          "terminal_step": null,
+          "train": {
+            "aliases": [
+              "W#117",
+              "W#174",
+              "W312"
+            ],
+            "binding": "DailyCVaR_99",
+            "cap_scale": 0.16192,
+            "capped_k": [
+              0.002714032537440522,
+              0.5982416963338943,
+              0.0313616883591738
+            ],
+            "feasible": true,
+            "indices": [
+              5,
+              8,
+              28
+            ],
+            "member_contributions": [
+              {
+                "abs_net_share": 0.301,
+                "alias": "W#117",
+                "avg_weighted_gross_notional_frac": 0.00848693,
+                "capped_k": 0.0027140325,
+                "solo_weighted_net_usd": 100.92
+              },
+              {
+                "abs_net_share": 0.6097,
+                "alias": "W#174",
+                "avg_weighted_gross_notional_frac": 0.00183506,
+                "capped_k": 0.5982416963,
+                "solo_weighted_net_usd": 204.43
+              },
+              {
+                "abs_net_share": 0.0894,
+                "alias": "W312",
+                "avg_weighted_gross_notional_frac": 0.00642422,
+                "capped_k": 0.0313616884,
+                "solo_weighted_net_usd": 29.96
+              }
+            ],
+            "member_diagnostics": [
+              {
+                "alias": "W#117",
+                "oos_coins": 15,
+                "oos_coins_not_in_train": [
+                  "PENDLE",
+                  "UNI"
+                ],
+                "train_coins": 13,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 2,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "W#174",
+                "oos_coins": 18,
+                "oos_coins_not_in_train": [
+                  "BNB",
+                  "HBAR"
+                ],
+                "train_coins": 16,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 0,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "W312",
+                "oos_coins": 7,
+                "oos_coins_not_in_train": [
+                  "AVAX",
+                  "HYPE",
+                  "NEAR",
+                  "ZEC"
+                ],
+                "train_coins": 3,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 1,
+                "train_unpriced_open_steps": 0
+              }
+            ],
+            "min_lot_warnings": [],
+            "oos_coin_mismatch": 8,
+            "raw_k": [
+              0.01676152945676267,
+              3.694666765056787,
+              0.1936859105388019
+            ],
+            "size": 3,
+            "train_daily_cvar_usd": 48.58,
+            "train_gap_flagged": false,
+            "train_max_dd_usd": 67.44,
+            "train_net_over_dd": 4.9717,
+            "train_net_usd": 335.31,
+            "train_worst_day_usd": 52.23
+          },
+          "unpriced_open_steps": 0,
+          "verdict": "TIMEOUT",
+          "worst_daily_usd": -129.73
+        }
+      ],
+      "B_sleeve": [
+        {
+          "boundary_nonzero_targets": 0,
+          "coins": 38,
+          "deferred_notional_usd": 6094.76,
+          "forced_gap_exits": 0,
+          "full_window_net_usd": 231.88,
+          "full_window_peak_to_trough_dd_usd": -89.23,
+          "full_window_static_floor_dd_usd": -3.11,
+          "gap_invalidated": false,
+          "peak_gross_leverage": 0.1407,
+          "peak_to_trough_dd_usd": -89.23,
+          "static_floor_dd_usd": -3.11,
+          "sweeps": 0,
+          "terminal_net_usd": 231.88,
+          "terminal_step": null,
+          "train": {
+            "aliases": [
+              "W#117",
+              "W#264",
+              "Whale_0x5f94"
+            ],
+            "binding": "Max_K_Cap",
+            "cap_scale": 0.239105,
+            "capped_k": [
+              0.006493739994059826,
+              1.1955260516940118,
+              6.876076194842548e-05
+            ],
+            "disjoint_coin_pairs": 0,
+            "feasible": true,
+            "has_unknown_pair": false,
+            "indices": [
+              5,
+              17,
+              29
+            ],
+            "member_contributions": [
+              {
+                "abs_net_share": 0.4654,
+                "alias": "W#117",
+                "avg_weighted_gross_notional_frac": 0.02030628,
+                "capped_k": 0.00649374,
+                "solo_weighted_net_usd": 241.47
+              },
+              {
+                "abs_net_share": 0.2562,
+                "alias": "W#264",
+                "avg_weighted_gross_notional_frac": 0.00695685,
+                "capped_k": 1.1955260517,
+                "solo_weighted_net_usd": 132.92
+              },
+              {
+                "abs_net_share": 0.2784,
+                "alias": "Whale_0x5f94",
+                "avg_weighted_gross_notional_frac": 0.02077705,
+                "capped_k": 6.87608e-05,
+                "solo_weighted_net_usd": 144.4
+              }
+            ],
+            "member_diagnostics": [
+              {
+                "alias": "W#117",
+                "oos_coins": 15,
+                "oos_coins_not_in_train": [
+                  "PENDLE",
+                  "UNI"
+                ],
+                "train_coins": 13,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 2,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "W#264",
+                "oos_coins": 5,
+                "oos_coins_not_in_train": [
+                  "DOGE",
+                  "XMR",
+                  "XRP"
+                ],
+                "train_coins": 2,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 1,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "Whale_0x5f94",
+                "oos_coins": 29,
+                "oos_coins_not_in_train": [
+                  "ATOM",
+                  "BNB",
+                  "ENA"
+                ],
+                "train_coins": 26,
+                "train_forced_gap_exits": 1,
+                "train_gap_flagged": true,
+                "train_unanchored_coins": 13,
+                "train_unpriced_open_steps": 1
+              }
+            ],
+            "min_lot_warnings": [],
+            "oos_coin_mismatch": 8,
+            "pairs": [
+              {
+                "common_coins": 1,
+                "concurrent_days": 58,
+                "crowded": false,
+                "disjoint_coins": false,
+                "dist": 0.7564,
+                "psi_pos": 0.5939,
+                "unknown": false
+              },
+              {
+                "common_coins": 5,
+                "concurrent_days": 46,
+                "crowded": false,
+                "disjoint_coins": false,
+                "dist": 0.4993,
+                "psi_pos": -0.0071,
+                "unknown": false
+              },
+              {
+                "common_coins": 2,
+                "concurrent_days": 79,
+                "crowded": false,
+                "disjoint_coins": false,
+                "dist": 0.8371,
+                "psi_pos": -0.2863,
+                "unknown": false
+              }
+            ],
+            "raw_k": [
+              0.02715850476390063,
+              5.0,
+              0.00028757533911952097
+            ],
+            "size": 3,
+            "train_daily_cvar_usd": 55.49,
+            "train_gap_flagged": true,
+            "train_max_dd_usd": 81.88,
+            "train_net_over_dd": 6.3359,
+            "train_net_usd": 518.79,
+            "train_worst_day_usd": 66.95,
+            "unknown_pairs": 0
+          },
+          "unpriced_open_steps": 0,
+          "verdict": "TIMEOUT",
+          "worst_daily_usd": -43.64
+        },
+        {
+          "boundary_nonzero_targets": 0,
+          "coins": 38,
+          "deferred_notional_usd": 5040.47,
+          "forced_gap_exits": 1,
+          "full_window_net_usd": 198.37,
+          "full_window_peak_to_trough_dd_usd": -61.66,
+          "full_window_static_floor_dd_usd": -5.6,
+          "gap_invalidated": true,
+          "peak_gross_leverage": 0.1681,
+          "peak_to_trough_dd_usd": -61.66,
+          "static_floor_dd_usd": -5.6,
+          "sweeps": 0,
+          "terminal_net_usd": 198.37,
+          "terminal_step": null,
+          "train": {
+            "aliases": [
+              "M54",
+              "W#117",
+              "Whale_0x5f94"
+            ],
+            "binding": "DailyCVaR_99",
+            "cap_scale": 0.168401,
+            "capped_k": [
+              0.008676133750255928,
+              0.0063988204504275845,
+              5.686637437642492e-05
+            ],
+            "disjoint_coin_pairs": 0,
+            "feasible": true,
+            "has_unknown_pair": false,
+            "indices": [
+              2,
+              5,
+              29
+            ],
+            "member_contributions": [
+              {
+                "abs_net_share": 0.2574,
+                "alias": "M54",
+                "avg_weighted_gross_notional_frac": 0.01763486,
+                "capped_k": 0.0086761338,
+                "solo_weighted_net_usd": 123.86
+              },
+              {
+                "abs_net_share": 0.4944,
+                "alias": "W#117",
+                "avg_weighted_gross_notional_frac": 0.02000946,
+                "capped_k": 0.0063988205,
+                "solo_weighted_net_usd": 237.94
+              },
+              {
+                "abs_net_share": 0.2482,
+                "alias": "Whale_0x5f94",
+                "avg_weighted_gross_notional_frac": 0.01718299,
+                "capped_k": 5.68664e-05,
+                "solo_weighted_net_usd": 119.43
+              }
+            ],
+            "member_diagnostics": [
+              {
+                "alias": "M54",
+                "oos_coins": 7,
+                "oos_coins_not_in_train": [],
+                "train_coins": 7,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 3,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "W#117",
+                "oos_coins": 15,
+                "oos_coins_not_in_train": [
+                  "PENDLE",
+                  "UNI"
+                ],
+                "train_coins": 13,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 2,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "Whale_0x5f94",
+                "oos_coins": 29,
+                "oos_coins_not_in_train": [
+                  "ATOM",
+                  "BNB",
+                  "ENA"
+                ],
+                "train_coins": 26,
+                "train_forced_gap_exits": 1,
+                "train_gap_flagged": true,
+                "train_unanchored_coins": 13,
+                "train_unpriced_open_steps": 1
+              }
+            ],
+            "min_lot_warnings": [],
+            "oos_coin_mismatch": 5,
+            "pairs": [
+              {
+                "common_coins": 4,
+                "concurrent_days": 66,
+                "crowded": false,
+                "disjoint_coins": false,
+                "dist": 0.7377,
+                "psi_pos": 0.0344,
+                "unknown": false
+              },
+              {
+                "common_coins": 1,
+                "concurrent_days": 93,
+                "crowded": false,
+                "disjoint_coins": false,
+                "dist": 0.7965,
+                "psi_pos": 0.0,
+                "unknown": false
+              },
+              {
+                "common_coins": 5,
+                "concurrent_days": 46,
+                "crowded": false,
+                "disjoint_coins": false,
+                "dist": 0.4993,
+                "psi_pos": -0.0071,
+                "unknown": false
+              }
+            ],
+            "raw_k": [
+              0.05152064550878705,
+              0.03799749630313526,
+              0.0003376840883223287
+            ],
+            "size": 3,
+            "train_daily_cvar_usd": 50.52,
+            "train_gap_flagged": true,
+            "train_max_dd_usd": 91.32,
+            "train_net_over_dd": 5.2694,
+            "train_net_usd": 481.22,
+            "train_worst_day_usd": 62.3,
+            "unknown_pairs": 0
+          },
+          "unpriced_open_steps": 1,
+          "verdict": "TIMEOUT",
+          "worst_daily_usd": -28.72
+        },
+        {
+          "boundary_nonzero_targets": 0,
+          "coins": 39,
+          "deferred_notional_usd": 0.0,
+          "forced_gap_exits": 2,
+          "full_window_net_usd": 146.63,
+          "full_window_peak_to_trough_dd_usd": -54.61,
+          "full_window_static_floor_dd_usd": -20.29,
+          "gap_invalidated": true,
+          "peak_gross_leverage": 0.1853,
+          "peak_to_trough_dd_usd": -54.61,
+          "static_floor_dd_usd": -20.29,
+          "sweeps": 0,
+          "terminal_net_usd": 146.63,
+          "terminal_step": null,
+          "train": {
+            "aliases": [
+              "M21",
+              "M54",
+              "Whale_0x5f94"
+            ],
+            "binding": "DailyCVaR_99",
+            "cap_scale": 0.109887,
+            "capped_k": [
+              0.0035476385067071963,
+              0.008676133750255928,
+              9.192271072177006e-05
+            ],
+            "disjoint_coin_pairs": 0,
+            "feasible": true,
+            "has_unknown_pair": false,
+            "indices": [
+              1,
+              2,
+              29
+            ],
+            "member_contributions": [
+              {
+                "abs_net_share": 0.1243,
+                "alias": "M21",
+                "avg_weighted_gross_notional_frac": 0.01315088,
+                "capped_k": 0.0035476385,
+                "solo_weighted_net_usd": 44.99
+              },
+              {
+                "abs_net_share": 0.3422,
+                "alias": "M54",
+                "avg_weighted_gross_notional_frac": 0.01763486,
+                "capped_k": 0.0086761338,
+                "solo_weighted_net_usd": 123.86
+              },
+              {
+                "abs_net_share": 0.5334,
+                "alias": "Whale_0x5f94",
+                "avg_weighted_gross_notional_frac": 0.02777576,
+                "capped_k": 9.19227e-05,
+                "solo_weighted_net_usd": 193.05
+              }
+            ],
+            "member_diagnostics": [
+              {
+                "alias": "M21",
+                "oos_coins": 21,
+                "oos_coins_not_in_train": [
+                  "AAVE",
+                  "CASHCAT",
+                  "EIGEN",
+                  "ENA",
+                  "LIT",
+                  "MORPHO",
+                  "NEAR",
+                  "OP",
+                  "SEI",
+                  "SYRUP",
+                  "UNI",
+                  "XMR",
+                  "ZEC"
+                ],
+                "train_coins": 8,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 0,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "M54",
+                "oos_coins": 7,
+                "oos_coins_not_in_train": [],
+                "train_coins": 7,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 3,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "Whale_0x5f94",
+                "oos_coins": 29,
+                "oos_coins_not_in_train": [
+                  "ATOM",
+                  "BNB",
+                  "ENA"
+                ],
+                "train_coins": 26,
+                "train_forced_gap_exits": 1,
+                "train_gap_flagged": true,
+                "train_unanchored_coins": 13,
+                "train_unpriced_open_steps": 1
+              }
+            ],
+            "min_lot_warnings": [],
+            "oos_coin_mismatch": 16,
+            "pairs": [
+              {
+                "common_coins": 3,
+                "concurrent_days": 86,
+                "crowded": false,
+                "disjoint_coins": false,
+                "dist": 0.7808,
+                "psi_pos": 0.0105,
+                "unknown": false
+              },
+              {
+                "common_coins": 4,
+                "concurrent_days": 83,
+                "crowded": false,
+                "disjoint_coins": false,
+                "dist": 0.6216,
+                "psi_pos": -0.336,
+                "unknown": false
+              },
+              {
+                "common_coins": 1,
+                "concurrent_days": 93,
+                "crowded": false,
+                "disjoint_coins": false,
+                "dist": 0.7965,
+                "psi_pos": 0.0,
+                "unknown": false
+              }
+            ],
+            "raw_k": [
+              0.032284355922033395,
+              0.07895488491594137,
+              0.0008365185755676756
+            ],
+            "size": 3,
+            "train_daily_cvar_usd": 32.97,
+            "train_gap_flagged": true,
+            "train_max_dd_usd": 71.5,
+            "train_net_over_dd": 5.0617,
+            "train_net_usd": 361.9,
+            "train_worst_day_usd": 35.52,
+            "unknown_pairs": 0
+          },
+          "unpriced_open_steps": 2,
+          "verdict": "TIMEOUT",
+          "worst_daily_usd": -34.29
+        }
+      ],
+      "C_baseline": [
+        {
+          "boundary_nonzero_targets": 0,
+          "coins": 24,
+          "deferred_notional_usd": 0.0,
+          "forced_gap_exits": 0,
+          "full_window_net_usd": 765.69,
+          "full_window_peak_to_trough_dd_usd": -211.22,
+          "full_window_static_floor_dd_usd": -9.17,
+          "gap_invalidated": false,
+          "peak_gross_leverage": 0.7493,
+          "peak_to_trough_dd_usd": -211.22,
+          "static_floor_dd_usd": -9.17,
+          "sweeps": 0,
+          "terminal_net_usd": 765.69,
+          "terminal_step": null,
+          "train": {
+            "aliases": [
+              "W111",
+              "W#117",
+              "W#107"
+            ],
+            "binding": "DailyCVaR_99",
+            "cap_scale": 0.107612,
+            "capped_k": [
+              0.06272834470771523,
+              0.0013373307958374657,
+              0.08343475919170422
+            ],
+            "feasible": true,
+            "indices": [
+              27,
+              5,
+              4
+            ],
+            "member_contributions": [
+              {
+                "abs_net_share": 0.499,
+                "alias": "W111",
+                "avg_weighted_gross_notional_frac": 0.0082989,
+                "capped_k": 0.0627283447,
+                "solo_weighted_net_usd": 284.74
+              },
+              {
+                "abs_net_share": 0.0871,
+                "alias": "W#117",
+                "avg_weighted_gross_notional_frac": 0.00418191,
+                "capped_k": 0.0013373308,
+                "solo_weighted_net_usd": 49.73
+              },
+              {
+                "abs_net_share": 0.4139,
+                "alias": "W#107",
+                "avg_weighted_gross_notional_frac": 0.00233068,
+                "capped_k": 0.0834347592,
+                "solo_weighted_net_usd": 236.2
+              }
+            ],
+            "member_diagnostics": [
+              {
+                "alias": "W111",
+                "oos_coins": 13,
+                "oos_coins_not_in_train": [
+                  "AVAX",
+                  "BNB",
+                  "NEAR",
+                  "PONS",
+                  "SAND",
+                  "ZEC"
+                ],
+                "train_coins": 7,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 0,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "W#117",
+                "oos_coins": 15,
+                "oos_coins_not_in_train": [
+                  "PENDLE",
+                  "UNI"
+                ],
+                "train_coins": 13,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 2,
+                "train_unpriced_open_steps": 0
+              },
+              {
+                "alias": "W#107",
+                "oos_coins": 9,
+                "oos_coins_not_in_train": [],
+                "train_coins": 9,
+                "train_forced_gap_exits": 0,
+                "train_gap_flagged": false,
+                "train_unanchored_coins": 2,
+                "train_unpriced_open_steps": 0
+              }
+            ],
+            "min_lot_warnings": [],
+            "oos_coin_mismatch": 8,
+            "raw_k": [
+              0.5829134124284634,
+              0.012427365354205015,
+              0.7753311588596973
+            ],
+            "size": 3,
+            "train_daily_cvar_usd": 32.28,
+            "train_gap_flagged": false,
+            "train_max_dd_usd": 67.99,
+            "train_net_over_dd": 8.3939,
+            "train_net_usd": 570.67,
+            "train_worst_day_usd": 37.27
+          },
+          "unpriced_open_steps": 0,
+          "verdict": "TIMEOUT",
+          "worst_daily_usd": -169.91
+        }
+      ]
+    }
+  },
+  "runtime_s": 113.66,
+  "search_budgets": {
+    "A_upgma": {
+      "cluster_pick_sizes": [
+        1,
+        2,
+        2
+      ],
+      "clusters": 3,
+      "combos_admitted": 4,
+      "combos_generated": 4,
+      "combos_sized": 4
+    },
+    "B_sleeve": {
+      "combos_admitted": 6,
+      "combos_generated": 6,
+      "combos_rejected_crowded": 0,
+      "combos_rejected_infeasible": 0,
+      "combos_rejected_unknown_cap": 0,
+      "picks_per_sleeve": {
+        "intraday_tactical": 3,
+        "multi_day_swing": 2,
+        "positional": 1
+      },
+      "sleeves_present": 3
+    },
+    "C_baseline": {
+      "combos_admitted": 1,
+      "combos_generated": 1,
+      "combos_sized": 1
+    }
+  },
+  "sleeve_features": {
+    "M21": {
+      "active_frac": 0.6819,
+      "censored_fallback": false,
+      "chop_net_over_dd": 1.7603,
+      "median_dur_bars": 623.0,
+      "n_left_censored": 0,
+      "n_right_censored": 4,
+      "n_runs": 28,
+      "n_uncensored": 24,
+      "net_over_max_dd": 0.9978,
+      "sleeve": "multi_day_swing"
+    },
+    "M54": {
+      "active_frac": 0.9386,
+      "censored_fallback": false,
+      "chop_net_over_dd": 2.1705,
+      "median_dur_bars": 96.0,
+      "n_left_censored": 0,
+      "n_right_censored": 3,
+      "n_runs": 248,
+      "n_uncensored": 245,
+      "net_over_max_dd": 1.8578,
+      "sleeve": "intraday_tactical"
+    },
+    "W#107": {
+      "active_frac": 0.0797,
+      "censored_fallback": false,
+      "chop_net_over_dd": 2.2744,
+      "median_dur_bars": 2.0,
+      "n_left_censored": 0,
+      "n_right_censored": 0,
+      "n_runs": 119,
+      "n_uncensored": 119,
+      "net_over_max_dd": 3.543,
+      "sleeve": "intraday_tactical"
+    },
+    "W#117": {
+      "active_frac": 0.5062,
+      "censored_fallback": false,
+      "chop_net_over_dd": 3.0778,
+      "median_dur_bars": 712.5,
+      "n_left_censored": 0,
+      "n_right_censored": 1,
+      "n_runs": 23,
+      "n_uncensored": 22,
+      "net_over_max_dd": 3.622,
+      "sleeve": "multi_day_swing"
+    },
+    "W#13": {
+      "active_frac": 0.1464,
+      "censored_fallback": false,
+      "chop_net_over_dd": 1.8394,
+      "median_dur_bars": 51.5,
+      "n_left_censored": 0,
+      "n_right_censored": 0,
+      "n_runs": 30,
+      "n_uncensored": 30,
+      "net_over_max_dd": 2.8807,
+      "sleeve": "intraday_tactical"
+    },
+    "W#174": {
+      "active_frac": 0.0556,
+      "censored_fallback": false,
+      "chop_net_over_dd": 1.7291,
+      "median_dur_bars": 5.0,
+      "n_left_censored": 0,
+      "n_right_censored": 0,
+      "n_runs": 154,
+      "n_uncensored": 154,
+      "net_over_max_dd": 3.0664,
+      "sleeve": "intraday_tactical"
+    },
+    "W#255": {
+      "active_frac": 0.9401,
+      "censored_fallback": false,
+      "chop_net_over_dd": 5.0965,
+      "median_dur_bars": 102.5,
+      "n_left_censored": 0,
+      "n_right_censored": 4,
+      "n_runs": 110,
+      "n_uncensored": 106,
+      "net_over_max_dd": 0.8744,
+      "sleeve": "intraday_tactical"
+    },
+    "W#264": {
+      "active_frac": 0.5338,
+      "censored_fallback": false,
+      "chop_net_over_dd": 3.1034,
+      "median_dur_bars": 270.0,
+      "n_left_censored": 0,
+      "n_right_censored": 0,
+      "n_runs": 67,
+      "n_uncensored": 67,
+      "net_over_max_dd": 2.9554,
+      "sleeve": "intraday_tactical"
+    },
+    "W111": {
+      "active_frac": 0.1647,
+      "censored_fallback": false,
+      "chop_net_over_dd": 6.4233,
+      "median_dur_bars": 56.0,
+      "n_left_censored": 0,
+      "n_right_censored": 2,
+      "n_runs": 63,
+      "n_uncensored": 61,
+      "net_over_max_dd": 7.3921,
+      "sleeve": "intraday_tactical"
+    },
+    "W312": {
+      "active_frac": 0.1619,
+      "censored_fallback": false,
+      "chop_net_over_dd": 1.0699,
+      "median_dur_bars": 42.0,
+      "n_left_censored": 0,
+      "n_right_censored": 0,
+      "n_runs": 21,
+      "n_uncensored": 21,
+      "net_over_max_dd": 0.558,
+      "sleeve": "intraday_tactical"
+    },
+    "Whale_0x5f94": {
+      "active_frac": 0.7832,
+      "censored_fallback": false,
+      "chop_net_over_dd": 2.6272,
+      "median_dur_bars": 4036.0,
+      "n_left_censored": 0,
+      "n_right_censored": 12,
+      "n_runs": 21,
+      "n_uncensored": 9,
+      "net_over_max_dd": 3.54,
+      "sleeve": "positional"
+    }
+  },
+  "stability": {
+    "drop_frac": 0.1,
+    "jaccard_vs_full": {
+      "A_upgma": [
+        0.5,
+        1.0,
+        0.5,
+        0.5,
+        1.0
+      ],
+      "B_sleeve": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.2
+      ]
+    },
+    "mean_jaccard": {
+      "A_upgma": 0.7,
+      "B_sleeve": 0.84
+    },
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "study": "CFT $10k structural episode sleeves vs UPGMA (matched retrospective)",
+  "train": {
+    "A_upgma": [
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "binding": "DailyCVaR_99",
+        "cap_scale": 0.098581,
+        "capped_k": [
+          0.08343475919170422,
+          0.06272834470771523,
+          0.020758259525037247
+        ],
+        "feasible": true,
+        "indices": [
+          4,
+          27,
+          28
+        ],
+        "member_contributions": [
+          {
+            "abs_net_share": 0.4368,
+            "alias": "W#107",
+            "avg_weighted_gross_notional_frac": 0.00233068,
+            "capped_k": 0.0834347592,
+            "solo_weighted_net_usd": 236.2
+          },
+          {
+            "abs_net_share": 0.5265,
+            "alias": "W111",
+            "avg_weighted_gross_notional_frac": 0.0082989,
+            "capped_k": 0.0627283447,
+            "solo_weighted_net_usd": 284.74
+          },
+          {
+            "abs_net_share": 0.0367,
+            "alias": "W312",
+            "avg_weighted_gross_notional_frac": 0.00425218,
+            "capped_k": 0.0207582595,
+            "solo_weighted_net_usd": 19.83
+          }
+        ],
+        "member_diagnostics": [
+          {
+            "alias": "W#107",
+            "oos_coins": 9,
+            "oos_coins_not_in_train": [],
+            "train_coins": 9,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 2,
+            "train_unpriced_open_steps": 0
+          },
+          {
+            "alias": "W111",
+            "oos_coins": 13,
+            "oos_coins_not_in_train": [
+              "AVAX",
+              "BNB",
+              "NEAR",
+              "PONS",
+              "SAND",
+              "ZEC"
+            ],
+            "train_coins": 7,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 0,
+            "train_unpriced_open_steps": 0
+          },
+          {
+            "alias": "W312",
+            "oos_coins": 7,
+            "oos_coins_not_in_train": [
+              "AVAX",
+              "HYPE",
+              "NEAR",
+              "ZEC"
+            ],
+            "train_coins": 3,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 1,
+            "train_unpriced_open_steps": 0
+          }
+        ],
+        "min_lot_warnings": [],
+        "oos_coin_mismatch": 10,
+        "raw_k": [
+          0.8463594028443129,
+          0.6363142278178086,
+          0.2105710893865041
+        ],
+        "size": 3,
+        "train_daily_cvar_usd": 29.57,
+        "train_gap_flagged": false,
+        "train_max_dd_usd": 58.07,
+        "train_net_over_dd": 9.3131,
+        "train_net_usd": 540.77,
+        "train_worst_day_usd": 31.77
+      },
+      {
+        "aliases": [
+          "W#174",
+          "W111",
+          "W312"
+        ],
+        "binding": "DailyCVaR_99",
+        "cap_scale": 0.163515,
+        "capped_k": [
+          0.5982416963338943,
+          0.046574417731426856,
+          0.0313616883591738
+        ],
+        "feasible": true,
+        "indices": [
+          8,
+          27,
+          28
+        ],
+        "member_contributions": [
+          {
+            "abs_net_share": 0.4586,
+            "alias": "W#174",
+            "avg_weighted_gross_notional_frac": 0.00183506,
+            "capped_k": 0.5982416963,
+            "solo_weighted_net_usd": 204.43
+          },
+          {
+            "abs_net_share": 0.4742,
+            "alias": "W111",
+            "avg_weighted_gross_notional_frac": 0.00616175,
+            "capped_k": 0.0465744177,
+            "solo_weighted_net_usd": 211.41
+          },
+          {
+            "abs_net_share": 0.0672,
+            "alias": "W312",
+            "avg_weighted_gross_notional_frac": 0.00642422,
+            "capped_k": 0.0313616884,
+            "solo_weighted_net_usd": 29.96
+          }
+        ],
+        "member_diagnostics": [
+          {
+            "alias": "W#174",
+            "oos_coins": 18,
+            "oos_coins_not_in_train": [
+              "BNB",
+              "HBAR"
+            ],
+            "train_coins": 16,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 0,
+            "train_unpriced_open_steps": 0
+          },
+          {
+            "alias": "W111",
+            "oos_coins": 13,
+            "oos_coins_not_in_train": [
+              "AVAX",
+              "BNB",
+              "NEAR",
+              "PONS",
+              "SAND",
+              "ZEC"
+            ],
+            "train_coins": 7,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 0,
+            "train_unpriced_open_steps": 0
+          },
+          {
+            "alias": "W312",
+            "oos_coins": 7,
+            "oos_coins_not_in_train": [
+              "AVAX",
+              "HYPE",
+              "NEAR",
+              "ZEC"
+            ],
+            "train_coins": 3,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 1,
+            "train_unpriced_open_steps": 0
+          }
+        ],
+        "min_lot_warnings": [],
+        "oos_coin_mismatch": 12,
+        "raw_k": [
+          3.658638658590346,
+          0.28483298014458336,
+          0.1917972052645025
+        ],
+        "size": 3,
+        "train_daily_cvar_usd": 49.05,
+        "train_gap_flagged": false,
+        "train_max_dd_usd": 63.51,
+        "train_net_over_dd": 7.0194,
+        "train_net_usd": 445.8,
+        "train_worst_day_usd": 50.11
+      },
+      {
+        "aliases": [
+          "W#117",
+          "W#174",
+          "W312"
+        ],
+        "binding": "DailyCVaR_99",
+        "cap_scale": 0.16192,
+        "capped_k": [
+          0.002714032537440522,
+          0.5982416963338943,
+          0.0313616883591738
+        ],
+        "feasible": true,
+        "indices": [
+          5,
+          8,
+          28
+        ],
+        "member_contributions": [
+          {
+            "abs_net_share": 0.301,
+            "alias": "W#117",
+            "avg_weighted_gross_notional_frac": 0.00848693,
+            "capped_k": 0.0027140325,
+            "solo_weighted_net_usd": 100.92
+          },
+          {
+            "abs_net_share": 0.6097,
+            "alias": "W#174",
+            "avg_weighted_gross_notional_frac": 0.00183506,
+            "capped_k": 0.5982416963,
+            "solo_weighted_net_usd": 204.43
+          },
+          {
+            "abs_net_share": 0.0894,
+            "alias": "W312",
+            "avg_weighted_gross_notional_frac": 0.00642422,
+            "capped_k": 0.0313616884,
+            "solo_weighted_net_usd": 29.96
+          }
+        ],
+        "member_diagnostics": [
+          {
+            "alias": "W#117",
+            "oos_coins": 15,
+            "oos_coins_not_in_train": [
+              "PENDLE",
+              "UNI"
+            ],
+            "train_coins": 13,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 2,
+            "train_unpriced_open_steps": 0
+          },
+          {
+            "alias": "W#174",
+            "oos_coins": 18,
+            "oos_coins_not_in_train": [
+              "BNB",
+              "HBAR"
+            ],
+            "train_coins": 16,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 0,
+            "train_unpriced_open_steps": 0
+          },
+          {
+            "alias": "W312",
+            "oos_coins": 7,
+            "oos_coins_not_in_train": [
+              "AVAX",
+              "HYPE",
+              "NEAR",
+              "ZEC"
+            ],
+            "train_coins": 3,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 1,
+            "train_unpriced_open_steps": 0
+          }
+        ],
+        "min_lot_warnings": [],
+        "oos_coin_mismatch": 8,
+        "raw_k": [
+          0.01676152945676267,
+          3.694666765056787,
+          0.1936859105388019
+        ],
+        "size": 3,
+        "train_daily_cvar_usd": 48.58,
+        "train_gap_flagged": false,
+        "train_max_dd_usd": 67.44,
+        "train_net_over_dd": 4.9717,
+        "train_net_usd": 335.31,
+        "train_worst_day_usd": 52.23
+      }
+    ],
+    "B_sleeve": [
+      {
+        "aliases": [
+          "W#117",
+          "W#264",
+          "Whale_0x5f94"
+        ],
+        "binding": "Max_K_Cap",
+        "cap_scale": 0.239105,
+        "capped_k": [
+          0.006493739994059826,
+          1.1955260516940118,
+          6.876076194842548e-05
+        ],
+        "disjoint_coin_pairs": 0,
+        "feasible": true,
+        "has_unknown_pair": false,
+        "indices": [
+          5,
+          17,
+          29
+        ],
+        "member_contributions": [
+          {
+            "abs_net_share": 0.4654,
+            "alias": "W#117",
+            "avg_weighted_gross_notional_frac": 0.02030628,
+            "capped_k": 0.00649374,
+            "solo_weighted_net_usd": 241.47
+          },
+          {
+            "abs_net_share": 0.2562,
+            "alias": "W#264",
+            "avg_weighted_gross_notional_frac": 0.00695685,
+            "capped_k": 1.1955260517,
+            "solo_weighted_net_usd": 132.92
+          },
+          {
+            "abs_net_share": 0.2784,
+            "alias": "Whale_0x5f94",
+            "avg_weighted_gross_notional_frac": 0.02077705,
+            "capped_k": 6.87608e-05,
+            "solo_weighted_net_usd": 144.4
+          }
+        ],
+        "member_diagnostics": [
+          {
+            "alias": "W#117",
+            "oos_coins": 15,
+            "oos_coins_not_in_train": [
+              "PENDLE",
+              "UNI"
+            ],
+            "train_coins": 13,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 2,
+            "train_unpriced_open_steps": 0
+          },
+          {
+            "alias": "W#264",
+            "oos_coins": 5,
+            "oos_coins_not_in_train": [
+              "DOGE",
+              "XMR",
+              "XRP"
+            ],
+            "train_coins": 2,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 1,
+            "train_unpriced_open_steps": 0
+          },
+          {
+            "alias": "Whale_0x5f94",
+            "oos_coins": 29,
+            "oos_coins_not_in_train": [
+              "ATOM",
+              "BNB",
+              "ENA"
+            ],
+            "train_coins": 26,
+            "train_forced_gap_exits": 1,
+            "train_gap_flagged": true,
+            "train_unanchored_coins": 13,
+            "train_unpriced_open_steps": 1
+          }
+        ],
+        "min_lot_warnings": [],
+        "oos_coin_mismatch": 8,
+        "pairs": [
+          {
+            "common_coins": 1,
+            "concurrent_days": 58,
+            "crowded": false,
+            "disjoint_coins": false,
+            "dist": 0.7564,
+            "psi_pos": 0.5939,
+            "unknown": false
+          },
+          {
+            "common_coins": 5,
+            "concurrent_days": 46,
+            "crowded": false,
+            "disjoint_coins": false,
+            "dist": 0.4993,
+            "psi_pos": -0.0071,
+            "unknown": false
+          },
+          {
+            "common_coins": 2,
+            "concurrent_days": 79,
+            "crowded": false,
+            "disjoint_coins": false,
+            "dist": 0.8371,
+            "psi_pos": -0.2863,
+            "unknown": false
+          }
+        ],
+        "raw_k": [
+          0.02715850476390063,
+          5.0,
+          0.00028757533911952097
+        ],
+        "size": 3,
+        "train_daily_cvar_usd": 55.49,
+        "train_gap_flagged": true,
+        "train_max_dd_usd": 81.88,
+        "train_net_over_dd": 6.3359,
+        "train_net_usd": 518.79,
+        "train_worst_day_usd": 66.95,
+        "unknown_pairs": 0
+      },
+      {
+        "aliases": [
+          "M54",
+          "W#117",
+          "Whale_0x5f94"
+        ],
+        "binding": "DailyCVaR_99",
+        "cap_scale": 0.168401,
+        "capped_k": [
+          0.008676133750255928,
+          0.0063988204504275845,
+          5.686637437642492e-05
+        ],
+        "disjoint_coin_pairs": 0,
+        "feasible": true,
+        "has_unknown_pair": false,
+        "indices": [
+          2,
+          5,
+          29
+        ],
+        "member_contributions": [
+          {
+            "abs_net_share": 0.2574,
+            "alias": "M54",
+            "avg_weighted_gross_notional_frac": 0.01763486,
+            "capped_k": 0.0086761338,
+            "solo_weighted_net_usd": 123.86
+          },
+          {
+            "abs_net_share": 0.4944,
+            "alias": "W#117",
+            "avg_weighted_gross_notional_frac": 0.02000946,
+            "capped_k": 0.0063988205,
+            "solo_weighted_net_usd": 237.94
+          },
+          {
+            "abs_net_share": 0.2482,
+            "alias": "Whale_0x5f94",
+            "avg_weighted_gross_notional_frac": 0.01718299,
+            "capped_k": 5.68664e-05,
+            "solo_weighted_net_usd": 119.43
+          }
+        ],
+        "member_diagnostics": [
+          {
+            "alias": "M54",
+            "oos_coins": 7,
+            "oos_coins_not_in_train": [],
+            "train_coins": 7,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 3,
+            "train_unpriced_open_steps": 0
+          },
+          {
+            "alias": "W#117",
+            "oos_coins": 15,
+            "oos_coins_not_in_train": [
+              "PENDLE",
+              "UNI"
+            ],
+            "train_coins": 13,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 2,
+            "train_unpriced_open_steps": 0
+          },
+          {
+            "alias": "Whale_0x5f94",
+            "oos_coins": 29,
+            "oos_coins_not_in_train": [
+              "ATOM",
+              "BNB",
+              "ENA"
+            ],
+            "train_coins": 26,
+            "train_forced_gap_exits": 1,
+            "train_gap_flagged": true,
+            "train_unanchored_coins": 13,
+            "train_unpriced_open_steps": 1
+          }
+        ],
+        "min_lot_warnings": [],
+        "oos_coin_mismatch": 5,
+        "pairs": [
+          {
+            "common_coins": 4,
+            "concurrent_days": 66,
+            "crowded": false,
+            "disjoint_coins": false,
+            "dist": 0.7377,
+            "psi_pos": 0.0344,
+            "unknown": false
+          },
+          {
+            "common_coins": 1,
+            "concurrent_days": 93,
+            "crowded": false,
+            "disjoint_coins": false,
+            "dist": 0.7965,
+            "psi_pos": 0.0,
+            "unknown": false
+          },
+          {
+            "common_coins": 5,
+            "concurrent_days": 46,
+            "crowded": false,
+            "disjoint_coins": false,
+            "dist": 0.4993,
+            "psi_pos": -0.0071,
+            "unknown": false
+          }
+        ],
+        "raw_k": [
+          0.05152064550878705,
+          0.03799749630313526,
+          0.0003376840883223287
+        ],
+        "size": 3,
+        "train_daily_cvar_usd": 50.52,
+        "train_gap_flagged": true,
+        "train_max_dd_usd": 91.32,
+        "train_net_over_dd": 5.2694,
+        "train_net_usd": 481.22,
+        "train_worst_day_usd": 62.3,
+        "unknown_pairs": 0
+      },
+      {
+        "aliases": [
+          "M21",
+          "M54",
+          "Whale_0x5f94"
+        ],
+        "binding": "DailyCVaR_99",
+        "cap_scale": 0.109887,
+        "capped_k": [
+          0.0035476385067071963,
+          0.008676133750255928,
+          9.192271072177006e-05
+        ],
+        "disjoint_coin_pairs": 0,
+        "feasible": true,
+        "has_unknown_pair": false,
+        "indices": [
+          1,
+          2,
+          29
+        ],
+        "member_contributions": [
+          {
+            "abs_net_share": 0.1243,
+            "alias": "M21",
+            "avg_weighted_gross_notional_frac": 0.01315088,
+            "capped_k": 0.0035476385,
+            "solo_weighted_net_usd": 44.99
+          },
+          {
+            "abs_net_share": 0.3422,
+            "alias": "M54",
+            "avg_weighted_gross_notional_frac": 0.01763486,
+            "capped_k": 0.0086761338,
+            "solo_weighted_net_usd": 123.86
+          },
+          {
+            "abs_net_share": 0.5334,
+            "alias": "Whale_0x5f94",
+            "avg_weighted_gross_notional_frac": 0.02777576,
+            "capped_k": 9.19227e-05,
+            "solo_weighted_net_usd": 193.05
+          }
+        ],
+        "member_diagnostics": [
+          {
+            "alias": "M21",
+            "oos_coins": 21,
+            "oos_coins_not_in_train": [
+              "AAVE",
+              "CASHCAT",
+              "EIGEN",
+              "ENA",
+              "LIT",
+              "MORPHO",
+              "NEAR",
+              "OP",
+              "SEI",
+              "SYRUP",
+              "UNI",
+              "XMR",
+              "ZEC"
+            ],
+            "train_coins": 8,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 0,
+            "train_unpriced_open_steps": 0
+          },
+          {
+            "alias": "M54",
+            "oos_coins": 7,
+            "oos_coins_not_in_train": [],
+            "train_coins": 7,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 3,
+            "train_unpriced_open_steps": 0
+          },
+          {
+            "alias": "Whale_0x5f94",
+            "oos_coins": 29,
+            "oos_coins_not_in_train": [
+              "ATOM",
+              "BNB",
+              "ENA"
+            ],
+            "train_coins": 26,
+            "train_forced_gap_exits": 1,
+            "train_gap_flagged": true,
+            "train_unanchored_coins": 13,
+            "train_unpriced_open_steps": 1
+          }
+        ],
+        "min_lot_warnings": [],
+        "oos_coin_mismatch": 16,
+        "pairs": [
+          {
+            "common_coins": 3,
+            "concurrent_days": 86,
+            "crowded": false,
+            "disjoint_coins": false,
+            "dist": 0.7808,
+            "psi_pos": 0.0105,
+            "unknown": false
+          },
+          {
+            "common_coins": 4,
+            "concurrent_days": 83,
+            "crowded": false,
+            "disjoint_coins": false,
+            "dist": 0.6216,
+            "psi_pos": -0.336,
+            "unknown": false
+          },
+          {
+            "common_coins": 1,
+            "concurrent_days": 93,
+            "crowded": false,
+            "disjoint_coins": false,
+            "dist": 0.7965,
+            "psi_pos": 0.0,
+            "unknown": false
+          }
+        ],
+        "raw_k": [
+          0.032284355922033395,
+          0.07895488491594137,
+          0.0008365185755676756
+        ],
+        "size": 3,
+        "train_daily_cvar_usd": 32.97,
+        "train_gap_flagged": true,
+        "train_max_dd_usd": 71.5,
+        "train_net_over_dd": 5.0617,
+        "train_net_usd": 361.9,
+        "train_worst_day_usd": 35.52,
+        "unknown_pairs": 0
+      }
+    ],
+    "C_baseline": [
+      {
+        "aliases": [
+          "W111",
+          "W#117",
+          "W#107"
+        ],
+        "binding": "DailyCVaR_99",
+        "cap_scale": 0.107612,
+        "capped_k": [
+          0.06272834470771523,
+          0.0013373307958374657,
+          0.08343475919170422
+        ],
+        "feasible": true,
+        "indices": [
+          27,
+          5,
+          4
+        ],
+        "member_contributions": [
+          {
+            "abs_net_share": 0.499,
+            "alias": "W111",
+            "avg_weighted_gross_notional_frac": 0.0082989,
+            "capped_k": 0.0627283447,
+            "solo_weighted_net_usd": 284.74
+          },
+          {
+            "abs_net_share": 0.0871,
+            "alias": "W#117",
+            "avg_weighted_gross_notional_frac": 0.00418191,
+            "capped_k": 0.0013373308,
+            "solo_weighted_net_usd": 49.73
+          },
+          {
+            "abs_net_share": 0.4139,
+            "alias": "W#107",
+            "avg_weighted_gross_notional_frac": 0.00233068,
+            "capped_k": 0.0834347592,
+            "solo_weighted_net_usd": 236.2
+          }
+        ],
+        "member_diagnostics": [
+          {
+            "alias": "W111",
+            "oos_coins": 13,
+            "oos_coins_not_in_train": [
+              "AVAX",
+              "BNB",
+              "NEAR",
+              "PONS",
+              "SAND",
+              "ZEC"
+            ],
+            "train_coins": 7,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 0,
+            "train_unpriced_open_steps": 0
+          },
+          {
+            "alias": "W#117",
+            "oos_coins": 15,
+            "oos_coins_not_in_train": [
+              "PENDLE",
+              "UNI"
+            ],
+            "train_coins": 13,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 2,
+            "train_unpriced_open_steps": 0
+          },
+          {
+            "alias": "W#107",
+            "oos_coins": 9,
+            "oos_coins_not_in_train": [],
+            "train_coins": 9,
+            "train_forced_gap_exits": 0,
+            "train_gap_flagged": false,
+            "train_unanchored_coins": 2,
+            "train_unpriced_open_steps": 0
+          }
+        ],
+        "min_lot_warnings": [],
+        "oos_coin_mismatch": 8,
+        "raw_k": [
+          0.5829134124284634,
+          0.012427365354205015,
+          0.7753311588596973
+        ],
+        "size": 3,
+        "train_daily_cvar_usd": 32.28,
+        "train_gap_flagged": false,
+        "train_max_dd_usd": 67.99,
+        "train_net_over_dd": 8.3939,
+        "train_net_usd": 570.67,
+        "train_worst_day_usd": 37.27
+      }
+    ]
+  }
+}

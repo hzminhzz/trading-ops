@@ -456,7 +456,8 @@ def _run_pod_discovery_pass(
                     {
                         "alias": x.alias,
                         "reason": x.reject_reason,
-                        "tilt": round(x.tilt_multiplier, 3),
+                        "tilt": round(x.tilt_multiplier, 3) if x.tilt_multiplier is not None else None,
+                        "tilt_status": x.tilt_status,
                     }
                     for x in metrics_fail
                     if not x.passed_behavioral_gate
@@ -469,7 +470,12 @@ def _run_pod_discovery_pass(
             "status": "OK",
             "passed": [x.alias for x in metrics if x.passed_behavioral_gate],
             "rejected": [
-                {"alias": x.alias, "reason": x.reject_reason, "tilt": round(x.tilt_multiplier, 3)}
+                {
+                    "alias": x.alias,
+                    "reason": x.reject_reason,
+                    "tilt": round(x.tilt_multiplier, 3) if x.tilt_multiplier is not None else None,
+                    "tilt_status": x.tilt_status,
+                }
                 for x in metrics
                 if not x.passed_behavioral_gate
             ],
@@ -478,7 +484,10 @@ def _run_pod_discovery_pass(
         }
 
         for s in sized:
-            unit_dd = [metrics[i].standalone_max_dd * tensor.pod_equity_usd for i in s.pod_indices]
+            unit_dd = [
+                metrics[i].standalone_peak_to_trough_dd * tensor.pod_equity_usd
+                for i in s.pod_indices
+            ]
             base = [
                 min((baseline_port_dd_frac * tensor.pod_equity_usd / size) / max(dd, 0.01), conf.max_k_mult)
                 for dd in unit_dd
@@ -512,7 +521,10 @@ def _run_pod_discovery_pass(
                     "live_deployable": len(non_deployable) == 0 and all(a in row_by_alias for a in s.aliases),
                     "live_non_deployable_members": non_deployable,
                     "train_net_usd": round(s.objective_net_return * cap_scale * tensor.pod_equity_usd, 2),
-                    "train_peak_dd_usd": round(s.max_static_dd * cap_scale * tensor.pod_equity_usd, 2),
+                    "train_peak_dd_usd": round(s.peak_to_trough_dd * cap_scale * tensor.pod_equity_usd, 2),
+                    "train_static_floor_dd_usd": round(
+                        s.static_floor_dd * cap_scale * tensor.pod_equity_usd, 2
+                    ),
                     "train_daily_cvar_usd": round(s.daily_cvar_99 * cap_scale * tensor.pod_equity_usd, 2),
                     "train_worst_day_usd": round(s.max_daily_loss * cap_scale * tensor.pod_equity_usd, 2),
                     "train_net_dd": round(s.net_over_max_dd, 4),

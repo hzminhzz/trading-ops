@@ -403,11 +403,14 @@ def _make_synthetic_tensor_with_micro_and_healthy(*, n_healthy: int = 4, n_days:
             notional[ti, ti, s_b:e_b] = 0.40
             d_notional[ti, ti, s_b] = 0.40
             d_notional[ti, ti, e_b] = -0.40
-            r = rng.normal(0.0012, 0.0005, size=e_b - s_b - 1)
+            if e_idx == 0:
+                # Realistic 2% standalone max DD inside first closed episode so post-loss tilt is measurable
+                r = np.zeros(e_b - s_b - 1, dtype=np.float64)
+                r[0] = -0.02
+            else:
+                r = rng.normal(0.0012, 0.0005, size=e_b - s_b - 1)
             gross[ti, s_b + 1 : e_b] = r
             net[ti, s_b + 1 : e_b] = r
-        # Give realistic 2% standalone max DD so baseline k is ~0.25..0.33
-        net[ti, 25 + ti] = -0.02
 
     # MICRO trader: positive net, 10 episodes, tiny $5 unit position (q10_frac = 0.0005 -> ~$3.33 < $15)
     m_idx = n_healthy
@@ -419,9 +422,12 @@ def _make_synthetic_tensor_with_micro_and_healthy(*, n_healthy: int = 4, n_days:
         notional[m_idx, m_idx, s_b:e_b] = 0.0005
         d_notional[m_idx, m_idx, s_b] = 0.0005
         d_notional[m_idx, m_idx, e_b] = -0.0005
-        gross[m_idx, s_b + 1 : e_b] = 0.0008
-        net[m_idx, s_b + 1 : e_b] = 0.0008
-    net[m_idx, 20] = -0.01
+        if e_idx == 0:
+            gross[m_idx, s_b + 1] = -0.01
+            net[m_idx, s_b + 1] = -0.01
+        else:
+            gross[m_idx, s_b + 1 : e_b] = 0.0012
+            net[m_idx, s_b + 1 : e_b] = 0.0012
 
     aliases = tuple([f"HEALTHY_{i}" for i in range(n_healthy)] + ["MICRO_TINY"])
     symbols = tuple(f"COIN_{i}" for i in range(n_total))

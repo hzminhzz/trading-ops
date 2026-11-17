@@ -74,3 +74,39 @@ Hardening `studies/study_data.py`, `studies/canonical_replay.py`, `studies/pod_c
    Dropping `AV < $1,000` or currently unmapped wallets prior to Train replay injects survivorship lookahead (`scope="live"` alone lifted `CPCV PBO` to `0.70` vs `0.15` across the `189`-wallet historical screen). Keep historical eligibility strictly pre-split, then tag `live_deployable` independently on candidates.
 4. **Gate headline OOS passes with deadbands (`$15`/`$30`), `2x`/`3x` cost stress, funding, and 1m participation.**
    `Pod 3` stays strongly profitable under `$30` deadband (`+$1,124` at `1x`), `2x`/`3x` costs (`+$936`/`+$743`), and historical USDT funding carry (`-$10.69`), yet 1m bar-volume diagnostics expose thin-altcoin spikes (`96.96%` of 1m bar volume on `XRP`, `79` trades `>1%`, vs `0.066%` median / `2.21%` p95) that require capacity validation and prospective CWSA paper runs in `copytrade-pm` prior to live authorization.
+
+---
+
+## 2026-11-17 — Research-to-Execution Contract Differences (Q8)
+
+1. **Do not equate strict new-only with checkpoint late entry.** The research replay admits a pre-existing source leg only after a post-activation flat-to-open or genuine flip; the approved checkpoint design permits a later genuine increase to trigger one fresh full-target attempt. Compare them as different policies with their original clocks. See `studies/canonical_replay.py` and `prop-production/docs/ADR-CANONICAL-5M-CHECKPOINT-GRILL-20261111.md`.
+2. **Check the signed release and execution path, not just a research `k`.** The current v1 verifier requires `0 < k <= 10`; a zero-k research setting cannot be silently projected. Checkpoint v2 code includes signed pause transitions, but that alone proves neither equivalent leader-following behavior nor deployment or trading authorization.
+3. **Accounting reconciliation does not prove liquidity.** `reconcile_portfolio_with_pm03` supplies synthetic volume and 100% participation; the native 1m research replay rejects partial execution. Compare each policy's actual timing, partial-fill and broker-reconciliation assumptions explicitly before claiming equivalence.
+
+---
+
+## 2026-11-17 — PIT Universe Evidence (Q9)
+
+1. **A `known_at` column is not a complete historical universe.** In the examined registry snapshot, cohort, exclusion and monitoring records begin on 2026-11-04, and all 158 `wallet_coverage.first_known` values are `UNKNOWN`. Earlier discovery may exist elsewhere; do not infer it from retrospective fills. The 269-wallet July–November Reservoir backfill is a November-selected cohort, not a PIT July roster.
+2. **Do not backdate the v4 freeze.** The original v4 candidates and `k` were frozen on 2026-11-16; a prior-period comparison must re-run the static-v4 method using only evidence available at each cutoff. Previously inspected historical folds are exploratory; a frozen prospective paper comparison is separate.
+
+---
+
+## 2026-11-17 — Episode Underwriting Evidence (Q10)
+
+1. **The current episode audit is not closed-episode ROPN underwriting.** Its extractor includes boundary-open runs without returning censor flags, and its empirical-Bayes shrinkage applies to active-bar Sharpe. See `reports/2026-11-17__research__episode-underwriting__q10-evidence.md`.
+2. **Close order is not a causal post-loss entry order.** Overlapping per-symbol episodes may have opened before the previous loss was known; missing win/loss comparison groups currently receive a median fallback rather than `UNKNOWN`. Define causal transitions and evidence requirements before treating the tilt as a discipline gate.
+
+---
+
+## 2026-11-17 — Challenge Frontier Risk Semantics (Q11)
+
+1. **Do not qualify CFT outcomes with an equity-reset proxy for a balance-reset rule.** The research Guardian replay resets its daily baseline to modeled equity and uses fixed dollar limits; CFT describes equity breaches against the 00:05 balance. A synthetic overnight open-loss scenario breaches both plausible balance-based limits while the research replay reports no breach or sweep. Resolve exact account terms and model balance separately before relying on pass/failure rates. See `reports/2026-11-17__research__risk-speed-frontier__q11-evidence.md`.
+2. **Separate peak-to-trough DD, static-floor distance and risk-share proxies.** The sizing optimizer's `max_static_dd` is peak-to-trough, and its per-wallet shares are standalone-CDaR-weighted allocation proxies, not actual marginal contributions to net portfolio risk. Do not treat either label as an account-level guarantee.
+
+---
+
+## 2026-11-17 — Lifecycle Retirement and Release (Q12)
+
+1. **An advisory CUSUM kill is not a durable retirement.** `update_roster_episode_cusum` can return `KILL_CONTAIN_0X` and then `OK` on a later episode; a retirement rule needs its own persisted terminal latch. Unit-copy CUSUM baselines are not automatically interchangeable with Q10 ROPN or broker-attributed PnL.
+2. **Do not project a research unfreeze into a signed mandate.** The inspected checkpoint mandate contract has no paused-to-active edge, and its test requires a new generation to resume. A clean episode required while follower entries are frozen must come from a separately labeled causal shadow stream, not an imagined real fill. See `reports/2026-11-17__research__lifecycle-thresholds__q12-evidence.md`.
