@@ -22,3 +22,17 @@ Private daily trading operations, wallet evaluation, and prop-challenge research
 - Use `uv run` (`Python >=3.14`) and run `uv run pytest && uv run ruff check .` after edits.
 - **Historical backtest default:** `[2026-07-01T00:00Z, 2026-11-01T00:00Z)`; calibrate/freeze wallet `k` on earlier data (the default train end is October 1), with `k` sized so the modeled wallet max drawdown uses **50% of its allocated risk**. Never fit `k` using the evaluation window.
 - **Market-data-gap policy:** a single unpriced pair must not halt the whole portfolio. Inspect local verified 1m, then connected Vike 1m and the verified Reservoir market price source before declaring a gap. Distinguish normal trade-sparse minutes from genuine cutoff. In research only, model a pair-local follower exit with explicit stale-price age, adverse slippage/fees and `executed=false`, and continue independent pairs. No invented quote, no claim of actual forced execution, and no promotion of retrospective source books to PIT/CWSA/trading authorization.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs are tracked as GitHub Issues in `hzminhzz/trading-ops` via `gh`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Uses the five default triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context repo (`GLOSSARY.md` and `docs/adr/` at the repo root, created lazily when needed). See `docs/agents/domain.md`.
