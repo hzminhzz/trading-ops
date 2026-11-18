@@ -1419,6 +1419,7 @@ class PortfolioPolicyConfig:
     max_static_dd_usd: float = 1_000.0
     profit_target_usd: float | None = 800.0
     stop_on_guardian_breach: bool = True
+    apply_l3_liquidity_cap: bool = False
 
 
 @dataclass(frozen=True)
@@ -1632,13 +1633,20 @@ def run_portfolio_policy_replay(
     haircut_cnt = 0
 
     sorted_bench = sorted(bench_snapshots, key=lambda s: s.asof_ts_ms)
+    use_l3_cap = bool(
+        policy_cfg.apply_l3_liquidity_cap or policy_cfg.liquidity.apply_l3_liquidity_cap
+    )
 
     for j in range(n_bars):
         bar_ts_ms = int(grid_arr[j])
-        prior_start = max(0, j - liq_cfg.l2_lookback_bars)
-        bar_caps, bar_vol_valid = cr.estimate_causal_bar_capacity(
-            vol_mat[:, prior_start:j], liq_cfg
-        )
+        if use_l3_cap:
+            prior_start = max(0, j - liq_cfg.l2_lookback_bars)
+            bar_caps, bar_vol_valid = cr.estimate_causal_bar_capacity(
+                vol_mat[:, prior_start:j], liq_cfg
+            )
+        else:
+            bar_caps = np.zeros(n_coins, dtype=np.float64)
+            bar_vol_valid = np.ones(n_coins, dtype=bool)
 
         active_sids = sorted(admitted_states)
         coin_executable = np.ones(n_coins, dtype=bool)
@@ -1888,19 +1896,31 @@ def run_portfolio_policy_replay(
                 )
                 for sid in active_sids
             ]
-            alloc = cr.allocate_l3_market_step(
-                ci,
-                intents_ci,
-                exec_price_buy=q_buy,
-                exec_price_sell=q_sell,
-                mark_price=mc_px,
-                l2_cap_usd=float(bar_caps[ci]),
-                l2_prior_vol_valid=bool(bar_vol_valid[ci]),
-                actual_bar_vol_1m_usd=float(vol_mat[ci, j]),
-                cross_zero_permitted=cwsa_cfg.cross_zero_permitted,
-                protective_exit_haircut_bps=liq_cfg.protective_exit_haircut_bps,
-                eps=eps,
-            )
+            if use_l3_cap:
+                alloc = cr.allocate_l3_market_step(
+                    ci,
+                    intents_ci,
+                    exec_price_buy=q_buy,
+                    exec_price_sell=q_sell,
+                    mark_price=mc_px,
+                    l2_cap_usd=float(bar_caps[ci]),
+                    l2_prior_vol_valid=bool(bar_vol_valid[ci]),
+                    actual_bar_vol_1m_usd=float(vol_mat[ci, j]),
+                    cross_zero_permitted=cwsa_cfg.cross_zero_permitted,
+                    protective_exit_haircut_bps=liq_cfg.protective_exit_haircut_bps,
+                    eps=eps,
+                )
+            else:
+                alloc = cr.allocate_uncapped_market_step(
+                    ci,
+                    intents_ci,
+                    exec_price_buy=q_buy,
+                    exec_price_sell=q_sell,
+                    mark_price=mc_px,
+                    actual_bar_vol_1m_usd=float(vol_mat[ci, j]),
+                    cross_zero_permitted=cwsa_cfg.cross_zero_permitted,
+                    eps=eps,
+                )
             bar_allocations[ci] = alloc
             total_missed_notional += alloc.missed_notional_usd
             if alloc.extra_haircut_bps > 0.0:

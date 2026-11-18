@@ -797,6 +797,7 @@ def replay_coin_targets_vectorized(
     vol_1m_usd: np.ndarray | None = None,
     cwsa_cfg: CWSAReplayConfig | None = None,
     liquidity_cfg: CausalLiquidityConfig | None = None,
+    apply_l3_liquidity_cap: bool | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, dict[str, float]]:
     """Simulate causal per-bar fills, fees, and pair-local stale-mark exits on a 1-coin target."""
     if mode == "cwsa_one_shot_v3":
@@ -827,6 +828,7 @@ def replay_coin_targets_vectorized(
             initial_positions=np.array([initial_pos], dtype=np.float64),
             cwsa_cfg=eff_cwsa,
             liquidity_cfg=eff_liq,
+            apply_l3_liquidity_cap=apply_l3_liquidity_cap,
         )
         quarantined_bars = int(np.sum(res.dispositions[0] == OrderDisposition.QUARANTINED.value))
         return (
@@ -2056,6 +2058,7 @@ class CausalLiquidityConfig:
     l2_min_valid_bars: int = 3
     max_participation_1m: float = 0.05
     protective_exit_haircut_bps: float = 15.0
+    apply_l3_liquidity_cap: bool = False
 
 
 @dataclass
@@ -2574,21 +2577,32 @@ def _cross_pro_rata(
             crossed_delta[sk] -= qty
 
 
-def allocate_l3_market_step(
-    coin_idx: int,
+def _project_and_cross_market_step(
     intents: Sequence[SeatMarketIntent],
     *,
     exec_price_buy: float,
     exec_price_sell: float,
     mark_price: float,
-    l2_cap_usd: float,
-    l2_prior_vol_valid: bool,
-    actual_bar_vol_1m_usd: float,
-    cross_zero_permitted: bool = True,
-    protective_exit_haircut_bps: float = 15.0,
-    eps: float = 1e-12,
-) -> MarketStepAllocation:
-    """Project Q23=A market orders, cross opposing seats at mark, and allocate L3 fills."""
+    cross_zero_permitted: bool,
+    eps: float,
+) -> tuple[
+    list[SeatMarketIntent],
+    float,
+    MarketProjectionMode,
+    dict[str, float],
+    dict[str, OrderDisposition],
+    dict[str, bool],
+    set[str],
+    float,
+    dict[str, float],
+    list[tuple[str, str, float]],
+    dict[str, float],
+    dict[str, float],
+    dict[str, float],
+    dict[str, float],
+    float,
+]:
+    """Project Q23=A market intents and cross opposing seats at mark."""
     ordered = sorted(intents, key=lambda x: x.seat_id)
     old_net = sum(float(i.held_qty) for i in ordered)
     raw_net = sum(float(i.raw_desired_qty) for i in ordered)
@@ -2722,6 +2736,161 @@ def allocate_l3_market_step(
         is_q = inc_sells.get(sid, 0.0)
         reduce_parts[sid] = rb if rb > eps else (-rs if rs > eps else 0.0)
         increase_parts[sid] = ib if ib > eps else (-is_q if is_q > eps else 0.0)
+
+    tot_red_signed = sum(reduce_parts.values())
+    tot_inc_signed = sum(increase_parts.values())
+    ext_probe = tot_red_signed if abs(tot_red_signed) > eps else tot_inc_signed
+    ext_sign = 1.0 if ext_probe > eps else (-1.0 if ext_probe < -eps else 0.0)
+    exec_px = (
+        float(exec_price_buy)
+        if ext_sign > 0.0
+        else (float(exec_price_sell) if ext_sign < 0.0 else float(mark_price))
+    )
+    return (
+        ordered,
+        old_net,
+        projection_mode,
+        projected,
+        dispositions,
+        q23_clamped,
+        q23_partial_clipped,
+        missed_notional_usd,
+        deltas,
+        cross_records,
+        crossed_delta,
+        pos_after_cross,
+        reduce_parts,
+        increase_parts,
+        exec_px,
+    )
+
+
+def allocate_uncapped_market_step(
+    coin_idx: int,
+    intents: Sequence[SeatMarketIntent],
+    *,
+    exec_price_buy: float,
+    exec_price_sell: float,
+    mark_price: float,
+    actual_bar_vol_1m_usd: float = float("nan"),
+    cross_zero_permitted: bool = True,
+    eps: float = 1e-12,
+) -> MarketStepAllocation:
+    """Project Q23=A market orders and cross opposing seats without L2/L3 volume caps."""
+    (
+        ordered,
+        _old_net,
+        projection_mode,
+        projected,
+        dispositions,
+        q23_clamped,
+        q23_partial_clipped,
+        missed_notional_usd,
+        deltas,
+        cross_records,
+        _crossed_delta,
+        pos_after_cross,
+        reduce_parts,
+        increase_parts,
+        exec_px,
+    ) = _project_and_cross_market_step(
+        intents,
+        exec_price_buy=exec_price_buy,
+        exec_price_sell=exec_price_sell,
+        mark_price=mark_price,
+        cross_zero_permitted=cross_zero_permitted,
+        eps=eps,
+    )
+
+    seat_post_qty: dict[str, float] = {}
+    external_allocations: dict[str, float] = {}
+    for item in ordered:
+        sid = item.seat_id
+        ext_i = reduce_parts[sid] + increase_parts[sid]
+        post_i = pos_after_cross[sid] + ext_i
+        if abs(post_i) <= eps:
+            post_i = 0.0
+        seat_post_qty[sid] = post_i
+        if abs(ext_i) > eps:
+            external_allocations[sid] = ext_i
+
+        if q23_clamped[sid]:
+            dispositions[sid] = OrderDisposition.MISSED
+        elif sid in q23_partial_clipped:
+            dispositions[sid] = OrderDisposition.CLIPPED
+        elif abs(deltas[sid]) > eps:
+            dispositions[sid] = OrderDisposition.EXECUTED
+
+    external_delta_qty = sum(external_allocations.values())
+    if abs(external_delta_qty) <= eps:
+        external_delta_qty = 0.0
+        external_notional_usd = 0.0
+    else:
+        external_notional_usd = abs(external_delta_qty) * exec_px
+
+    if math.isfinite(actual_bar_vol_1m_usd) and actual_bar_vol_1m_usd > 0.0:
+        realized_part = external_notional_usd / float(actual_bar_vol_1m_usd)
+    else:
+        realized_part = float("nan")
+
+    return MarketStepAllocation(
+        coin_idx=coin_idx,
+        projection_mode=projection_mode,
+        seat_projected_qty=projected,
+        seat_post_qty=seat_post_qty,
+        seat_dispositions=dispositions,
+        internal_crosses=tuple(cross_records),
+        external_allocations=external_allocations,
+        external_delta_qty=external_delta_qty,
+        external_exec_price=exec_px,
+        external_notional_usd=external_notional_usd,
+        missed_notional_usd=missed_notional_usd,
+        extra_haircut_bps=0.0,
+        l2_cap_usd=0.0,
+        l2_prior_vol_valid=True,
+        realized_participation_1m=realized_part,
+    )
+
+
+def allocate_l3_market_step(
+    coin_idx: int,
+    intents: Sequence[SeatMarketIntent],
+    *,
+    exec_price_buy: float,
+    exec_price_sell: float,
+    mark_price: float,
+    l2_cap_usd: float,
+    l2_prior_vol_valid: bool,
+    actual_bar_vol_1m_usd: float,
+    cross_zero_permitted: bool = True,
+    protective_exit_haircut_bps: float = 15.0,
+    eps: float = 1e-12,
+) -> MarketStepAllocation:
+    """Project Q23=A market orders, cross opposing seats at mark, and allocate L3 fills."""
+    (
+        ordered,
+        old_net,
+        projection_mode,
+        projected,
+        dispositions,
+        q23_clamped,
+        q23_partial_clipped,
+        missed_notional_usd,
+        deltas,
+        cross_records,
+        crossed_delta,
+        pos_after_cross,
+        reduce_parts,
+        increase_parts,
+        exec_px,
+    ) = _project_and_cross_market_step(
+        intents,
+        exec_price_buy=exec_price_buy,
+        exec_price_sell=exec_price_sell,
+        mark_price=mark_price,
+        cross_zero_permitted=cross_zero_permitted,
+        eps=eps,
+    )
 
     clipped_seats: set[str] = set(q23_partial_clipped)
     missed_inc_seats: set[str] = set()
@@ -2864,10 +3033,16 @@ def simulate_cwsa_one_shot_replay(
     mode: Literal["cwsa_one_shot_v3"] = "cwsa_one_shot_v3",
     cwsa_cfg: CWSAReplayConfig = CWSAReplayConfig(),
     liquidity_cfg: CausalLiquidityConfig = CausalLiquidityConfig(),
+    apply_l3_liquidity_cap: bool | None = None,
 ) -> CWSAReplayResult:
-    """Run single-seat CWSA one-shot replay with 3-layer causal follower liquidity."""
+    """Run single-seat CWSA one-shot replay (uncapped by default, or L1-L3 capped)."""
     if mode != "cwsa_one_shot_v3":
         raise ValueError(f"UNSUPPORTED_CWSA_REPLAY_MODE:{mode}")
+    use_l3_cap = bool(
+        liquidity_cfg.apply_l3_liquidity_cap
+        if apply_l3_liquidity_cap is None
+        else apply_l3_liquidity_cap
+    )
 
     coin_tuple = tuple(str(c) for c in coins)
     n_coins = len(coin_tuple)
@@ -2946,10 +3121,14 @@ def simulate_cwsa_one_shot_replay(
     haircut_cnt = 0
 
     for j in range(n_bars):
-        prior_start = max(0, j - liquidity_cfg.l2_lookback_bars)
-        prior_vol_slice = vol_mat[:, prior_start:j]
-        bar_caps, bar_vol_valid = estimate_causal_bar_capacity(prior_vol_slice, liquidity_cfg)
-        l2_caps[:, j] = bar_caps
+        if use_l3_cap:
+            prior_start = max(0, j - liquidity_cfg.l2_lookback_bars)
+            prior_vol_slice = vol_mat[:, prior_start:j]
+            bar_caps, bar_vol_valid = estimate_causal_bar_capacity(prior_vol_slice, liquidity_cfg)
+            l2_caps[:, j] = bar_caps
+        else:
+            bar_caps = np.zeros(n_coins, dtype=np.float64)
+            bar_vol_valid = np.ones(n_coins, dtype=bool)
 
         for ci in range(n_coins):
             st = pair_states[ci]
@@ -3002,27 +3181,40 @@ def simulate_cwsa_one_shot_replay(
                     prev_marks[ci] = mc_px
                 continue
 
-            alloc = allocate_l3_market_step(
-                ci,
-                (
-                    SeatMarketIntent(
-                        seat_id=seat_id,
-                        held_qty=old_qty,
-                        raw_desired_qty=raw_want,
-                        seat_blocks_cross_zero=False,
-                        initial_disposition=OrderDisposition.NOOP,
-                    ),
+            intent_ci = (
+                SeatMarketIntent(
+                    seat_id=seat_id,
+                    held_qty=old_qty,
+                    raw_desired_qty=raw_want,
+                    seat_blocks_cross_zero=False,
+                    initial_disposition=OrderDisposition.NOOP,
                 ),
-                exec_price_buy=q_buy,
-                exec_price_sell=q_sell,
-                mark_price=mc_px,
-                l2_cap_usd=float(bar_caps[ci]),
-                l2_prior_vol_valid=bool(bar_vol_valid[ci]),
-                actual_bar_vol_1m_usd=float(vol_mat[ci, j]),
-                cross_zero_permitted=cwsa_cfg.cross_zero_permitted,
-                protective_exit_haircut_bps=liquidity_cfg.protective_exit_haircut_bps,
-                eps=cwsa_cfg.qty_eps,
             )
+            if use_l3_cap:
+                alloc = allocate_l3_market_step(
+                    ci,
+                    intent_ci,
+                    exec_price_buy=q_buy,
+                    exec_price_sell=q_sell,
+                    mark_price=mc_px,
+                    l2_cap_usd=float(bar_caps[ci]),
+                    l2_prior_vol_valid=bool(bar_vol_valid[ci]),
+                    actual_bar_vol_1m_usd=float(vol_mat[ci, j]),
+                    cross_zero_permitted=cwsa_cfg.cross_zero_permitted,
+                    protective_exit_haircut_bps=liquidity_cfg.protective_exit_haircut_bps,
+                    eps=cwsa_cfg.qty_eps,
+                )
+            else:
+                alloc = allocate_uncapped_market_step(
+                    ci,
+                    intent_ci,
+                    exec_price_buy=q_buy,
+                    exec_price_sell=q_sell,
+                    mark_price=mc_px,
+                    actual_bar_vol_1m_usd=float(vol_mat[ci, j]),
+                    cross_zero_permitted=cwsa_cfg.cross_zero_permitted,
+                    eps=cwsa_cfg.qty_eps,
+                )
 
             new_qty = alloc.seat_post_qty[seat_id]
             d_qty = new_qty - old_qty

@@ -51,6 +51,7 @@ def test_cwsa_one_shot_never_tops_up_on_unchanged_checkpoint() -> None:
         l2_lookback_bars=3,
         l2_min_valid_bars=3,
         max_participation_1m=0.05,
+        apply_l3_liquidity_cap=True,
     )
     cwsa_cfg = cr.CWSAReplayConfig(
         half_spread_bps=0.0,
@@ -280,6 +281,7 @@ def test_causal_liquidity_uses_strictly_prior_volume_and_prioritizes_exits(
         l2_min_valid_bars=3,
         max_participation_1m=0.05,
         protective_exit_haircut_bps=15.0,
+        apply_l3_liquidity_cap=True,
     )
     res_a = cr.simulate_cwsa_one_shot_replay(
         coins=("BTC",),
