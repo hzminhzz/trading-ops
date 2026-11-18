@@ -10,7 +10,7 @@ import os
 import urllib.parse
 import urllib.request
 from collections import defaultdict
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, MutableMapping, Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -577,16 +577,24 @@ class LazyPrices:
         self.cache: dict[str, tuple[np.ndarray, np.ndarray]] = {}
         self.stats: dict[str, dict] = {}
 
-    def coin_paths(self, coin: str) -> list[str]:
+    def coin_paths(
+        self,
+        coin: str,
+        *,
+        start_day: str | None = None,
+        end_day: str | None = None,
+    ) -> list[str]:
         """Return sorted daily OHLCV Parquet paths within the configured UTC date range."""
         coin_dir = self.store_root / f"crypto_futures_ohlcv_1m_HYPERLIQUID_{coin}_PERP"
         if not coin_dir.is_dir():
             return []
+        eff_start = self.start_day if start_day is None else start_day
+        eff_end = self.end_day if end_day is None else end_day
         candidates = sorted(coin_dir.glob("year=*/month=*/day=*/data.parquet"))
         selected: list[str] = []
         for path in candidates:
             day = _extract_partition_day(path)
-            if day is None or (self.start_day <= day <= self.end_day):
+            if day is None or (eff_start <= day <= eff_end):
                 selected.append(str(path))
         return selected
 
@@ -727,6 +735,152 @@ class LazyPrices:
             stat["oos_mark_valid_frac"] = round(float(np.mean(np.isfinite(mark[self.cut :]))), 5)
         self.stats[coin] = stat
         return trade, mark
+
+
+OHLCV_VOL_SCAN_SCHEMA = pl.Schema(
+    {
+        "timestamp": pl.Datetime("us", "UTC"),
+        "open": pl.Float64,
+        "volume": pl.Float64,
+        "quote_volume": pl.Float64,
+    }
+)
+
+
+def _scan_vike_volume_lf(
+    vike_path: Path,
+    start_lit: pl.Expr,
+    end_lit: pl.Expr,
+) -> pl.LazyFrame | None:
+    raw_lf = pl.scan_parquet(str(vike_path), hive_partitioning=False)
+    schema = raw_lf.collect_schema()
+    cols = set(schema.names())
+    vol_exprs: list[pl.Expr] = []
+    if "quote_volume" in cols:
+        vol_exprs.append(pl.col("quote_volume").cast(pl.Float64).fill_nan(None))
+    if "volume" in cols and "open" in cols:
+        vol_exprs.append(
+            (pl.col("volume").cast(pl.Float64) * pl.col("open").cast(pl.Float64)).fill_nan(None)
+        )
+    if not vol_exprs:
+        return None
+    if "ts_ms" in cols:
+        ts_expr = (
+            pl.from_epoch("ts_ms", time_unit="ms")
+            .dt.replace_time_zone("UTC")
+            .cast(pl.Datetime("us", "UTC"))
+            .alias("timestamp")
+        )
+    elif "timestamp" in cols:
+        ts_dtype = schema["timestamp"]
+        base_ts = pl.col("timestamp")
+        if isinstance(ts_dtype, pl.Datetime) and ts_dtype.time_zone is None:
+            base_ts = base_ts.dt.replace_time_zone("UTC")
+        ts_expr = base_ts.cast(pl.Datetime("us", "UTC")).alias("timestamp")
+    else:
+        return None
+    vol_expr = pl.coalesce(*vol_exprs) if len(vol_exprs) > 1 else vol_exprs[0]
+    return (
+        raw_lf.select([ts_expr, vol_expr.alias("vol_usd")])
+        .filter(
+            (pl.col("timestamp") >= start_lit)
+            & (pl.col("timestamp") < end_lit)
+            & pl.col("vol_usd").is_not_null()
+            & pl.col("vol_usd").is_not_nan()
+        )
+    )
+
+
+def load_1m_volumes_on_grid(
+    coins: Sequence[str],
+    grid_ms: np.ndarray,
+    prices: LazyPrices,
+    vol_cache: MutableMapping[tuple[str, int, int, int], np.ndarray] | None = None,
+) -> np.ndarray:
+    """Load 1m USD dollar volumes aligned to execution bars ``grid_ms + 60_000``."""
+    grid_arr = np.asarray(grid_ms, dtype=np.int64)
+    if not coins:
+        return np.zeros((0, int(grid_arr.size)), dtype=np.float64)
+    if grid_arr.size == 0:
+        return np.zeros((len(coins), 0), dtype=np.float64)
+
+    cache: MutableMapping[tuple[str, int, int, int], np.ndarray] = (
+        vol_cache if vol_cache is not None else {}
+    )
+    g_key = (int(grid_arr[0]), int(grid_arr[-1]), int(grid_arr.size))
+    missing = [c for c in coins if (c, *g_key) not in cache]
+    if missing:
+        trade_grid_df = pl.DataFrame(
+            {
+                "timestamp": pl.from_epoch(
+                    pl.Series("timestamp", grid_arr + 60_000, dtype=pl.Int64),
+                    time_unit="ms",
+                )
+                .dt.replace_time_zone("UTC")
+                .cast(pl.Datetime("us", "UTC"))
+            }
+        )
+        start_dt = min(prices.start_dt, to_utc_datetime(int(grid_arr[0])))
+        end_dt = max(prices.end_dt, to_utc_datetime(int(grid_arr[-1]) + 300_000))
+        exp_start_day = start_dt.date().isoformat()
+        exp_end_day = (end_dt - timedelta(milliseconds=1)).date().isoformat()
+        start_lit = pl.lit(start_dt, dtype=pl.Datetime("us", "UTC"))
+        end_lit = pl.lit(end_dt, dtype=pl.Datetime("us", "UTC"))
+
+        for coin in missing:
+            key = (coin, *g_key)
+            paths = prices.coin_paths(coin, start_day=exp_start_day, end_day=exp_end_day)
+            vike_path = prices._vike_path(coin)
+            parts: list[pl.LazyFrame] = []
+            if paths:
+                store_lf = (
+                    pl.scan_parquet(
+                        paths,
+                        schema=OHLCV_VOL_SCAN_SCHEMA,
+                        hive_partitioning=False,
+                        missing_columns="insert",
+                        extra_columns="ignore",
+                        cast_options=OHLCV_CAST_OPTIONS,
+                    )
+                    .filter((pl.col("timestamp") >= start_lit) & (pl.col("timestamp") < end_lit))
+                    .with_columns(
+                        pl.coalesce(
+                            pl.col("quote_volume").fill_nan(None),
+                            (pl.col("volume") * pl.col("open")).fill_nan(None),
+                        ).alias("vol_usd")
+                    )
+                    .select(["timestamp", "vol_usd"])
+                    .filter(pl.col("vol_usd").is_not_null() & pl.col("vol_usd").is_not_nan())
+                    .with_columns(pl.lit(0, dtype=pl.UInt8).alias("_src"))
+                )
+                parts.append(store_lf)
+            if vike_path is not None:
+                vike_lf = _scan_vike_volume_lf(vike_path, start_lit, end_lit)
+                if vike_lf is not None:
+                    parts.append(vike_lf.with_columns(pl.lit(1, dtype=pl.UInt8).alias("_src")))
+            if not parts:
+                cache[key] = np.full(grid_arr.size, np.nan, dtype=np.float64)
+                continue
+            combined = (
+                parts[0].drop("_src").unique(subset="timestamp", keep="first")
+                if len(parts) == 1
+                else (
+                    pl.concat(parts)
+                    .sort(["timestamp", "_src"])
+                    .unique(subset="timestamp", keep="first", maintain_order=True)
+                    .drop("_src")
+                )
+            )
+            bars = combined.collect(engine=prices.engine)
+            joined = (
+                trade_grid_df.join(bars, on="timestamp", how="left")["vol_usd"]
+                .fill_null(float("nan"))
+                .to_numpy()
+                .astype(np.float64, copy=True)
+            )
+            cache[key] = joined
+
+    return np.vstack([cache[(c, *g_key)] for c in coins])
 
 
 USER_AGENT = "trading-ops-research/1.0"

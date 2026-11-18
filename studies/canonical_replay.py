@@ -24,9 +24,10 @@ import sqlite3
 import subprocess
 import tomllib
 from collections.abc import Collection, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal as D
+from enum import StrEnum
 from pathlib import Path
 from typing import Any, Literal
 
@@ -757,6 +758,25 @@ def reconstruct_positions_on_grid(
     )
 
 
+def _apply_pair_outage_gap_exit(
+    cur_pos: float,
+    want: float,
+    prev_mark: float,
+    haircut_rate: float,
+    fee_rate: float,
+) -> tuple[float, float, float, float, int, int, float | None]:
+    if abs(cur_pos) <= 1e-12:
+        return cur_pos, 0.0, 0.0, 0.0, 0, 0, None
+    snap_val = want if abs(want) > 1e-9 else cur_pos
+    if np.isfinite(prev_mark) and prev_mark > 0:
+        direction = 1.0 if cur_pos > 0 else -1.0
+        exit_px = prev_mark * (1.0 - direction * haircut_rate)
+        bar_gross = cur_pos * (exit_px - prev_mark)
+        bar_cost = abs(cur_pos) * exit_px * fee_rate
+        return 0.0, -cur_pos, bar_gross, bar_cost, 1, 1, snap_val
+    return cur_pos, 0.0, 0.0, 0.0, 0, 1, None
+
+
 def replay_coin_targets_vectorized(
     targets: np.ndarray,
     trade_open: np.ndarray,
@@ -766,8 +786,53 @@ def replay_coin_targets_vectorized(
     gap_exit_haircut_bps: float = GAP_EXIT_HAIRCUT_BPS,
     fee_bps: float = DEFAULT_FEE_BPS,
     initial_pos: float = 0.0,
+    mode: Literal["legacy_target_chase", "cwsa_one_shot_v3"] = "legacy_target_chase",
+    vol_1m_usd: np.ndarray | None = None,
+    cwsa_cfg: CWSAReplayConfig | None = None,
+    liquidity_cfg: CausalLiquidityConfig | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, dict[str, float]]:
     """Simulate causal per-bar fills, fees, and pair-local stale-mark exits on a 1-coin target."""
+    if mode == "cwsa_one_shot_v3":
+        n = int(targets.size)
+        grid_ms = np.arange(n, dtype=np.int64) * 300_000
+        eff_cwsa = (
+            cwsa_cfg
+            if cwsa_cfg is not None
+            else CWSAReplayConfig(
+                fee_bps=fee_bps,
+                slippage_bps=max(0.0, cost_bps - fee_bps),
+            )
+        )
+        eff_liq = liquidity_cfg if liquidity_cfg is not None else CausalLiquidityConfig()
+        vol_2d = (
+            np.asarray(vol_1m_usd, dtype=np.float64).reshape(1, n)
+            if vol_1m_usd is not None
+            else None
+        )
+        res = simulate_cwsa_one_shot_replay(
+            coins=("COIN_0",),
+            source_positions=np.asarray(targets, dtype=np.float64).reshape(1, n),
+            trade_open=np.asarray(trade_open, dtype=np.float64).reshape(1, n),
+            mark_close=np.asarray(mark_close, dtype=np.float64).reshape(1, n),
+            grid_ms=grid_ms,
+            k_scale=1.0,
+            vol_1m_usd=vol_2d,
+            initial_positions=np.array([initial_pos], dtype=np.float64),
+            cwsa_cfg=eff_cwsa,
+            liquidity_cfg=eff_liq,
+        )
+        quarantined_bars = int(np.sum(res.dispositions[0] == OrderDisposition.QUARANTINED.value))
+        return (
+            res.executed_positions[0],
+            res.executed_deltas[0],
+            res.gross_pnl[0],
+            res.costs[0],
+            {
+                "forced_gap_exits": 0.0,
+                "unpriced_open_steps": float(quarantined_bars),
+                "deferred_notional_usd": float(res.participation_audit.total_missed_notional_usd),
+            },
+        )
     n = int(targets.size)
     cost_rate = cost_bps * 1e-4
     haircut_rate = gap_exit_haircut_bps * 1e-4
@@ -790,20 +855,17 @@ def replay_coin_targets_vectorized(
         t_open = float(trade_open[j])
         want = float(targets[j])
 
-        # Pair-local conservative termination if holding an open leg into a data outage.
         if not np.isfinite(m_close):
-            if abs(cur_pos) > 1e-12:
-                unpriced_open_steps += 1
-                snap_val = want if abs(want) > 1e-9 else cur_pos
-                if np.isfinite(prev_mark) and prev_mark > 0:
-                    direction = 1.0 if cur_pos > 0 else -1.0
-                    exit_px = prev_mark * (1.0 - direction * haircut_rate)
-                    gross[j] = cur_pos * (exit_px - prev_mark)
-                    cost[j] = abs(cur_pos) * exit_px * fee_rate
-                    delta[j] = -cur_pos
-                    cur_pos = 0.0
-                    forced_exits += 1
-                    outage_fenced_snap = snap_val
+            cur_pos, d_gap, g_gap, c_gap, f_inc, u_inc, snap_new = _apply_pair_outage_gap_exit(
+                cur_pos, want, prev_mark, haircut_rate, fee_rate
+            )
+            delta[j] = d_gap
+            gross[j] = g_gap
+            cost[j] = c_gap
+            forced_exits += f_inc
+            unpriced_open_steps += u_inc
+            if snap_new is not None:
+                outage_fenced_snap = snap_new
             pos[j] = cur_pos
             continue
 
@@ -1904,3 +1966,1132 @@ def reconcile_portfolio_with_pm03(
         "halted": account.breached,
         "account_verified": True,
     }
+
+
+class CheckpointClass(StrEnum):
+    """CWSA 5-minute checkpoint classification."""
+
+    BASELINE = "BASELINE"
+    UNCHANGED = "UNCHANGED"
+    CHANGED = "CHANGED"
+    FENCED = "FENCED"
+    RECOVERY_BASELINE = "RECOVERY_BASELINE"
+
+
+class OrderDisposition(StrEnum):
+    """Per-seat market checkpoint execution disposition."""
+
+    NOOP = "NOOP"
+    EXECUTED = "EXECUTED"
+    CLIPPED = "CLIPPED"
+    MISSED = "MISSED"
+    QUARANTINED = "QUARANTINED"
+    STATIC_HELD = "STATIC_HELD"
+
+
+class MarketProjectionMode(StrEnum):
+    """Q23=A single-order checkpoint market projection mode."""
+
+    DIRECT = "DIRECT"
+    CROSS_ZERO_SINGLE_ORDER = "CROSS_ZERO_SINGLE_ORDER"
+    REDUCE_ONLY_FALLBACK = "REDUCE_ONLY_FALLBACK"
+
+
+DEFAULT_SCALE_ALIASES: dict[str, tuple[str, float]] = {
+    "kPEPE": ("1000PEPE", 1.0),
+    "kSHIB": ("1000SHIB", 1.0),
+    "kFLOKI": ("1000FLOKI", 1.0),
+    "kBONK": ("1000BONK", 1.0),
+    "kLUNC": ("1000LUNC", 1.0),
+    "kNEIRO": ("1000NEIRO", 1.0),
+}
+
+
+def resolve_scale_alias(
+    coin: str,
+    scale_aliases: Mapping[str, tuple[str, float]] | None = None,
+) -> tuple[str, float]:
+    """Resolve source coin symbol to ``(follower_symbol, qty_multiplier)``."""
+    mapping = scale_aliases if scale_aliases is not None else DEFAULT_SCALE_ALIASES
+    if coin in mapping:
+        sym, mult = mapping[coin]
+        return str(sym), float(mult)
+    return str(coin), 1.0
+
+
+@dataclass(frozen=True)
+class CWSAReplayConfig:
+    """Parameters governing CWSA one-shot 5-minute checkpoint projection."""
+
+    source_stale_ms: int = 600_000
+    mark_stale_ms: int = 300_000
+    recovery_clean_bars: int = 2
+    cross_zero_permitted: bool = True
+    allow_q15_late_increase: bool = True
+    half_spread_bps: float = 0.0
+    fee_bps: float = DEFAULT_FEE_BPS
+    slippage_bps: float = DEFAULT_SLIPPAGE_BPS
+    qty_eps: float = 1e-12
+    scale_aliases: Mapping[str, tuple[str, float]] = field(
+        default_factory=lambda: dict(DEFAULT_SCALE_ALIASES)
+    )
+
+
+@dataclass(frozen=True)
+class CausalLiquidityConfig:
+    """Parameters governing 3-layer causal follower liquidity capacity."""
+
+    l1_window_days: int = 14
+    l1_min_median_daily_usd: float = 1_000_000.0
+    l1_min_1m_completeness: float = 0.95
+    l2_lookback_bars: int = 12
+    l2_quantile: float = 0.50
+    l2_min_valid_bars: int = 3
+    max_participation_1m: float = 0.05
+    protective_exit_haircut_bps: float = 15.0
+
+
+@dataclass
+class PairCWSAState:
+    """Mutable per-``(seat, coin)`` CWSA checkpoint tracking and quarantine state."""
+
+    initialized: bool = False
+    prev_source_qty: float = 0.0
+    held_follower_qty: float = 0.0
+    fenced: bool = False
+    recovery_clean_count: int = 0
+    quarantined: bool = False
+    quarantine_fresh_marks: int = 0
+    quarantine_awaiting_change: bool = False
+
+
+@dataclass(frozen=True)
+class L1ScreenResult:
+    """Layer-1 causal market eligibility screen summary."""
+
+    coins: tuple[str, ...]
+    allowed_mask: np.ndarray
+    allowed_coins: tuple[str, ...]
+    median_daily_usd: np.ndarray
+    completeness_1m: np.ndarray
+    rolling_allowed_mask: np.ndarray
+
+
+@dataclass(frozen=True)
+class SeatMarketIntent:
+    """Per-seat target proposal on one market prior to Q23=A and L3 allocation."""
+
+    seat_id: str
+    held_qty: float
+    raw_desired_qty: float
+    seat_blocks_cross_zero: bool = False
+    initial_disposition: OrderDisposition = OrderDisposition.NOOP
+
+
+@dataclass(frozen=True)
+class MarketStepAllocation:
+    """Layer-3 Q23=A market projection, internal crosses, and pro-rata fill result."""
+
+    coin_idx: int
+    projection_mode: MarketProjectionMode
+    seat_projected_qty: dict[str, float]
+    seat_post_qty: dict[str, float]
+    seat_dispositions: dict[str, OrderDisposition]
+    internal_crosses: tuple[tuple[str, str, float], ...]
+    external_allocations: dict[str, float]
+    external_delta_qty: float
+    external_exec_price: float
+    external_notional_usd: float
+    missed_notional_usd: float
+    extra_haircut_bps: float
+    l2_cap_usd: float
+    l2_prior_vol_valid: bool
+    realized_participation_1m: float
+
+
+@dataclass(frozen=True)
+class RealizedParticipationAudit:
+    """Ex-post 1-minute bar volume participation and missed-notional diagnostics."""
+
+    lookahead_bars_used: int
+    trade_count: int
+    volume_covered_trades: int
+    unpriced_or_missing_vol_trades: int
+    total_external_notional_usd: float
+    total_missed_notional_usd: float
+    max_participation_1m: float
+    p95_participation_1m: float
+    median_participation_1m: float
+    bars_gt_5pct_count: int
+    clipped_order_count: int
+    missed_order_count: int
+    protective_haircut_count: int
+
+
+@dataclass(frozen=True)
+class CWSAReplayResult:
+    """Single-seat CWSA one-shot replay output aligned to ``grid_ms``."""
+
+    mode: Literal["cwsa_one_shot_v3"]
+    coins: tuple[str, ...]
+    follower_coins: tuple[str, ...]
+    grid_ms: np.ndarray
+    executed_positions: np.ndarray
+    proposed_positions: np.ndarray
+    executed_deltas: np.ndarray
+    gross_pnl: np.ndarray
+    costs: np.ndarray
+    net_pnl: np.ndarray
+    step_pnl: np.ndarray
+    checkpoint_classes: np.ndarray
+    dispositions: np.ndarray
+    realized_participation_1m: np.ndarray
+    l2_cap_usd: np.ndarray
+    l1_screen: L1ScreenResult | None
+    participation_audit: RealizedParticipationAudit
+
+
+def _opposes(a: float, b: float, eps: float = 1e-12) -> bool:
+    return (a > eps and b < -eps) or (a < -eps and b > eps)
+
+
+def _same_sign(a: float, b: float, eps: float = 1e-12) -> bool:
+    return (a > eps and b > eps) or (a < -eps and b < -eps)
+
+
+def compute_notional_mirror_qty(
+    *,
+    k_scale: float,
+    source_qty: float,
+    source_mark: float,
+    follower_exec_quote: float,
+    qty_multiplier: float = 1.0,
+    eps: float = 1e-12,
+) -> float:
+    """Convert ``k * source_qty * source_mark`` USD notional into follower contracts."""
+    if not math.isfinite(k_scale) or not math.isfinite(qty_multiplier):
+        raise ValueError("INVALID_MIRROR_SCALE")
+    if not math.isfinite(source_qty) or abs(source_qty) <= eps or abs(k_scale) <= eps:
+        return 0.0
+    if not (math.isfinite(source_mark) and source_mark > 0.0):
+        raise ValueError("INVALID_SOURCE_MARK")
+    if not (math.isfinite(follower_exec_quote) and follower_exec_quote > 0.0):
+        raise ValueError("INVALID_FOLLOWER_EXEC_QUOTE")
+    requested_notional = float(k_scale) * float(source_qty) * float(source_mark) * float(
+        qty_multiplier
+    )
+    return requested_notional / float(follower_exec_quote)
+
+
+def _select_directional_mirror_qty(
+    *,
+    held_follower_qty: float,
+    k_scale: float,
+    source_qty: float,
+    source_mark: float,
+    exec_quote_buy: float,
+    exec_quote_sell: float,
+    qty_multiplier: float,
+    eps: float,
+) -> float:
+    if abs(source_qty) <= eps or abs(k_scale) <= eps:
+        return 0.0
+    q_buy_tgt = compute_notional_mirror_qty(
+        k_scale=k_scale,
+        source_qty=source_qty,
+        source_mark=source_mark,
+        follower_exec_quote=exec_quote_buy,
+        qty_multiplier=qty_multiplier,
+        eps=eps,
+    )
+    q_sell_tgt = compute_notional_mirror_qty(
+        k_scale=k_scale,
+        source_qty=source_qty,
+        source_mark=source_mark,
+        follower_exec_quote=exec_quote_sell,
+        qty_multiplier=qty_multiplier,
+        eps=eps,
+    )
+    if q_buy_tgt > held_follower_qty + eps:
+        return q_buy_tgt
+    if q_sell_tgt < held_follower_qty - eps:
+        return q_sell_tgt
+    return held_follower_qty
+
+
+def _protective_recovery_target(
+    *,
+    held_follower_qty: float,
+    k_scale: float,
+    source_qty: float,
+    source_mark: float,
+    exec_quote_buy: float,
+    exec_quote_sell: float,
+    qty_multiplier: float,
+    eps: float,
+) -> float | None:
+    if abs(held_follower_qty) <= eps:
+        return None
+    if abs(source_qty) <= eps or _opposes(source_qty, held_follower_qty, eps):
+        return 0.0
+    rec_tgt = _select_directional_mirror_qty(
+        held_follower_qty=held_follower_qty,
+        k_scale=k_scale,
+        source_qty=source_qty,
+        source_mark=source_mark,
+        exec_quote_buy=exec_quote_buy,
+        exec_quote_sell=exec_quote_sell,
+        qty_multiplier=qty_multiplier,
+        eps=eps,
+    )
+    if _same_sign(rec_tgt, held_follower_qty, eps) and abs(rec_tgt) < abs(held_follower_qty) - eps:
+        return float(rec_tgt)
+    if abs(rec_tgt) <= eps:
+        return 0.0
+    return None
+
+
+def classify_and_propose_cwsa_pair(
+    state: PairCWSAState,
+    *,
+    source_qty: float,
+    source_mark: float,
+    mark_price: float,
+    exec_quote_buy: float,
+    exec_quote_sell: float,
+    k_scale: float,
+    source_age_ms: int = 0,
+    mark_age_ms: int = 0,
+    qty_multiplier: float = 1.0,
+    initial_follower_qty: float = 0.0,
+    cfg: CWSAReplayConfig = CWSAReplayConfig(),
+) -> tuple[CheckpointClass, float, bool]:
+    """Classify one ``(seat, coin)`` checkpoint and return ``(cls, desired_qty, quote_ok)``."""
+    quote_ok = (
+        0 <= mark_age_ms <= cfg.mark_stale_ms
+        and math.isfinite(mark_price)
+        and mark_price > 0.0
+        and math.isfinite(exec_quote_buy)
+        and exec_quote_buy > 0.0
+        and math.isfinite(exec_quote_sell)
+        and exec_quote_sell > 0.0
+    )
+    source_ok = math.isfinite(source_qty) and 0 <= source_age_ms <= cfg.source_stale_ms
+    source_mark_ok = (not math.isfinite(source_qty)) or (abs(source_qty) <= cfg.qty_eps) or (
+        math.isfinite(source_mark) and source_mark > 0.0
+    )
+
+    if not state.initialized:
+        state.initialized = True
+        state.prev_source_qty = float(source_qty) if math.isfinite(source_qty) else 0.0
+        state.held_follower_qty = float(initial_follower_qty)
+        if not quote_ok or not source_mark_ok:
+            state.fenced = True
+            state.recovery_clean_count = 0
+            state.quarantined = True
+            state.quarantine_fresh_marks = 0
+            state.quarantine_awaiting_change = True
+            return CheckpointClass.FENCED, state.held_follower_qty, False
+        if not source_ok:
+            state.fenced = True
+            state.recovery_clean_count = 0
+            return CheckpointClass.FENCED, state.held_follower_qty, True
+        return CheckpointClass.BASELINE, state.held_follower_qty, True
+
+    if not quote_ok or not source_mark_ok:
+        state.fenced = True
+        state.recovery_clean_count = 0
+        state.quarantined = True
+        state.quarantine_fresh_marks = 0
+        state.quarantine_awaiting_change = True
+        return CheckpointClass.FENCED, state.held_follower_qty, False
+
+    if not source_ok:
+        state.fenced = True
+        state.recovery_clean_count = 0
+        return CheckpointClass.FENCED, state.held_follower_qty, True
+
+    if state.quarantined:
+        state.quarantine_fresh_marks += 1
+        if state.quarantine_fresh_marks < cfg.recovery_clean_bars:
+            state.prev_source_qty = float(source_qty)
+            return CheckpointClass.RECOVERY_BASELINE, state.held_follower_qty, False
+
+        if abs(source_qty - state.prev_source_qty) <= cfg.qty_eps:
+            prot_tgt = _protective_recovery_target(
+                held_follower_qty=state.held_follower_qty,
+                k_scale=k_scale,
+                source_qty=source_qty,
+                source_mark=source_mark,
+                exec_quote_buy=exec_quote_buy,
+                exec_quote_sell=exec_quote_sell,
+                qty_multiplier=qty_multiplier,
+                eps=cfg.qty_eps,
+            )
+            if prot_tgt is not None:
+                state.prev_source_qty = float(source_qty)
+                state.fenced = False
+                state.quarantined = False
+                state.quarantine_awaiting_change = False
+                return CheckpointClass.CHANGED, prot_tgt, True
+            cls = CheckpointClass.RECOVERY_BASELINE if state.fenced else CheckpointClass.UNCHANGED
+            state.fenced = False
+            state.quarantine_awaiting_change = True
+            return cls, state.held_follower_qty, True
+
+        state.fenced = False
+        state.quarantined = False
+        state.quarantine_awaiting_change = False
+        state.recovery_clean_count = 0
+
+    elif state.fenced:
+        state.recovery_clean_count += 1
+        prot_tgt = _protective_recovery_target(
+            held_follower_qty=state.held_follower_qty,
+            k_scale=k_scale,
+            source_qty=source_qty,
+            source_mark=source_mark,
+            exec_quote_buy=exec_quote_buy,
+            exec_quote_sell=exec_quote_sell,
+            qty_multiplier=qty_multiplier,
+            eps=cfg.qty_eps,
+        )
+        if state.recovery_clean_count < cfg.recovery_clean_bars:
+            state.prev_source_qty = float(source_qty)
+            if prot_tgt is not None:
+                return CheckpointClass.CHANGED, prot_tgt, True
+            return CheckpointClass.RECOVERY_BASELINE, state.held_follower_qty, True
+
+        state.fenced = False
+        state.recovery_clean_count = 0
+        if abs(source_qty - state.prev_source_qty) <= cfg.qty_eps:
+            state.prev_source_qty = float(source_qty)
+            if prot_tgt is not None:
+                return CheckpointClass.CHANGED, prot_tgt, True
+            return CheckpointClass.RECOVERY_BASELINE, state.held_follower_qty, True
+
+    if abs(source_qty - state.prev_source_qty) <= cfg.qty_eps:
+        return CheckpointClass.UNCHANGED, state.held_follower_qty, True
+
+    prev_old = state.prev_source_qty
+    state.prev_source_qty = float(source_qty)
+    if abs(source_qty) <= cfg.qty_eps:
+        return CheckpointClass.CHANGED, 0.0, True
+
+    full_target = _select_directional_mirror_qty(
+        held_follower_qty=state.held_follower_qty,
+        k_scale=k_scale,
+        source_qty=source_qty,
+        source_mark=source_mark,
+        exec_quote_buy=exec_quote_buy,
+        exec_quote_sell=exec_quote_sell,
+        qty_multiplier=qty_multiplier,
+        eps=cfg.qty_eps,
+    )
+
+    if abs(prev_old) <= cfg.qty_eps or _opposes(source_qty, prev_old, cfg.qty_eps):
+        desired = full_target
+    elif abs(source_qty) > abs(prev_old) + cfg.qty_eps:
+        if cfg.allow_q15_late_increase or abs(state.held_follower_qty) > cfg.qty_eps:
+            desired = full_target
+        else:
+            desired = 0.0
+    else:
+        if abs(state.held_follower_qty) <= cfg.qty_eps:
+            desired = 0.0
+        elif _same_sign(state.held_follower_qty, full_target, cfg.qty_eps):
+            sign = 1.0 if state.held_follower_qty > 0.0 else -1.0
+            desired = sign * min(abs(state.held_follower_qty), abs(full_target))
+        else:
+            desired = 0.0
+
+    return CheckpointClass.CHANGED, float(desired), True
+
+
+def screen_l1_allowed_markets(
+    coins: Sequence[str],
+    vol_1m_usd: np.ndarray,
+    grid_ms: np.ndarray,
+    *,
+    freeze_ts_ms: int | None = None,
+    bars_per_day: int = 288,
+    cfg: CausalLiquidityConfig = CausalLiquidityConfig(),
+) -> L1ScreenResult:
+    """Screen markets using trailing completed ``l1_window_days`` median volume & completeness."""
+    coin_tuple = tuple(str(c) for c in coins)
+    vol_arr = np.asarray(vol_1m_usd, dtype=np.float64)
+    grid_arr = np.asarray(grid_ms, dtype=np.int64)
+    n_coins = len(coin_tuple)
+    n_bars = int(grid_arr.size)
+    if vol_arr.shape != (n_coins, n_bars):
+        raise ValueError(f"INVALID_VOL_SHAPE:{vol_arr.shape}!={(n_coins, n_bars)}")
+    if n_coins == 0 or n_bars == 0 or bars_per_day <= 0:
+        return L1ScreenResult(
+            coins=coin_tuple,
+            allowed_mask=np.zeros(n_coins, dtype=bool),
+            allowed_coins=(),
+            median_daily_usd=np.zeros(n_coins, dtype=np.float64),
+            completeness_1m=np.zeros(n_coins, dtype=np.float64),
+            rolling_allowed_mask=np.zeros((n_coins, n_bars), dtype=bool),
+        )
+
+    step_ms = int(np.median(np.diff(grid_arr))) if n_bars > 1 else 300_000
+    utc_calendar_mode = (bars_per_day * step_ms) == 86_400_000 and step_ms >= 60_000
+    minutes_per_sample = float(step_ms) / 60_000.0 if utc_calendar_mode else 1.0
+
+    if utc_calendar_mode:
+        day_ids = grid_arr // 86_400_000
+    else:
+        day_ids = np.arange(n_bars, dtype=np.int64) // int(bars_per_day)
+
+    unique_days = np.unique(day_ids)
+    day_slices: list[tuple[int, np.ndarray, int, np.ndarray, np.ndarray]] = []
+    for d_id in unique_days:
+        idx = np.flatnonzero(day_ids == d_id)
+        if idx.size < bars_per_day:
+            continue
+        end_ts_ms = (
+            int((d_id + 1) * 86_400_000)
+            if utc_calendar_mode
+            else int(grid_arr[int(idx[-1])]) + step_ms
+        )
+        sub = vol_arr[:, idx[:bars_per_day]]
+        valid = np.isfinite(sub) & (sub >= 0.0)
+        d_vol = np.where(valid, sub, 0.0).sum(axis=1) * minutes_per_sample
+        d_valid_cnt = valid.sum(axis=1).astype(np.float64)
+        day_slices.append((int(d_id), idx, end_ts_ms, d_vol, d_valid_cnt))
+
+    w_days = max(1, int(cfg.l1_window_days))
+    rolling_mask = np.zeros((n_coins, n_bars), dtype=bool)
+    for d_id in unique_days:
+        bar_idx = np.flatnonzero(day_ids == d_id)
+        prior = [entry for entry in day_slices if entry[0] < int(d_id)]
+        if len(prior) < w_days:
+            continue
+        win = prior[-w_days:]
+        vols_mat = np.stack([x[3] for x in win], axis=1)
+        cnts_sum = np.sum([x[4] for x in win], axis=0)
+        med = np.median(vols_mat, axis=1)
+        comp = cnts_sum / float(w_days * bars_per_day)
+        ok = (med >= cfg.l1_min_median_daily_usd) & (comp >= cfg.l1_min_1m_completeness)
+        rolling_mask[:, bar_idx] = ok[:, None]
+
+    cutoff_ms = int(freeze_ts_ms) if freeze_ts_ms is not None else int(grid_arr[-1]) + step_ms
+    completed = [entry for entry in day_slices if entry[2] <= cutoff_ms]
+    if len(completed) < w_days:
+        return L1ScreenResult(
+            coins=coin_tuple,
+            allowed_mask=np.zeros(n_coins, dtype=bool),
+            allowed_coins=(),
+            median_daily_usd=np.zeros(n_coins, dtype=np.float64),
+            completeness_1m=np.zeros(n_coins, dtype=np.float64),
+            rolling_allowed_mask=rolling_mask,
+        )
+
+    win_f = completed[-w_days:]
+    vols_f = np.stack([x[3] for x in win_f], axis=1)
+    cnts_f = np.sum([x[4] for x in win_f], axis=0)
+    median_daily = np.median(vols_f, axis=1)
+    completeness = cnts_f / float(w_days * bars_per_day)
+    allowed_mask = (median_daily >= cfg.l1_min_median_daily_usd) & (
+        completeness >= cfg.l1_min_1m_completeness
+    )
+    allowed_coins = tuple(c for c, flag in zip(coin_tuple, allowed_mask, strict=True) if flag)
+    return L1ScreenResult(
+        coins=coin_tuple,
+        allowed_mask=allowed_mask,
+        allowed_coins=allowed_coins,
+        median_daily_usd=median_daily,
+        completeness_1m=completeness,
+        rolling_allowed_mask=rolling_mask,
+    )
+
+
+def estimate_causal_bar_capacity(
+    vol_usd_strictly_prior: np.ndarray,
+    cfg: CausalLiquidityConfig = CausalLiquidityConfig(),
+) -> tuple[np.ndarray, np.ndarray]:
+    """Compute Layer-2 ``(cap_usd, prior_vol_valid)`` from strictly prior 1m bar volumes."""
+    arr = np.asarray(vol_usd_strictly_prior, dtype=np.float64)
+    if arr.ndim != 2:
+        raise ValueError(f"EXPECTED_2D_PRIOR_VOLUME_SLICE:{arr.shape}")
+    if arr.shape[1] > cfg.l2_lookback_bars:
+        arr = arr[:, -cfg.l2_lookback_bars :]
+
+    n_coins, n_win = arr.shape
+    cap_usd = np.zeros(n_coins, dtype=np.float64)
+    prior_vol_valid = np.zeros(n_coins, dtype=bool)
+    if n_win < cfg.l2_min_valid_bars or cfg.l2_lookback_bars <= 0:
+        return cap_usd, prior_vol_valid
+
+    valid_mask = np.isfinite(arr) & (arr >= 0.0)
+    valid_counts = np.sum(valid_mask, axis=1)
+    for ci in range(n_coins):
+        if int(valid_counts[ci]) < cfg.l2_min_valid_bars:
+            continue
+        vals = arr[ci, valid_mask[ci]]
+        v_hat = float(np.quantile(vals, cfg.l2_quantile))
+        if math.isfinite(v_hat) and v_hat > 0.0:
+            prior_vol_valid[ci] = True
+            cap_usd[ci] = cfg.max_participation_1m * v_hat
+    return cap_usd, prior_vol_valid
+
+
+def _cross_pro_rata(
+    buy_map: dict[str, float],
+    sell_map: dict[str, float],
+    crossed_delta: dict[str, float],
+    cross_records: list[tuple[str, str, float]],
+    eps: float,
+) -> None:
+    tot_b = sum(q for q in buy_map.values() if q > eps)
+    tot_s = sum(q for q in sell_map.values() if q > eps)
+    ct = min(tot_b, tot_s)
+    if ct <= eps:
+        return
+    b_take = {k: q * (ct / tot_b) for k, q in sorted(buy_map.items()) if q > eps}
+    s_take = {k: q * (ct / tot_s) for k, q in sorted(sell_map.items()) if q > eps}
+    for bk, dq in b_take.items():
+        buy_map[bk] = max(0.0, buy_map[bk] - dq)
+    for sk, dq in s_take.items():
+        sell_map[sk] = max(0.0, sell_map[sk] - dq)
+    for bk in sorted(b_take):
+        for sk in sorted(s_take):
+            qty = min(b_take[bk], s_take[sk])
+            if qty <= eps:
+                continue
+            cross_records.append((bk, sk, float(qty)))
+            b_take[bk] -= qty
+            s_take[sk] -= qty
+            crossed_delta[bk] += qty
+            crossed_delta[sk] -= qty
+
+
+def allocate_l3_market_step(
+    coin_idx: int,
+    intents: Sequence[SeatMarketIntent],
+    *,
+    exec_price_buy: float,
+    exec_price_sell: float,
+    mark_price: float,
+    l2_cap_usd: float,
+    l2_prior_vol_valid: bool,
+    actual_bar_vol_1m_usd: float,
+    cross_zero_permitted: bool = True,
+    protective_exit_haircut_bps: float = 15.0,
+    eps: float = 1e-12,
+) -> MarketStepAllocation:
+    """Project Q23=A market orders, cross opposing seats at mark, and allocate L3 fills."""
+    ordered = sorted(intents, key=lambda x: x.seat_id)
+    old_net = sum(float(i.held_qty) for i in ordered)
+    raw_net = sum(float(i.raw_desired_qty) for i in ordered)
+
+    locked_opposes_active = any(
+        _opposes(float(locked.held_qty), float(act.raw_desired_qty), eps)
+        for locked in ordered
+        if locked.seat_blocks_cross_zero and abs(locked.held_qty) > eps
+        for act in ordered
+        if not act.seat_blocks_cross_zero and act.seat_id != locked.seat_id
+    )
+    fallback = (_opposes(old_net, raw_net, eps) and not cross_zero_permitted) or (
+        locked_opposes_active
+    )
+
+    projected: dict[str, float] = {}
+    dispositions: dict[str, OrderDisposition] = {}
+    q23_clamped: dict[str, bool] = {}
+    q23_partial_clipped: set[str] = set()
+    missed_notional_usd = 0.0
+
+    if fallback:
+        projection_mode = MarketProjectionMode.REDUCE_ONLY_FALLBACK
+        for item in ordered:
+            sid = item.seat_id
+            if item.seat_blocks_cross_zero:
+                proj = float(item.raw_desired_qty)
+            elif _same_sign(float(item.held_qty), float(item.raw_desired_qty), eps):
+                sign = 1.0 if item.held_qty > 0.0 else -1.0
+                proj = sign * min(abs(item.held_qty), abs(item.raw_desired_qty))
+            else:
+                proj = 0.0
+            projected[sid] = proj
+            if abs(proj - item.raw_desired_qty) > eps:
+                q23_clamped[sid] = True
+                dispositions[sid] = OrderDisposition.MISSED
+                if math.isfinite(mark_price) and mark_price > 0.0:
+                    missed_notional_usd += abs(item.raw_desired_qty - proj) * mark_price
+            else:
+                q23_clamped[sid] = False
+                dispositions[sid] = item.initial_disposition
+
+        proj_net = sum(projected.values())
+        if abs(old_net) <= eps or _opposes(old_net, proj_net, eps):
+            allowed_net = 0.0
+        elif abs(proj_net) > abs(old_net) + eps:
+            allowed_net = old_net
+        else:
+            allowed_net = proj_net
+
+        if abs(proj_net - allowed_net) > eps:
+            need_trim = abs(proj_net - allowed_net)
+            move_dir = 1.0 if (proj_net - allowed_net) > 0.0 else -1.0
+            movers = [
+                i
+                for i in ordered
+                if not i.seat_blocks_cross_zero
+                and _same_sign(projected[i.seat_id] - float(i.held_qty), move_dir, eps)
+            ]
+            mover_sum = sum(abs(projected[i.seat_id] - float(i.held_qty)) for i in movers)
+            if mover_sum > eps:
+                trim_amt = min(need_trim, mover_sum)
+                keep_ratio = max(0.0, (mover_sum - trim_amt) / mover_sum)
+                for item in movers:
+                    sid = item.seat_id
+                    old_proj = projected[sid]
+                    d_orig = old_proj - float(item.held_qty)
+                    new_proj = float(item.held_qty) + d_orig * keep_ratio
+                    projected[sid] = new_proj
+                    trimmed_q = abs(old_proj - new_proj)
+                    if trimmed_q > eps:
+                        if math.isfinite(mark_price) and mark_price > 0.0:
+                            missed_notional_usd += trimmed_q * mark_price
+                        if abs(new_proj - float(item.held_qty)) <= eps:
+                            q23_clamped[sid] = True
+                            dispositions[sid] = OrderDisposition.MISSED
+                        else:
+                            q23_partial_clipped.add(sid)
+    else:
+        projection_mode = (
+            MarketProjectionMode.CROSS_ZERO_SINGLE_ORDER
+            if _opposes(old_net, raw_net, eps)
+            else MarketProjectionMode.DIRECT
+        )
+        for item in ordered:
+            projected[item.seat_id] = float(item.raw_desired_qty)
+            q23_clamped[item.seat_id] = False
+            dispositions[item.seat_id] = item.initial_disposition
+
+    deltas = {i.seat_id: projected[i.seat_id] - float(i.held_qty) for i in ordered}
+    red_deltas: dict[str, float] = {}
+    inc_deltas: dict[str, float] = {}
+    for item in ordered:
+        sid = item.seat_id
+        h_q = float(item.held_qty)
+        d_q = deltas[sid]
+        if abs(d_q) <= eps:
+            red_deltas[sid] = 0.0
+            inc_deltas[sid] = 0.0
+        elif _opposes(h_q, d_q, eps):
+            r_mag = min(abs(h_q), abs(d_q))
+            r_val = math.copysign(r_mag, d_q)
+            red_deltas[sid] = r_val
+            inc_deltas[sid] = d_q - r_val
+        else:
+            red_deltas[sid] = 0.0
+            inc_deltas[sid] = d_q
+
+    red_buys = {sid: q for sid, q in red_deltas.items() if q > eps}
+    red_sells = {sid: -q for sid, q in red_deltas.items() if q < -eps}
+    inc_buys = {sid: q for sid, q in inc_deltas.items() if q > eps}
+    inc_sells = {sid: -q for sid, q in inc_deltas.items() if q < -eps}
+
+    cross_records: list[tuple[str, str, float]] = []
+    crossed_delta: dict[str, float] = {i.seat_id: 0.0 for i in ordered}
+
+    _cross_pro_rata(red_buys, red_sells, crossed_delta, cross_records, eps)
+    _cross_pro_rata(red_buys, inc_sells, crossed_delta, cross_records, eps)
+    _cross_pro_rata(inc_buys, red_sells, crossed_delta, cross_records, eps)
+    _cross_pro_rata(inc_buys, inc_sells, crossed_delta, cross_records, eps)
+
+    pos_after_cross: dict[str, float] = {}
+    reduce_parts: dict[str, float] = {}
+    increase_parts: dict[str, float] = {}
+    for item in ordered:
+        sid = item.seat_id
+        pos_after_cross[sid] = float(item.held_qty) + crossed_delta[sid]
+        rb = red_buys.get(sid, 0.0)
+        rs = red_sells.get(sid, 0.0)
+        ib = inc_buys.get(sid, 0.0)
+        is_q = inc_sells.get(sid, 0.0)
+        reduce_parts[sid] = rb if rb > eps else (-rs if rs > eps else 0.0)
+        increase_parts[sid] = ib if ib > eps else (-is_q if is_q > eps else 0.0)
+
+    clipped_seats: set[str] = set(q23_partial_clipped)
+    missed_inc_seats: set[str] = set()
+
+    tot_red_signed = sum(reduce_parts.values())
+    tot_inc_signed = sum(increase_parts.values())
+    ext_probe = tot_red_signed if abs(tot_red_signed) > eps else tot_inc_signed
+    ext_sign = 1.0 if ext_probe > eps else (-1.0 if ext_probe < -eps else 0.0)
+    exec_px = (
+        float(exec_price_buy)
+        if ext_sign > 0.0
+        else (float(exec_price_sell) if ext_sign < 0.0 else float(mark_price))
+    )
+
+    if not l2_prior_vol_valid and abs(tot_red_signed) > eps:
+        max_red_mag = abs(old_net) if _opposes(old_net, tot_red_signed, eps) else 0.0
+        cur_red_mag = sum(abs(v) for v in reduce_parts.values())
+        if cur_red_mag > max_red_mag + eps:
+            r_scale = max_red_mag / cur_red_mag if max_red_mag > eps else 0.0
+            missed_notional_usd += (cur_red_mag - max_red_mag) * exec_px
+            for item in ordered:
+                sid = item.seat_id
+                if abs(reduce_parts[sid]) > eps:
+                    reduce_parts[sid] = reduce_parts[sid] * r_scale
+                    if abs(reduce_parts[sid]) > eps or abs(crossed_delta[sid]) > eps:
+                        clipped_seats.add(sid)
+                    else:
+                        missed_inc_seats.add(sid)
+
+    total_reduce_qty = sum(abs(v) for v in reduce_parts.values())
+    extra_haircut_bps = (
+        float(protective_exit_haircut_bps)
+        if (not l2_prior_vol_valid and total_reduce_qty > eps)
+        else 0.0
+    )
+
+    rem_cap_usd = (
+        0.0
+        if not l2_prior_vol_valid
+        else max(0.0, float(l2_cap_usd) - total_reduce_qty * exec_px)
+    )
+    req_inc_qty = sum(abs(v) for v in increase_parts.values())
+    req_inc_usd = req_inc_qty * exec_px
+
+    inc_fills: dict[str, float] = {i.seat_id: 0.0 for i in ordered}
+
+    if req_inc_qty > eps:
+        if rem_cap_usd <= eps:
+            missed_notional_usd += req_inc_usd
+            for item in ordered:
+                sid = item.seat_id
+                if abs(increase_parts[sid]) > eps:
+                    has_prior_fill = (
+                        abs(crossed_delta[sid]) > eps or abs(reduce_parts[sid]) > eps
+                    )
+                    if has_prior_fill:
+                        clipped_seats.add(sid)
+                    else:
+                        missed_inc_seats.add(sid)
+        elif req_inc_usd <= rem_cap_usd + 1e-9:
+            for item in ordered:
+                sid = item.seat_id
+                inc_fills[sid] = increase_parts[sid]
+        else:
+            scale = rem_cap_usd / req_inc_usd
+            missed_notional_usd += req_inc_usd - rem_cap_usd
+            for item in ordered:
+                sid = item.seat_id
+                if abs(increase_parts[sid]) > eps:
+                    inc_fills[sid] = increase_parts[sid] * scale
+                    clipped_seats.add(sid)
+
+    seat_post_qty: dict[str, float] = {}
+    external_allocations: dict[str, float] = {}
+    for item in ordered:
+        sid = item.seat_id
+        ext_i = reduce_parts[sid] + inc_fills[sid]
+        post_i = pos_after_cross[sid] + ext_i
+        if abs(post_i) <= eps:
+            post_i = 0.0
+        seat_post_qty[sid] = post_i
+        if abs(ext_i) > eps:
+            external_allocations[sid] = ext_i
+
+        if q23_clamped[sid]:
+            dispositions[sid] = OrderDisposition.MISSED
+        elif sid in clipped_seats:
+            dispositions[sid] = OrderDisposition.CLIPPED
+        elif sid in missed_inc_seats:
+            dispositions[sid] = OrderDisposition.MISSED
+        elif abs(deltas[sid]) > eps:
+            dispositions[sid] = OrderDisposition.EXECUTED
+
+    external_delta_qty = sum(external_allocations.values())
+    if abs(external_delta_qty) <= eps:
+        external_delta_qty = 0.0
+        external_notional_usd = 0.0
+    else:
+        external_notional_usd = abs(external_delta_qty) * exec_px
+
+    if math.isfinite(actual_bar_vol_1m_usd) and actual_bar_vol_1m_usd > 0.0:
+        realized_part = external_notional_usd / float(actual_bar_vol_1m_usd)
+    else:
+        realized_part = float("nan")
+
+    return MarketStepAllocation(
+        coin_idx=coin_idx,
+        projection_mode=projection_mode,
+        seat_projected_qty=projected,
+        seat_post_qty=seat_post_qty,
+        seat_dispositions=dispositions,
+        internal_crosses=tuple(cross_records),
+        external_allocations=external_allocations,
+        external_delta_qty=external_delta_qty,
+        external_exec_price=exec_px,
+        external_notional_usd=external_notional_usd,
+        missed_notional_usd=missed_notional_usd,
+        extra_haircut_bps=extra_haircut_bps,
+        l2_cap_usd=float(l2_cap_usd),
+        l2_prior_vol_valid=bool(l2_prior_vol_valid),
+        realized_participation_1m=realized_part,
+    )
+
+
+def simulate_cwsa_one_shot_replay(
+    coins: Sequence[str],
+    source_positions: np.ndarray,
+    trade_open: np.ndarray,
+    mark_close: np.ndarray,
+    grid_ms: np.ndarray,
+    *,
+    source_marks: np.ndarray | None = None,
+    k_scale: float = 1.0,
+    vol_1m_usd: np.ndarray | None = None,
+    source_ages_ms: np.ndarray | None = None,
+    mark_ages_ms: np.ndarray | None = None,
+    allowed_markets_mask: np.ndarray | None = None,
+    initial_positions: np.ndarray | None = None,
+    seat_id: str = "SEAT_0",
+    mode: Literal["cwsa_one_shot_v3"] = "cwsa_one_shot_v3",
+    cwsa_cfg: CWSAReplayConfig = CWSAReplayConfig(),
+    liquidity_cfg: CausalLiquidityConfig = CausalLiquidityConfig(),
+) -> CWSAReplayResult:
+    """Run single-seat CWSA one-shot replay with 3-layer causal follower liquidity."""
+    if mode != "cwsa_one_shot_v3":
+        raise ValueError(f"UNSUPPORTED_CWSA_REPLAY_MODE:{mode}")
+
+    coin_tuple = tuple(str(c) for c in coins)
+    n_coins = len(coin_tuple)
+    grid_arr = np.asarray(grid_ms, dtype=np.int64)
+    n_bars = int(grid_arr.size)
+
+    src_pos = np.asarray(source_positions, dtype=np.float64)
+    t_open = np.asarray(trade_open, dtype=np.float64)
+    m_close = np.asarray(mark_close, dtype=np.float64)
+    if src_pos.shape != (n_coins, n_bars) or t_open.shape != (n_coins, n_bars) or (
+        m_close.shape != (n_coins, n_bars)
+    ):
+        raise ValueError("CWSA_REPLAY_SHAPE_MISMATCH")
+
+    src_marks = (
+        np.asarray(source_marks, dtype=np.float64)
+        if source_marks is not None
+        else np.where(np.isfinite(t_open), t_open, m_close)
+    )
+    vol_mat = (
+        np.asarray(vol_1m_usd, dtype=np.float64)
+        if vol_1m_usd is not None
+        else np.full((n_coins, n_bars), np.nan, dtype=np.float64)
+    )
+    src_ages = (
+        np.asarray(source_ages_ms, dtype=np.int64)
+        if source_ages_ms is not None
+        else np.zeros((n_coins, n_bars), dtype=np.int64)
+    )
+    mk_ages = (
+        np.asarray(mark_ages_ms, dtype=np.int64)
+        if mark_ages_ms is not None
+        else np.zeros((n_coins, n_bars), dtype=np.int64)
+    )
+    init_pos = (
+        np.asarray(initial_positions, dtype=np.float64)
+        if initial_positions is not None
+        else np.zeros(n_coins, dtype=np.float64)
+    )
+
+    resolved_pairs = [resolve_scale_alias(c, cwsa_cfg.scale_aliases) for c in coin_tuple]
+    follower_coins = tuple(pair[0] for pair in resolved_pairs)
+    qty_mults = np.array([pair[1] for pair in resolved_pairs], dtype=np.float64)
+
+    l1_res: L1ScreenResult | None = None
+    if allowed_markets_mask is not None:
+        allow_arr = np.asarray(allowed_markets_mask, dtype=bool)
+        if allow_arr.ndim == 1:
+            allow_2d = np.broadcast_to(allow_arr[:, None], (n_coins, n_bars))
+        else:
+            allow_2d = allow_arr
+    else:
+        allow_2d = np.ones((n_coins, n_bars), dtype=bool)
+
+    exec_pos = np.zeros((n_coins, n_bars), dtype=np.float64)
+    prop_pos = np.zeros((n_coins, n_bars), dtype=np.float64)
+    exec_deltas = np.zeros((n_coins, n_bars), dtype=np.float64)
+    gross_pnl = np.zeros((n_coins, n_bars), dtype=np.float64)
+    costs = np.zeros((n_coins, n_bars), dtype=np.float64)
+    ckpt_classes = np.empty((n_coins, n_bars), dtype=object)
+    disp_arr = np.empty((n_coins, n_bars), dtype=object)
+    real_part = np.full((n_coins, n_bars), np.nan, dtype=np.float64)
+    l2_caps = np.zeros((n_coins, n_bars), dtype=np.float64)
+
+    pair_states = [PairCWSAState() for _ in range(n_coins)]
+    prev_marks = np.full(n_coins, np.nan, dtype=np.float64)
+    spread_frac = cwsa_cfg.half_spread_bps * 1e-4
+
+    trade_ratios: list[float] = []
+    trade_count = 0
+    missing_vol_trades = 0
+    total_ext_notional = 0.0
+    total_missed_notional = 0.0
+    clipped_cnt = 0
+    missed_cnt = 0
+    haircut_cnt = 0
+
+    for j in range(n_bars):
+        prior_start = max(0, j - liquidity_cfg.l2_lookback_bars)
+        prior_vol_slice = vol_mat[:, prior_start:j]
+        bar_caps, bar_vol_valid = estimate_causal_bar_capacity(prior_vol_slice, liquidity_cfg)
+        l2_caps[:, j] = bar_caps
+
+        for ci in range(n_coins):
+            st = pair_states[ci]
+            to_px = float(t_open[ci, j])
+            mc_px = float(m_close[ci, j])
+            if math.isfinite(to_px) and to_px > 0.0:
+                q_buy = to_px * (1.0 + spread_frac)
+                q_sell = to_px * max(1e-9, 1.0 - spread_frac)
+            else:
+                q_buy = float("nan")
+                q_sell = float("nan")
+
+            cls, raw_want, executable = classify_and_propose_cwsa_pair(
+                st,
+                source_qty=float(src_pos[ci, j]),
+                source_mark=float(src_marks[ci, j]),
+                mark_price=mc_px,
+                exec_quote_buy=q_buy,
+                exec_quote_sell=q_sell,
+                k_scale=k_scale,
+                source_age_ms=int(src_ages[ci, j]),
+                mark_age_ms=int(mk_ages[ci, j]),
+                qty_multiplier=float(qty_mults[ci]),
+                initial_follower_qty=float(init_pos[ci]),
+                cfg=cwsa_cfg,
+            )
+            ckpt_classes[ci, j] = cls.value
+
+            if not allow_2d[ci, j]:
+                if _same_sign(st.held_follower_qty, raw_want, cwsa_cfg.qty_eps):
+                    sgn = 1.0 if st.held_follower_qty > 0.0 else -1.0
+                    raw_want = sgn * min(abs(st.held_follower_qty), abs(raw_want))
+                else:
+                    raw_want = 0.0
+
+            prop_pos[ci, j] = raw_want
+            old_qty = st.held_follower_qty
+
+            if not executable:
+                disp_arr[ci, j] = OrderDisposition.QUARANTINED.value
+                exec_pos[ci, j] = old_qty
+                exec_deltas[ci, j] = 0.0
+                if (
+                    math.isfinite(mc_px)
+                    and mc_px > 0.0
+                    and 0 <= int(mk_ages[ci, j]) <= cwsa_cfg.mark_stale_ms
+                ):
+                    if math.isfinite(prev_marks[ci]):
+                        gross_pnl[ci, j] = old_qty * (mc_px - float(prev_marks[ci]))
+                    prev_marks[ci] = mc_px
+                continue
+
+            alloc = allocate_l3_market_step(
+                ci,
+                (
+                    SeatMarketIntent(
+                        seat_id=seat_id,
+                        held_qty=old_qty,
+                        raw_desired_qty=raw_want,
+                        seat_blocks_cross_zero=False,
+                        initial_disposition=OrderDisposition.NOOP,
+                    ),
+                ),
+                exec_price_buy=q_buy,
+                exec_price_sell=q_sell,
+                mark_price=mc_px,
+                l2_cap_usd=float(bar_caps[ci]),
+                l2_prior_vol_valid=bool(bar_vol_valid[ci]),
+                actual_bar_vol_1m_usd=float(vol_mat[ci, j]),
+                cross_zero_permitted=cwsa_cfg.cross_zero_permitted,
+                protective_exit_haircut_bps=liquidity_cfg.protective_exit_haircut_bps,
+                eps=cwsa_cfg.qty_eps,
+            )
+
+            new_qty = alloc.seat_post_qty[seat_id]
+            d_qty = new_qty - old_qty
+            disp = alloc.seat_dispositions[seat_id]
+            st.held_follower_qty = new_qty
+
+            exec_pos[ci, j] = new_qty
+            exec_deltas[ci, j] = d_qty
+            disp_arr[ci, j] = disp.value
+            real_part[ci, j] = alloc.realized_participation_1m
+            total_missed_notional += alloc.missed_notional_usd
+            if disp == OrderDisposition.CLIPPED:
+                clipped_cnt += 1
+            elif disp == OrderDisposition.MISSED:
+                missed_cnt += 1
+            if alloc.extra_haircut_bps > 0.0:
+                haircut_cnt += 1
+
+            bar_gross = 0.0
+            if math.isfinite(prev_marks[ci]):
+                bar_gross += old_qty * (to_px - float(prev_marks[ci]))
+            bar_gross += new_qty * (mc_px - to_px)
+
+            bar_cost = 0.0
+            if abs(d_qty) > cwsa_cfg.qty_eps:
+                trade_count += 1
+                total_ext_notional += alloc.external_notional_usd
+                if math.isfinite(alloc.realized_participation_1m):
+                    trade_ratios.append(alloc.realized_participation_1m)
+                else:
+                    missing_vol_trades += 1
+                ext_sgn = 1.0 if d_qty > 0.0 else -1.0
+                slip_rate = (cwsa_cfg.slippage_bps + alloc.extra_haircut_bps) * 1e-4
+                fill_px = alloc.external_exec_price * (1.0 + ext_sgn * slip_rate)
+                drag_usd = d_qty * (fill_px - to_px)
+                fee_usd = abs(d_qty) * fill_px * (cwsa_cfg.fee_bps * 1e-4)
+                bar_cost = drag_usd + fee_usd
+
+            gross_pnl[ci, j] = bar_gross
+            costs[ci, j] = bar_cost
+            prev_marks[ci] = mc_px
+
+    net_pnl = gross_pnl - costs
+    step_pnl = np.sum(net_pnl, axis=0)
+    ratios_np = np.asarray(trade_ratios, dtype=np.float64)
+    audit = RealizedParticipationAudit(
+        lookahead_bars_used=0,
+        trade_count=trade_count,
+        volume_covered_trades=int(ratios_np.size),
+        unpriced_or_missing_vol_trades=missing_vol_trades,
+        total_external_notional_usd=total_ext_notional,
+        total_missed_notional_usd=total_missed_notional,
+        max_participation_1m=float(np.max(ratios_np)) if ratios_np.size else 0.0,
+        p95_participation_1m=float(np.quantile(ratios_np, 0.95)) if ratios_np.size else 0.0,
+        median_participation_1m=float(np.median(ratios_np)) if ratios_np.size else 0.0,
+        bars_gt_5pct_count=int(np.count_nonzero(ratios_np > 0.05)) if ratios_np.size else 0,
+        clipped_order_count=clipped_cnt,
+        missed_order_count=missed_cnt,
+        protective_haircut_count=haircut_cnt,
+    )
+    return CWSAReplayResult(
+        mode=mode,
+        coins=coin_tuple,
+        follower_coins=follower_coins,
+        grid_ms=grid_arr,
+        executed_positions=exec_pos,
+        proposed_positions=prop_pos,
+        executed_deltas=exec_deltas,
+        gross_pnl=gross_pnl,
+        costs=costs,
+        net_pnl=net_pnl,
+        step_pnl=step_pnl,
+        checkpoint_classes=ckpt_classes,
+        dispositions=disp_arr,
+        realized_participation_1m=real_part,
+        l2_cap_usd=l2_caps,
+        l1_screen=l1_res,
+        participation_audit=audit,
+    )
