@@ -7,6 +7,7 @@ import hashlib
 import itertools
 import json
 import os
+import re
 import sqlite3
 import urllib.parse
 import urllib.request
@@ -789,6 +790,10 @@ class LazyPrices:
         self._bars_1m_cache[coin] = (ts_ms, open_arr, close_arr)
         return self._bars_1m_cache[coin]
 
+    def clear_1m_cache(self) -> None:
+        """Clear cached 1-minute bar arrays to free memory."""
+        self._bars_1m_cache.clear()
+
     def get_quote_volume_on_grid(self, coin: str) -> np.ndarray:
         """Return 1-minute execution-bar USD quote volume aligned to ``self.grid``."""
         return load_1m_volumes_on_grid([coin], self.grid, self, self.vol_cache)[0]
@@ -897,6 +902,8 @@ def load_1m_volumes_on_grid(
 ) -> np.ndarray:
     """Load 1m USD dollar volumes aligned to execution bars ``grid_ms + 60_000``."""
     grid_arr = np.asarray(grid_ms, dtype=np.int64)
+    if grid_arr.ndim != 1:
+        raise ValueError("GRID_MS_MUST_BE_1D")
     if not coins:
         return np.zeros((0, int(grid_arr.size)), dtype=np.float64)
     if grid_arr.size == 0:
@@ -962,6 +969,135 @@ def load_1m_volumes_on_grid(
             cache[key] = joined
 
     return np.vstack([cache[(c, *g_key)] for c in coins])
+
+
+_HEX_ALIAS_RE = re.compile(r"0x[0-9a-fA-F]{4,}")
+HEX_ALIAS_RE = _HEX_ALIAS_RE
+
+
+def sanitize_public_label(label: str) -> str:
+    """Replace 0x hex aliases with deterministic short SHA-256 identifiers."""
+    return _HEX_ALIAS_RE.sub(
+        lambda m: f"H#{hashlib.sha256(m.group(0).lower().encode()).hexdigest()[:6]}",
+        label,
+    )
+
+
+FUNDING_SCAN_SCHEMA = pl.Schema(
+    {
+        "timestamp": pl.Datetime("us", "UTC"),
+        "funding_rate": pl.Float64,
+        "funding_interval_hours": pl.Float64,
+    }
+)
+_FUNDING_FLOAT_CAST_OPTIONS = pl.ScanCastOptions(
+    datetime_cast="millisecond-upcast",
+    float_cast="upcast",
+    integer_cast="allow-float",
+)
+
+
+def _scan_funding_frames(
+    f_paths: list[str],
+    start_lit: pl.Expr,
+    end_lit: pl.Expr,
+) -> pl.DataFrame:
+    interval_h = pl.coalesce(pl.col("funding_interval_hours").fill_nan(None), pl.lit(8.0))
+    fr = pl.col("funding_rate").fill_nan(None)
+    rate_5m = (
+        pl.when(fr.is_finite() & interval_h.is_finite() & (interval_h > 0.0))
+        .then(fr / (interval_h * 12.0))
+        .otherwise(0.0)
+        .alias("rate_5m")
+    )
+    return (
+        pl.scan_parquet(
+            f_paths,
+            schema=FUNDING_SCAN_SCHEMA,
+            hive_partitioning=False,
+            missing_columns="insert",
+            extra_columns="ignore",
+            cast_options=_FUNDING_FLOAT_CAST_OPTIONS,
+        )
+        .filter((pl.col("timestamp") >= start_lit) & (pl.col("timestamp") < end_lit))
+        .with_columns(rate_5m)
+        .select(["timestamp", "rate_5m"])
+        .unique(subset="timestamp", keep="first")
+        .sort("timestamp")
+        .collect()
+    )
+
+
+def load_usdt_funding_rates_on_grid(
+    coins: Sequence[str],
+    grid_ms: np.ndarray,
+    store_root: Path | str = DEFAULT_STORE_ROOT,
+    fund_cache: MutableMapping[tuple[str, int, int, int], np.ndarray] | None = None,
+) -> tuple[np.ndarray, int]:
+    """Load local USDT perp funding rates prorated to 5m bars via backward asof join."""
+    grid_arr = np.asarray(grid_ms, dtype=np.int64)
+    if grid_arr.ndim != 1:
+        raise ValueError("GRID_MS_MUST_BE_1D")
+    if not coins:
+        return np.zeros((0, int(grid_arr.size)), dtype=np.float64), 0
+    if grid_arr.size == 0:
+        return np.zeros((len(coins), 0), dtype=np.float64), 0
+
+    root = Path(store_root).expanduser()
+    cache: MutableMapping[tuple[str, int, int, int], np.ndarray] = (
+        fund_cache if fund_cache is not None else {}
+    )
+    g_key = (int(grid_arr[0]), int(grid_arr[-1]), int(grid_arr.size))
+    missing = [c for c in coins if (c, *g_key) not in cache]
+    if missing:
+        grid_df = pl.DataFrame(
+            {
+                "timestamp": pl.from_epoch(
+                    pl.Series("timestamp", grid_arr, dtype=pl.Int64),
+                    time_unit="ms",
+                )
+                .dt.replace_time_zone("UTC")
+                .cast(pl.Datetime("us", "UTC"))
+            }
+        )
+        start_lit = pl.lit(to_utc_datetime(int(grid_arr[0]) - 12 * 3_600_000), dtype=pl.Datetime("us", "UTC"))
+        end_lit = pl.lit(to_utc_datetime(int(grid_arr[-1]) + 300_000), dtype=pl.Datetime("us", "UTC"))
+
+        for coin in missing:
+            key = (coin, *g_key)
+            f_dir = root / f"crypto_futures_funding_{coin}USDT_PERP"
+            f_paths = sorted(str(p) for p in f_dir.glob("year=*/month=*/data.parquet")) if f_dir.is_dir() else []
+            if not f_paths:
+                cache[key] = np.zeros(grid_arr.size, dtype=np.float64)
+                continue
+            fdf = _scan_funding_frames(f_paths, start_lit, end_lit)
+            if fdf.is_empty():
+                cache[key] = np.zeros(grid_arr.size, dtype=np.float64)
+                continue
+            joined = (
+                grid_df.join_asof(
+                    fdf,
+                    on="timestamp",
+                    strategy="backward",
+                    tolerance=timedelta(hours=12),
+                )["rate_5m"]
+                .fill_null(0.0)
+                .fill_nan(0.0)
+                .to_numpy()
+                .astype(np.float64, copy=True)
+            )
+            cache[key] = np.where(np.isfinite(joined), joined, 0.0)
+
+    covered = sum(
+        1
+        for c in coins
+        if np.any(cache[(c, *g_key)] != 0.0)
+        or (
+            (f_dir := root / f"crypto_futures_funding_{c}USDT_PERP").is_dir()
+            and next(f_dir.glob("year=*/month=*/data.parquet"), None) is not None
+        )
+    )
+    return np.vstack([cache[(c, *g_key)] for c in coins]), covered
 
 
 USER_AGENT = "trading-ops-research/1.0"

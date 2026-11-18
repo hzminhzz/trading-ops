@@ -14,7 +14,7 @@ import urllib.request
 from collections.abc import Callable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -39,29 +39,12 @@ OOS_GRID = GRID[CUT:]
 TRIAD = ("ACT04", "ACT08", "ACT09")
 TRIAD_K = (0.00045, 0.00356, 0.00099)
 MIN_NOTIONAL_USD = 15.0
-ALT_DEADBAND_USD = 30.0
 BASELINE_PORT_DD_FRAC = 0.02
 POD_SIZES = (3, 4)
 DEADBANDS_USD = (15.0, 30.0)
 COST_MULTIPLIERS = (1.0, 2.0, 3.0)
 POLICIES = ("new", "full")
 MAX_GROSS_LEVERAGE = 5.0
-
-_VOL_SCAN_SCHEMA = pl.Schema(
-    {
-        "timestamp": pl.Datetime("us", "UTC"),
-        "open": pl.Float64,
-        "volume": pl.Float64,
-        "quote_volume": pl.Float64,
-    }
-)
-_FUNDING_SCAN_SCHEMA = pl.Schema(
-    {
-        "timestamp": pl.Datetime("us", "UTC"),
-        "funding_rate": pl.Float64,
-        "funding_interval_hours": pl.Int64,
-    }
-)
 
 
 @dataclass(frozen=True)
@@ -97,8 +80,6 @@ def _json_default(obj: object) -> object:
 
 def dump_json(path: Path, data: dict) -> None:
     """Write formatted deterministic JSON with NumPy scalar conversion."""
-    import json
-
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True, default=_json_default) + "\n"
@@ -627,141 +608,6 @@ def candidate_targets(
     return coins, net, trade, mark
 
 
-def _epoch_ms_to_utc_datetime(timestamps_ms: np.ndarray) -> pl.DataFrame:
-    """Convert millisecond epoch array into a single-column UTC ``Datetime('us')`` DataFrame."""
-    return pl.DataFrame(
-        {
-            "timestamp": pl.from_epoch(
-                pl.Series("timestamp", timestamps_ms, dtype=pl.Int64), time_unit="ms"
-            )
-            .dt.replace_time_zone("UTC")
-            .cast(pl.Datetime("us", "UTC"))
-        }
-    )
-
-
-def load_1m_volumes_on_grid(
-    coins: Sequence[str],
-    grid_ms: np.ndarray,
-    prices: sd.LazyPrices,
-    vol_cache: dict[tuple[str, int, int], np.ndarray],
-) -> np.ndarray:
-    """Load 1m USD dollar volumes at execution bars ``grid_ms + 60_000`` for candidate coins."""
-    if not coins:
-        return np.zeros((0, grid_ms.size), dtype=np.float64)
-
-    g_key = (int(grid_ms[0]), int(grid_ms.size))
-    missing = [c for c in coins if (c, *g_key) not in vol_cache]
-    if missing:
-        trade_grid_df = _epoch_ms_to_utc_datetime(grid_ms + 60_000)
-        start_dt = sd.to_utc_datetime(int(grid_ms[0]))
-        end_dt = sd.to_utc_datetime(int(grid_ms[-1]) + 300_000)
-        start_lit = pl.lit(start_dt, dtype=pl.Datetime("us", "UTC"))
-        end_lit = pl.lit(end_dt, dtype=pl.Datetime("us", "UTC"))
-
-        for coin in missing:
-            key = (coin, *g_key)
-            paths = prices.coin_paths(coin)
-            if not paths:
-                vol_cache[key] = np.full(grid_ms.size, np.nan, dtype=np.float64)
-                continue
-            lf = (
-                pl.scan_parquet(
-                    paths,
-                    schema=_VOL_SCAN_SCHEMA,
-                    hive_partitioning=False,
-                    missing_columns="insert",
-                    extra_columns="ignore",
-                    cast_options=sd.OHLCV_CAST_OPTIONS,
-                )
-                .filter((pl.col("timestamp") >= start_lit) & (pl.col("timestamp") < end_lit))
-                .with_columns(
-                    pl.coalesce(
-                        pl.col("quote_volume"),
-                        pl.col("volume") * pl.col("open"),
-                    ).alias("vol_usd")
-                )
-                .select(["timestamp", "vol_usd"])
-                .unique(subset="timestamp", keep="first")
-            )
-            bars = lf.collect(engine=prices.engine)
-            joined = (
-                trade_grid_df.join(bars, on="timestamp", how="left")["vol_usd"]
-                .fill_null(float("nan"))
-                .to_numpy()
-                .astype(np.float64, copy=True)
-            )
-            vol_cache[key] = joined
-
-    return np.vstack([vol_cache[(c, *g_key)] for c in coins])
-
-
-def load_usdt_funding_rates_on_grid(
-    coins: Sequence[str],
-    grid_ms: np.ndarray,
-    store_root: Path | str,
-    fund_cache: dict[tuple[str, int, int], np.ndarray],
-) -> tuple[np.ndarray, int]:
-    """Load local USDT perp funding rates prorated to 5m bars via backward asof join."""
-    if not coins:
-        return np.zeros((0, grid_ms.size), dtype=np.float64), 0
-
-    root = Path(store_root).expanduser()
-    g_key = (int(grid_ms[0]), int(grid_ms.size))
-    missing = [c for c in coins if (c, *g_key) not in fund_cache]
-    if missing:
-        grid_df = _epoch_ms_to_utc_datetime(grid_ms)
-        start_lit = pl.lit(sd.to_utc_datetime(int(grid_ms[0]) - 12 * 3_600_000), dtype=pl.Datetime("us", "UTC"))
-        end_lit = pl.lit(sd.to_utc_datetime(int(grid_ms[-1]) + 300_000), dtype=pl.Datetime("us", "UTC"))
-
-        for coin in missing:
-            key = (coin, *g_key)
-            f_dir = root / f"crypto_futures_funding_{coin}USDT_PERP"
-            f_paths = sorted(str(p) for p in f_dir.glob("year=*/month=*/data.parquet")) if f_dir.is_dir() else []
-            if not f_paths:
-                fund_cache[key] = np.zeros(grid_ms.size, dtype=np.float64)
-                continue
-            lf = (
-                pl.scan_parquet(
-                    f_paths,
-                    schema=_FUNDING_SCAN_SCHEMA,
-                    hive_partitioning=False,
-                    missing_columns="insert",
-                    extra_columns="ignore",
-                    cast_options=sd.OHLCV_CAST_OPTIONS,
-                )
-                .filter((pl.col("timestamp") >= start_lit) & (pl.col("timestamp") < end_lit))
-                .with_columns(
-                    (
-                        pl.col("funding_rate")
-                        / (pl.coalesce(pl.col("funding_interval_hours"), pl.lit(8)).cast(pl.Float64) * 12.0)
-                    ).alias("rate_5m")
-                )
-                .select(["timestamp", "rate_5m"])
-                .unique(subset="timestamp", keep="first")
-                .sort("timestamp")
-            )
-            fdf = lf.collect()
-            if fdf.is_empty():
-                fund_cache[key] = np.zeros(grid_ms.size, dtype=np.float64)
-                continue
-            joined = (
-                grid_df.join_asof(
-                    fdf,
-                    on="timestamp",
-                    strategy="backward",
-                    tolerance=timedelta(hours=12),
-                )["rate_5m"]
-                .fill_null(0.0)
-                .to_numpy()
-                .astype(np.float64, copy=True)
-            )
-            fund_cache[key] = joined
-
-    covered = sum(1 for c in coins if np.any(fund_cache[(c, *g_key)] != 0.0))
-    return np.vstack([fund_cache[(c, *g_key)] for c in coins]), covered
-
-
 def compute_1m_participation_diagnostics(
     coins: Sequence[str],
     run_result: cr.ChallengeRunResult | np.ndarray,
@@ -916,8 +762,8 @@ def evaluate_one(
     *,
     full_grid: np.ndarray = GRID,
     store_root: Path | str = sd.DEFAULT_STORE_ROOT,
-    vol_cache: dict[tuple[str, int, int], np.ndarray] | None = None,
-    fund_cache: dict[tuple[str, int, int], np.ndarray] | None = None,
+    vol_cache: dict[tuple[str, int, int, int], np.ndarray] | None = None,
+    fund_cache: dict[tuple[str, int, int, int], np.ndarray] | None = None,
     montecarlo: bool = True,
     pm03: bool = False,
     equity_sink: list[pl.DataFrame] | None = None,
@@ -955,12 +801,12 @@ def evaluate_one(
             aliases, k, grouped, prices, grid, policy, full_grid=full_grid
         )
         vol_mat = (
-            load_1m_volumes_on_grid(coins, grid, prices, v_cache)
+            sd.load_1m_volumes_on_grid(coins, grid, prices, v_cache)
             if include_volume_participation
             else None
         )
         fund_mat, fund_covered = (
-            load_usdt_funding_rates_on_grid(coins, grid, store_root, f_cache)
+            sd.load_usdt_funding_rates_on_grid(coins, grid, store_root, f_cache)
             if include_funding_stress
             else (None, 0)
         )
@@ -1581,8 +1427,8 @@ def run_study(
     amount_step_by_coin = {c: float(v[0]) for c, v in lot_specs_raw.items()} or None
     min_amount_by_coin = {c: float(v[1]) for c, v in lot_specs_raw.items()} or None
 
-    vol_cache: dict[tuple[str, int, int], np.ndarray] = {}
-    fund_cache: dict[tuple[str, int, int], np.ndarray] = {}
+    vol_cache: dict[tuple[str, int, int, int], np.ndarray] = {}
+    fund_cache: dict[tuple[str, int, int, int], np.ndarray] = {}
     equity_records: list[pl.DataFrame] = []
     block_records: list[pl.DataFrame] = []
     results: list[dict] = []

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from itertools import combinations, product
@@ -1565,6 +1566,25 @@ def _check_right_censored_revenge_tilt(
     return best_tilt, status
 
 
+def _hidden_bagholder_reason(
+    right_censored_pnl: float,
+    tot_ret: float,
+    closed_gains: float,
+    config: PodConstructorConfig,
+) -> str | None:
+    """Return rejection reason when right-censored open losses violate bagholder guard."""
+    if not config.reject_hidden_bagholder or right_censored_pnl >= -1e-9:
+        return None
+    if (tot_ret <= 0.0) or (
+        abs(right_censored_pnl) > config.max_bagholder_open_loss_ratio * max(closed_gains, 1e-8)
+    ):
+        return (
+            f"right_censored_bagholder(open_pnl={right_censored_pnl:.4f},"
+            f"closed_gains={closed_gains:.4f})"
+        )
+    return None
+
+
 def stage1_audit_traders(
     tensor: UnitCopy5mTensor,
     config: PodConstructorConfig = PodConstructorConfig(),
@@ -1788,15 +1808,11 @@ def stage1_audit_traders(
             reasons.append("tilt_unknown")
         if net_dd_vec[i] <= 0.0 and chop_net_dd_vec[i] <= 0.0:
             reasons.append("non_positive_net_return")
-        if config.reject_hidden_bagholder and right_censored_pnls[i] < -1e-9:
-            closed_g = float(closed_gains_vec[i])
-            if (tot_ret_vec[i] <= 0.0) or (
-                abs(float(right_censored_pnls[i]))
-                > config.max_bagholder_open_loss_ratio * max(closed_g, 1e-8)
-            ):
-                reasons.append(
-                    f"right_censored_bagholder(open_pnl={right_censored_pnls[i]:.4f},closed_gains={closed_g:.4f})"
-                )
+        bag_reason = _hidden_bagholder_reason(
+            float(right_censored_pnls[i]), float(tot_ret_vec[i]), float(closed_gains_vec[i]), config
+        )
+        if bag_reason is not None:
+            reasons.append(bag_reason)
         if config.min_baseline_order_usd > 0.0:
             if config.baseline_port_dd_frac <= 0.0:
                 raise ValueError("baseline_port_dd_frac must be positive when min_baseline_order_usd > 0")
@@ -2192,6 +2208,102 @@ def _apply_fill_to_basis_scalar(
     return cur_entry
 
 
+def _build_reset_seg_context(
+    n_bars: int,
+    day_slices: Sequence[tuple[int, int]],
+    segments: Sequence[tuple[int, int]] | None,
+) -> tuple[list[tuple[int, int]], np.ndarray, set[int]]:
+    """Build daily reset targets, per-bar segment IDs, and segment start offsets."""
+    if segments is not None and len(segments) > 1:
+        bar_seg_id = np.full(n_bars, -1, dtype=np.int32)
+        seg_starts: set[int] = set()
+        for seg_idx, (s, e) in enumerate(segments):
+            s_i, e_i = int(s), int(e)
+            if e_i > s_i:
+                bar_seg_id[s_i:e_i] = seg_idx
+                seg_starts.add(s_i)
+    else:
+        bar_seg_id = np.zeros(n_bars, dtype=np.int32)
+        seg_starts = {int(s) for s, e in segments if e > s} if segments is not None else {0}
+    reset_targets = [
+        (di, int(sb - 1))
+        for di, (sb, _eb) in enumerate(day_slices)
+        if sb > 0 and sb not in seg_starts
+    ]
+    return reset_targets, bar_seg_id, seg_starts
+
+
+def _compute_eff_open_and_q_members(
+    notional_mat: np.ndarray,
+    open_s: np.ndarray,
+    close_s: np.ndarray,
+    pod_eq: float,
+    seg_starts: set[int],
+) -> tuple[np.ndarray, np.ndarray]:
+    """Compute effective execution prices and member quantities with gap forward-fill."""
+    eff_open = np.where(
+        np.isfinite(open_s) & (open_s > 0.0),
+        open_s,
+        np.where(np.isfinite(close_s) & (close_s > 0.0), close_s, np.nan),
+    )
+    valid_px = np.isfinite(eff_open) & (eff_open > 0.0)
+    inv_open = np.where(valid_px, pod_eq / np.maximum(eff_open, 1e-12), 0.0)
+    q_mat = notional_mat * inv_open[None, :]
+    missing_bars = np.flatnonzero(~valid_px)
+    if missing_bars.size > 0:
+        nz_mask = np.abs(notional_mat) > 1e-12
+        for b in missing_bars:
+            b_i = int(b)
+            if b_i == 0 or b_i in seg_starts:
+                q_mat[:, b_i] = 0.0
+            else:
+                q_mat[:, b_i] = np.where(nz_mask[:, b_i], q_mat[:, b_i - 1], 0.0)
+    return eff_open, q_mat
+
+
+def _accumulate_symbol_unrl_at_resets(
+    unrl: np.ndarray,
+    nz_bars: np.ndarray,
+    q_nz: np.ndarray,
+    px_nz: np.ndarray,
+    nz_seg_id: np.ndarray,
+    close_s: np.ndarray,
+    bar_seg_id: np.ndarray,
+    reset_targets: Sequence[tuple[int, int]],
+    pod_equity_usd: float,
+) -> None:
+    """Trace netted cost basis across segment-isolated bars and add reset unrealized PnL."""
+    q_after = np.empty(nz_bars.size, dtype=np.float64)
+    entry_after = np.empty(nz_bars.size, dtype=np.float64)
+    cur_q = 0.0
+    cur_entry = 0.0
+    prev_seg_id = -2
+    for k in range(nz_bars.size):
+        cur_seg_id = int(nz_seg_id[k])
+        if cur_seg_id != prev_seg_id:
+            cur_q = 0.0
+            cur_entry = 0.0
+            prev_seg_id = cur_seg_id
+        new_q = float(q_nz[k])
+        cur_entry = _apply_fill_to_basis_scalar(cur_q, new_q, cur_entry, float(px_nz[k]))
+        cur_q = new_q
+        q_after[k] = cur_q
+        entry_after[k] = cur_entry
+
+    for di, r in reset_targets:
+        r_seg = int(bar_seg_id[r])
+        if r_seg < 0:
+            continue
+        k = int(np.searchsorted(nz_bars, r, side="right")) - 1
+        if (
+            k >= 0
+            and int(nz_seg_id[k]) == r_seg
+            and abs(q_after[k]) > 1e-12
+            and np.isfinite(close_s[r])
+        ):
+            unrl[di] += float(q_after[k] * (float(close_s[r]) - entry_after[k]) / pod_equity_usd)
+
+
 def _compute_netted_unrealized_frac_at_resets(
     weights: np.ndarray,
     tensor: UnitCopy5mTensor,
@@ -2206,15 +2318,13 @@ def _compute_netted_unrealized_frac_at_resets(
     """Compute exact account-netted open unrealized PnL fraction entering each daily reset."""
     n_days = len(day_slices)
     unrl = np.zeros(n_days, dtype=np.float64)
-    if n_days == 0 or tensor.timestamps_ms.size == 0:
+    n_bars = tensor.timestamps_ms.size
+    if n_days == 0 or n_bars == 0:
         return unrl
 
-    seg_starts = {int(s) for s, _ in segments} if segments is not None else {0}
-    reset_targets = [
-        (di, int(sb - 1))
-        for di, (sb, _eb) in enumerate(day_slices)
-        if sb > 0 and sb not in seg_starts
-    ]
+    reset_targets, bar_seg_id, seg_starts = _build_reset_seg_context(
+        n_bars, day_slices, segments
+    )
     if not reset_targets:
         return unrl
 
@@ -2234,31 +2344,35 @@ def _compute_netted_unrealized_frac_at_resets(
     # Case 1: Exact price arrays available -> replicate Guardian's netted quantity & cost basis
     if tensor.exec_open_px is not None and tensor.mark_close_px is not None:
         pod_eq = tensor.pod_equity_usd
+        seg_reset_full = np.empty(n_bars, dtype=bool)
+        seg_reset_full[0] = True
+        if n_bars > 1:
+            seg_reset_full[1:] = bar_seg_id[1:] != bar_seg_id[:-1]
         for s in syms:
             open_s = np.asarray(tensor.exec_open_px[s], dtype=np.float64)
             close_s = np.asarray(tensor.mark_close_px[s], dtype=np.float64)
-            n_s = weights @ tensor.notional_frac[pod_list, s, :].astype(np.float64, copy=False)
-            q_s = np.where(open_s > 0.0, n_s * pod_eq / np.maximum(open_s, 1e-12), 0.0)
-            nz_bars = np.flatnonzero(np.abs(np.diff(q_s, prepend=0.0)) > 1e-12)
+            pod_n_s = tensor.notional_frac[pod_list, s, :].astype(np.float64, copy=False)
+            eff_open, q_members_full = _compute_eff_open_and_q_members(
+                pod_n_s, open_s, close_s, pod_eq, seg_starts
+            )
+            q_s = weights @ q_members_full
+            prev_q_s = np.where(seg_reset_full, 0.0, np.roll(q_s, 1))
+            nz_bars = np.flatnonzero(np.abs(q_s - prev_q_s) > 1e-12)
             if nz_bars.size == 0:
                 continue
-            q_after = np.empty(nz_bars.size, dtype=np.float64)
-            entry_after = np.empty(nz_bars.size, dtype=np.float64)
-            cur_q = 0.0
-            cur_entry = 0.0
-            for k, b in enumerate(nz_bars):
-                b_i = int(b)
-                new_q = float(q_s[b_i])
-                px = float(open_s[b_i]) if open_s[b_i] > 0.0 else float(close_s[b_i])
-                cur_entry = _apply_fill_to_basis_scalar(cur_q, new_q, cur_entry, px)
-                cur_q = new_q
-                q_after[k] = cur_q
-                entry_after[k] = cur_entry
-
-            for di, r in reset_targets:
-                k = int(np.searchsorted(nz_bars, r, side="right")) - 1
-                if k >= 0 and abs(q_after[k]) > 1e-12 and np.isfinite(close_s[r]):
-                    unrl[di] += float(q_after[k] * (float(close_s[r]) - entry_after[k]) / pod_eq)
+            eff_nz = eff_open[nz_bars]
+            px_nz = np.where(np.isfinite(eff_nz) & (eff_nz > 0.0), eff_nz, 1.0)
+            _accumulate_symbol_unrl_at_resets(
+                unrl,
+                nz_bars,
+                q_s[nz_bars],
+                px_nz,
+                bar_seg_id[nz_bars],
+                close_s,
+                bar_seg_id,
+                reset_targets,
+                pod_eq,
+            )
         return unrl
 
     # Case 2: Synthetic fractional tensor -> trace sparse symbol netted unrealized recurrence
@@ -2544,6 +2658,96 @@ def compute_euler_marginal_risk_shares(
     return cdar_shares, dcvar_shares
 
 
+def _build_unrl_reset_cache(
+    pod_notional: np.ndarray,
+    active_syms: Sequence[int],
+    exec_open_px: np.ndarray,
+    mark_close_px: np.ndarray,
+    day_slices: Sequence[tuple[int, int]],
+    segments: Sequence[tuple[int, int]] | None,
+    pod_equity_usd: float,
+) -> tuple[
+    list[tuple[int, int]],
+    list[tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]],
+]:
+    """Precompute per-symbol member quantity snapshots on candidate change bars."""
+    n_bars = exec_open_px.shape[1] if exec_open_px.ndim == 2 else 0
+    reset_targets, bar_seg_id, seg_starts = _build_reset_seg_context(
+        n_bars, day_slices, segments
+    )
+    sym_cache: list[
+        tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+    ] = []
+    if not reset_targets or not active_syms:
+        return reset_targets, sym_cache
+
+    seg_reset_m = np.empty(n_bars, dtype=bool)
+    seg_reset_m[0] = True
+    if n_bars > 1:
+        seg_reset_m[1:] = bar_seg_id[1:] != bar_seg_id[:-1]
+
+    for a_idx, s in enumerate(active_syms):
+        open_s = np.asarray(exec_open_px[s], dtype=np.float64)
+        close_s = np.asarray(mark_close_px[s], dtype=np.float64)
+        eff_open, q_members_full = _compute_eff_open_and_q_members(
+            pod_notional[:, a_idx, :], open_s, close_s, pod_equity_usd, seg_starts
+        )
+        prev_q_m = np.where(seg_reset_m[None, :], 0.0, np.roll(q_members_full, 1, axis=1))
+        cand_bars = np.flatnonzero(np.any(np.abs(q_members_full - prev_q_m) > 1e-12, axis=0))
+        if cand_bars.size > 0:
+            eff_cand = eff_open[cand_bars]
+            px_cand = np.where(np.isfinite(eff_cand) & (eff_cand > 0.0), eff_cand, 1.0)
+            sym_cache.append(
+                (
+                    q_members_full[:, cand_bars].copy(),
+                    px_cand,
+                    close_s,
+                    cand_bars,
+                    bar_seg_id[cand_bars],
+                    bar_seg_id,
+                )
+            )
+    return reset_targets, sym_cache
+
+
+def _eval_unrl_reset_cache(
+    weights: np.ndarray,
+    n_days: int,
+    reset_targets: Sequence[tuple[int, int]],
+    sym_cache: Sequence[
+        tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+    ],
+    pod_equity_usd: float,
+) -> np.ndarray:
+    """Evaluate netted unrealized PnL fraction at daily resets using sparse candidate bars."""
+    unrl = np.zeros(n_days, dtype=np.float64)
+    if not reset_targets or not sym_cache:
+        return unrl
+
+    for q_members_cand, px_cand, close_s, cand_bars, cand_seg_id, bar_seg_id in sym_cache:
+        q_cand = weights @ q_members_cand
+        seg_reset = np.empty(q_cand.size, dtype=bool)
+        seg_reset[0] = True
+        if q_cand.size > 1:
+            seg_reset[1:] = cand_seg_id[1:] != cand_seg_id[:-1]
+        prev_q_cand = np.where(seg_reset, 0.0, np.roll(q_cand, 1))
+        keep = np.abs(q_cand - prev_q_cand) > 1e-12
+        if not np.any(keep):
+            continue
+        _accumulate_symbol_unrl_at_resets(
+            unrl,
+            cand_bars[keep],
+            q_cand[keep],
+            px_cand[keep],
+            cand_seg_id[keep],
+            close_s,
+            bar_seg_id,
+            reset_targets,
+            pod_equity_usd,
+        )
+    return unrl
+
+
 def size_pod_dual_barrier(
     pod_indices: Sequence[int],
     tensor: UnitCopy5mTensor,
@@ -2598,7 +2802,6 @@ def size_pod_dual_barrier(
         else np.zeros((m_size, 0, tensor.timestamps_ms.size), dtype=np.float64)
     )
 
-    # Risk normalization scale per member (inverse CDaR_95 keeps shares comparable)
     risk_unit = np.array(
         [max(metrics_list[idx].standalone_cdar95, 1e-4) for idx in pod],
         dtype=np.float64,
@@ -2640,6 +2843,21 @@ def size_pod_dual_barrier(
         else s_hi
     )
 
+    open_px = tensor.exec_open_px
+    close_px = tensor.mark_close_px
+    if config.daily_loss_mode == "reset_balance" and open_px is not None and close_px is not None:
+        reset_targets, unrl_sym_cache = _build_unrl_reset_cache(
+            pod_notional,
+            active_syms,
+            open_px,
+            close_px,
+            day_slices,
+            segments,
+            tensor.pod_equity_usd,
+        )
+    else:
+        reset_targets, unrl_sym_cache = [], []
+
     def _marginal_ok(m_shares: tuple[float, ...]) -> bool:
         if max(m_shares) > marginal_cap + 1e-9:
             return False
@@ -2658,15 +2876,20 @@ def size_pod_dual_barrier(
         np.ndarray,
         np.ndarray | None,
     ]:
-        # Map risk shares s_i into unit direction w_i proportional to s_i / risk_i
         w = shares / risk_unit
         w_sum = float(np.sum(w))
         if w_sum <= 1e-12:
             return False, -1e9, np.zeros(m_size), "INVALID", (0.0,) * 9, (), (), w, None
         w /= w_sum
 
-        unrl_resets = (
-            _compute_netted_unrealized_frac_at_resets(
+        if config.daily_loss_mode != "reset_balance":
+            unrl_resets = None
+        elif open_px is not None and close_px is not None:
+            unrl_resets = _eval_unrl_reset_cache(
+                w, len(day_slices), reset_targets, unrl_sym_cache, tensor.pod_equity_usd
+            )
+        else:
+            unrl_resets = _compute_netted_unrealized_frac_at_resets(
                 w,
                 tensor,
                 pod,
@@ -2676,9 +2899,6 @@ def size_pod_dual_barrier(
                 segments=segments,
                 eps=config.flat_notional_eps_frac,
             )
-            if config.daily_loss_mode == "reset_balance"
-            else None
-        )
 
         m_cdar_s: tuple[float, ...] = ()
         m_dcvar_s: tuple[float, ...] = ()
@@ -2921,6 +3141,22 @@ def size_pod_dual_barrier(
     )
 
 
+def _size_pod_if_feasible(
+    pod: tuple[int, ...],
+    tensor: UnitCopy5mTensor,
+    metrics_list: Sequence[TraderAuditMetrics],
+    config: PodConstructorConfig,
+    *,
+    segments: Sequence[tuple[int, int]] | None = None,
+) -> tuple[SizedPodCandidate | None, ValueError | None]:
+    try:
+        return size_pod_dual_barrier(pod, tensor, metrics_list, config, segments=segments), None
+    except ValueError as exc:
+        if str(exc).startswith("INFEASIBLE_MARGINAL_RISK_SHARE_BOUNDS"):
+            return None, exc
+        raise
+
+
 def discover_diverse_pods(
     tensor: UnitCopy5mTensor,
     config: PodConstructorConfig = PodConstructorConfig(),
@@ -2946,7 +3182,6 @@ def discover_diverse_pods(
     cluster_picks: list[list[int]] = []
     for c_id in sorted(clusters.keys()):
         members = clusters[c_id]
-        # Preserve both all-window Net/DD leaders AND chop-resilient cluster members
         by_overall = sorted(members, key=lambda t: metrics_list[t].net_over_max_dd, reverse=True)
         by_chop = sorted(members, key=lambda t: metrics_list[t].chop_net_over_dd, reverse=True)
         picked: list[int] = []
@@ -2967,20 +3202,23 @@ def discover_diverse_pods(
         key=lambda p: (sum(rank_lookup[t] for t in p), p),
     )[: config.max_candidate_pods]
 
-    sized = [
-        size_pod_dual_barrier(pod, tensor, metrics_list, config, segments=segments)
-        for pod in candidate_pods
-    ]
+    sized: list[SizedPodCandidate] = []
+    last_infeasible: ValueError | None = None
+    for pod in candidate_pods:
+        cand, err = _size_pod_if_feasible(pod, tensor, metrics_list, config, segments=segments)
+        if cand is not None:
+            sized.append(cand)
+        elif err is not None:
+            last_infeasible = err
+    if not sized:
+        if last_infeasible is not None:
+            raise last_infeasible
+        raise ValueError("NO_FEASIBLE_CANDIDATE_PODS")
     sized.sort(
         key=lambda s: (s.feasible, s.net_over_max_dd, s.objective_net_return),
         reverse=True,
     )
     return sized, metrics_list, baselines, {"distance_matrix": dist_mat, **comps}
-
-
-# ---------------------------------------------------------------------------
-# Stage 4: Leak-Free CPCV/PBO & Guardian Stationary Block Bootstrap
-# ---------------------------------------------------------------------------
 
 
 def _cpcv_sizing_metrics(
@@ -3071,32 +3309,94 @@ def _slice_tensor_for_traders(
     return sub_tensor, remapped_pods
 
 
-def _slice_tensor_bars(tensor: UnitCopy5mTensor, bar_idx: np.ndarray) -> UnitCopy5mTensor:
+def _compute_active_2d_mask(tensor: UnitCopy5mTensor) -> np.ndarray:
+    """Return an (N, S) bool mask where at least one 3D tensor slab is non-zero."""
+    mask = np.any(tensor.notional_frac, axis=2) | np.any(tensor.delta_notional_frac, axis=2)
+    if tensor.sym_net_ret_frac is not None:
+        mask |= np.any(tensor.sym_net_ret_frac, axis=2)
+    return mask
+
+
+def _normalize_bar_idx(bar_idx: np.ndarray, n_total: int) -> np.ndarray:
+    """Validate 1D integer bar indices and normalize negative offsets."""
+    raw = np.asarray(bar_idx)
+    if raw.dtype == np.bool_ or raw.ndim != 1:
+        raise ValueError("BAR_IDX_MUST_BE_1D_INT")
+    idx = np.asarray(raw, dtype=np.intp).copy()
+    neg = idx < 0
+    if np.any(neg):
+        idx[neg] += n_total
+    if idx.size > 0 and np.any((idx < 0) | (idx >= n_total)):
+        raise IndexError("BAR_IDX_OUT_OF_BOUNDS")
+    return idx
+
+
+def _slice_3d_sparse_bars(
+    arr: np.ndarray,
+    bar_idx: np.ndarray,
+    active_mask_2d: np.ndarray,
+) -> np.ndarray:
+    """Slice a 3D (N, S, T) tensor along axis 2, keeping inactive zero slabs demand-zero."""
+    idx = _normalize_bar_idx(bar_idx, arr.shape[2])
+    out = np.zeros((arr.shape[0], arr.shape[1], idx.size), dtype=arr.dtype)
+    if idx.size == 0 or not np.any(active_mask_2d):
+        return out
+
+    breaks = np.flatnonzero(np.diff(idx) != 1) + 1
+    starts = np.concatenate(([0], breaks))
+    ends = np.concatenate((breaks, [idx.size]))
+    runs = [
+        (int(idx[ds]), int(idx[de - 1]) + 1, int(ds), int(de))
+        for ds, de in zip(starts, ends, strict=True)
+    ]
+    active_pairs = np.argwhere(active_mask_2d)
+    if len(runs) <= 16:
+        for ti_arr, si_arr in active_pairs:
+            ti, si = int(ti_arr), int(si_arr)
+            for src_s, src_e, dst_s, dst_e in runs:
+                out[ti, si, dst_s:dst_e] = arr[ti, si, src_s:src_e]
+    else:
+        for ti_arr, si_arr in active_pairs:
+            ti, si = int(ti_arr), int(si_arr)
+            out[ti, si] = arr[ti, si, idx]
+    return out
+
+
+def _slice_tensor_bars(
+    tensor: UnitCopy5mTensor,
+    bar_idx: np.ndarray,
+    *,
+    active_mask_2d: np.ndarray | None = None,
+    include_sym_net_ret: bool = True,
+) -> UnitCopy5mTensor:
     """Slice a tensor along the time axis using an integer bar-index array."""
-    carried = tensor.carried_in_mask
-    if bar_idx.size > 0 and int(bar_idx[0]) > 0:
-        b0 = int(bar_idx[0])
+    idx = _normalize_bar_idx(bar_idx, tensor.timestamps_ms.size)
+    mask2d = active_mask_2d if active_mask_2d is not None else _compute_active_2d_mask(tensor)
+    if idx.size > 0 and int(idx[0]) > 0:
+        b0 = int(idx[0])
         prev_n = tensor.notional_frac[:, :, b0 - 1]
         cur_n = tensor.notional_frac[:, :, b0]
-        carried = (np.abs(prev_n) > 1e-4) & ((prev_n * cur_n) > 0.0)
+        carried: np.ndarray | None = (np.abs(prev_n) > 1e-4) & ((prev_n * cur_n) > 0.0)
+    else:
+        carried = tensor.carried_in_mask.copy() if tensor.carried_in_mask is not None else None
     return UnitCopy5mTensor(
         aliases=tensor.aliases,
         symbols=tensor.symbols,
-        timestamps_ms=tensor.timestamps_ms[bar_idx],
-        notional_frac=tensor.notional_frac[:, :, bar_idx],
-        delta_notional_frac=tensor.delta_notional_frac[:, :, bar_idx],
-        gross_ret_frac=tensor.gross_ret_frac[:, bar_idx],
-        net_ret_frac=tensor.net_ret_frac[:, bar_idx],
+        timestamps_ms=tensor.timestamps_ms[idx],
+        notional_frac=_slice_3d_sparse_bars(tensor.notional_frac, idx, mask2d),
+        delta_notional_frac=_slice_3d_sparse_bars(tensor.delta_notional_frac, idx, mask2d),
+        gross_ret_frac=tensor.gross_ret_frac[:, idx],
+        net_ret_frac=tensor.net_ret_frac[:, idx],
         sym_net_ret_frac=(
-            tensor.sym_net_ret_frac[:, :, bar_idx]
-            if tensor.sym_net_ret_frac is not None
+            _slice_3d_sparse_bars(tensor.sym_net_ret_frac, idx, mask2d)
+            if include_sym_net_ret and tensor.sym_net_ret_frac is not None
             else None
         ),
-        chop_mask=tensor.chop_mask[bar_idx] if tensor.chop_mask is not None else None,
+        chop_mask=tensor.chop_mask[idx] if tensor.chop_mask is not None else None,
         pod_equity_usd=tensor.pod_equity_usd,
-        exec_open_px=tensor.exec_open_px[:, bar_idx] if tensor.exec_open_px is not None else None,
+        exec_open_px=tensor.exec_open_px[:, idx] if tensor.exec_open_px is not None else None,
         mark_close_px=(
-            tensor.mark_close_px[:, bar_idx] if tensor.mark_close_px is not None else None
+            tensor.mark_close_px[:, idx] if tensor.mark_close_px is not None else None
         ),
         carried_in_mask=carried,
     )
@@ -3122,6 +3422,8 @@ def compute_leakfree_cpcv_pbo(
         return 0.0, np.array([1.0], dtype=np.float64)
 
     sub_tensor, remapped_pods = _slice_tensor_for_traders(tensor, candidate_pods)
+    active_mask_2d = _compute_active_2d_mask(sub_tensor)
+    te_need_sym_net = sub_tensor.exec_open_px is None or sub_tensor.mark_close_px is None
     n_bars = sub_tensor.timestamps_ms.size
     bpd = config.bars_per_day
     n_days = max(2, n_bars // bpd)
@@ -3159,57 +3461,69 @@ def compute_leakfree_cpcv_pbo(
         tr_segments = _contiguous_index_segments(tr_idx)
         te_segments = _contiguous_index_segments(te_idx)
 
-        tr_tensor = _slice_tensor_bars(sub_tensor, tr_idx)
-        te_tensor = _slice_tensor_bars(sub_tensor, te_idx)
-
-        tr_metrics = _cpcv_sizing_metrics(tr_tensor, config)
-        te_slices = _daily_reset_slices(
-            te_tensor.timestamps_ms, bpd, config.reset_bar_offset, segments=te_segments
+        tr_tensor = _slice_tensor_bars(sub_tensor, tr_idx, active_mask_2d=active_mask_2d)
+        te_tensor = _slice_tensor_bars(
+            sub_tensor,
+            te_idx,
+            active_mask_2d=active_mask_2d,
+            include_sym_net_ret=te_need_sym_net,
         )
-        cost_rate = config.cost_bps * 1e-4
-
-        is_scores = np.zeros(n_pods, dtype=np.float64)
-        oos_scores = np.zeros(n_pods, dtype=np.float64)
-        for p_idx, pod in enumerate(remapped_pods):
-            sized_tr = size_pod_dual_barrier(
-                pod, tr_tensor, tr_metrics, config, segments=tr_segments
+        try:
+            tr_metrics = _cpcv_sizing_metrics(tr_tensor, config)
+            te_slices = _daily_reset_slices(
+                te_tensor.timestamps_ms, bpd, config.reset_bar_offset, segments=te_segments
             )
-            is_scores[p_idx] = sized_tr.net_over_max_dd
+            cost_rate = config.cost_bps * 1e-4
 
-            solo_te, t_ov_te, delta_ov_te = _build_sparse_overlap_cache(
-                te_tensor.delta_notional_frac[list(pod)],
-                te_tensor.net_ret_frac[list(pod)],
-            )
-            unrl_te = (
-                _compute_netted_unrealized_frac_at_resets(
-                    sized_tr.multipliers,
-                    te_tensor,
-                    pod,
-                    te_slices,
-                    cost_rate,
-                    segments=te_segments,
-                    eps=config.flat_notional_eps_frac,
+            is_scores: list[float] = []
+            oos_scores: list[float] = []
+            for pod in remapped_pods:
+                sized_tr, _ = _size_pod_if_feasible(
+                    pod, tr_tensor, tr_metrics, config, segments=tr_segments
                 )
-                if config.daily_loss_mode == "reset_balance"
-                else None
-            )
-            ret_te, peak_dd_te, _, _, _, _, _ = _evaluate_weights_unit_scale(
-                sized_tr.multipliers,
-                solo_te,
-                t_ov_te,
-                delta_ov_te,
-                cost_rate,
-                te_slices,
-                config,
-                segments=te_segments,
-                unrl_at_resets=unrl_te,
-            )
-            oos_scores[p_idx] = ret_te / max(peak_dd_te, 1e-6)
+                if sized_tr is None:
+                    continue
+                is_scores.append(sized_tr.net_over_max_dd)
 
-        best_is = int(np.argmax(is_scores))
-        ranks = rankdata_average(oos_scores)
-        omega = float(np.clip(ranks[best_is] / float(n_pods + 1), 1e-4, 1.0 - 1e-4))
-        logits.append(math.log(omega / (1.0 - omega)))
+                solo_te, t_ov_te, delta_ov_te = _build_sparse_overlap_cache(
+                    te_tensor.delta_notional_frac[list(pod)],
+                    te_tensor.net_ret_frac[list(pod)],
+                )
+                unrl_te = (
+                    _compute_netted_unrealized_frac_at_resets(
+                        sized_tr.multipliers,
+                        te_tensor,
+                        pod,
+                        te_slices,
+                        cost_rate,
+                        segments=te_segments,
+                        eps=config.flat_notional_eps_frac,
+                    )
+                    if config.daily_loss_mode == "reset_balance"
+                    else None
+                )
+                ret_te, peak_dd_te, _, _, _, _, _ = _evaluate_weights_unit_scale(
+                    sized_tr.multipliers,
+                    solo_te,
+                    t_ov_te,
+                    delta_ov_te,
+                    cost_rate,
+                    te_slices,
+                    config,
+                    segments=te_segments,
+                    unrl_at_resets=unrl_te,
+                )
+                oos_scores.append(ret_te / max(peak_dd_te, 1e-6))
+
+            n_feas = len(is_scores)
+            if n_feas < 2:
+                continue
+            best_is = int(np.argmax(np.asarray(is_scores, dtype=np.float64)))
+            ranks = rankdata_average(np.asarray(oos_scores, dtype=np.float64))
+            omega = float(np.clip(ranks[best_is] / float(n_feas + 1), 1e-4, 1.0 - 1e-4))
+            logits.append(math.log(omega / (1.0 - omega)))
+        finally:
+            del tr_tensor, te_tensor
 
     logits_arr = np.asarray(logits, dtype=np.float64) if logits else np.array([0.0])
     pbo = float(np.mean(logits_arr <= 0.0))
@@ -3290,8 +3604,10 @@ def _stage1_audit_segmented(
                 chop_net_over_dd = float(np.sum(chop_r)) / max(c_mdd, 1e-6)
 
         ep_all = merged_eps[i]
+        right_c_pnl = float(np.sum(ep_all["ep_pnl"][ep_all["ep_right_censored"]]))
         ep = filter_uncensored_episodes(ep_all)
         n_ep = int(ep["ep_pnl"].size)
+        closed_g = float(np.sum(np.maximum(0.0, ep["ep_pnl"]))) if n_ep > 0 else 0.0
         tilt_val, tilt_stat = _compute_causal_post_loss_tilt(
             ep["ep_start_bar"],
             ep["ep_end_bar"],
@@ -3320,6 +3636,9 @@ def _stage1_audit_segmented(
             reasons.append("tilt_unknown")
         if net_over_dd <= 0.0 and chop_net_over_dd <= 0.0:
             reasons.append("non_positive_net_return")
+        bag_reason = _hidden_bagholder_reason(right_c_pnl, tot_ret, closed_g, config)
+        if bag_reason is not None:
+            reasons.append(bag_reason)
         if config.min_baseline_order_usd > 0.0 and config.baseline_port_dd_frac > 0.0:
             base_k = (config.baseline_port_dd_frac / max(1, config.pod_size)) / max(peak_dd, 1e-6)
             eff_base_k = min(base_k, config.max_k_mult)
@@ -3356,6 +3675,7 @@ def _stage1_audit_segmented(
                 raw_ropn_mean=float(raw_ropn_vec[i]),
                 eb_ropn_mean=float(eb_ropn_vec[i]),
                 eb_ropn_post_sd=float(eb_ropn_sd_vec[i]),
+                right_censored_pnl_frac=right_c_pnl,
             )
         )
     return passed_ids, metrics
@@ -3378,6 +3698,8 @@ def compute_full_pipeline_cpcv_pbo(
     embargo = config.cpcv_embargo_days
     cost_rate = config.cost_bps * 1e-4
 
+    active_mask_2d = _compute_active_2d_mask(tensor)
+    te_need_sym_net = tensor.exec_open_px is None or tensor.mark_close_px is None
     logits: list[float] = []
     split_records: list[dict[str, Any]] = []
     for split_idx, train_blocks in enumerate(combinations(range(n_blocks), half_b)):
@@ -3404,118 +3726,143 @@ def compute_full_pipeline_cpcv_pbo(
         tr_segments = _contiguous_index_segments(tr_idx)
         te_segments = _contiguous_index_segments(te_idx)
 
-        tr_tensor = _slice_tensor_bars(tensor, tr_idx)
-        te_tensor = _slice_tensor_bars(tensor, te_idx)
-
-        passed_ids, tr_metrics = _stage1_audit_segmented(tr_tensor, tr_segments, config)
-        if len(passed_ids) < config.pod_size:
-            split_records.append(
-                {
-                    "split_idx": split_idx,
-                    "train_blocks": train_blocks,
-                    "status": "INSUFFICIENT_TRAIN_ELIGIBLE",
-                    "passed_count": len(passed_ids),
-                }
-            )
-            continue
-
-        dist_mat, _ = compute_crowding_distance_matrix(passed_ids, tr_tensor, config)
-        n_clusters = min(config.pod_size, len(passed_ids))
-        labels = cluster_candidates_upgma(dist_mat, n_clusters)
-        clusters: dict[int, list[int]] = {}
-        for pos_idx, c_label in enumerate(labels):
-            clusters.setdefault(int(c_label), []).append(passed_ids[pos_idx])
-
-        cluster_picks: list[list[int]] = []
-        for c_id in sorted(clusters):
-            members = clusters[c_id]
-            by_overall = sorted(members, key=lambda t: tr_metrics[t].net_over_max_dd, reverse=True)
-            by_chop = sorted(members, key=lambda t: tr_metrics[t].chop_net_over_dd, reverse=True)
-            picked: list[int] = []
-            for lst in (by_overall, by_chop):
-                for tid in lst:
-                    if tid not in picked and len(picked) < config.top_per_cluster:
-                        picked.append(tid)
-            cluster_picks.append(picked)
-
-        rank_lookup = {tid: r_idx for lst in cluster_picks for r_idx, tid in enumerate(lst)}
-        raw_combos = {
-            tuple(sorted(p)) for p in product(*cluster_picks) if len(set(p)) == len(cluster_picks)
-        }
-        cand_pods = sorted(raw_combos, key=lambda p: (sum(rank_lookup[t] for t in p), p))[
-            : config.max_candidate_pods
-        ]
-        if len(cand_pods) < 2:
-            split_records.append(
-                {
-                    "split_idx": split_idx,
-                    "train_blocks": train_blocks,
-                    "status": "FEWER_THAN_TWO_CANDIDATES",
-                    "passed_count": len(passed_ids),
-                }
-            )
-            continue
-
-        te_slices = _daily_reset_slices(
-            te_tensor.timestamps_ms, bpd, config.reset_bar_offset, segments=te_segments
+        tr_tensor = _slice_tensor_bars(tensor, tr_idx, active_mask_2d=active_mask_2d)
+        te_tensor = _slice_tensor_bars(
+            tensor,
+            te_idx,
+            active_mask_2d=active_mask_2d,
+            include_sym_net_ret=te_need_sym_net,
         )
-        is_scores = np.zeros(len(cand_pods), dtype=np.float64)
-        oos_scores = np.zeros(len(cand_pods), dtype=np.float64)
-        sized_list: list[SizedPodCandidate] = []
-        for p_idx, pod in enumerate(cand_pods):
-            sized_tr = size_pod_dual_barrier(
-                pod, tr_tensor, tr_metrics, config, segments=tr_segments
-            )
-            sized_list.append(sized_tr)
-            is_scores[p_idx] = sized_tr.net_over_max_dd
-
-            solo_te, t_ov_te, delta_ov_te = _build_sparse_overlap_cache(
-                te_tensor.delta_notional_frac[list(pod)],
-                te_tensor.net_ret_frac[list(pod)],
-            )
-            unrl_te = (
-                _compute_netted_unrealized_frac_at_resets(
-                    sized_tr.multipliers,
-                    te_tensor,
-                    pod,
-                    te_slices,
-                    cost_rate,
-                    segments=te_segments,
-                    eps=config.flat_notional_eps_frac,
+        try:
+            passed_ids, tr_metrics = _stage1_audit_segmented(tr_tensor, tr_segments, config)
+            if len(passed_ids) < config.pod_size:
+                split_records.append(
+                    {
+                        "split_idx": split_idx,
+                        "train_blocks": train_blocks,
+                        "status": "INSUFFICIENT_TRAIN_ELIGIBLE",
+                        "passed_count": len(passed_ids),
+                    }
                 )
-                if config.daily_loss_mode == "reset_balance"
-                else None
-            )
-            ret_te, peak_dd_te, _, _, _, _, _ = _evaluate_weights_unit_scale(
-                sized_tr.multipliers,
-                solo_te,
-                t_ov_te,
-                delta_ov_te,
-                cost_rate,
-                te_slices,
-                config,
-                segments=te_segments,
-                unrl_at_resets=unrl_te,
-            )
-            oos_scores[p_idx] = ret_te / max(peak_dd_te, 1e-6)
+                continue
 
-        best_is = int(np.argmax(is_scores))
-        ranks = rankdata_average(oos_scores)
-        omega = float(np.clip(ranks[best_is] / float(len(cand_pods) + 1), 1e-4, 1.0 - 1e-4))
-        logit = math.log(omega / (1.0 - omega))
-        logits.append(logit)
-        split_records.append(
-            {
-                "split_idx": split_idx,
-                "train_blocks": train_blocks,
-                "status": "OK",
-                "selected_aliases": sized_list[best_is].aliases,
-                "selected_multipliers": [float(x) for x in sized_list[best_is].multipliers],
-                "is_score": float(is_scores[best_is]),
-                "oos_score": float(oos_scores[best_is]),
-                "logit": logit,
+            dist_mat, _ = compute_crowding_distance_matrix(passed_ids, tr_tensor, config)
+            n_clusters = min(config.pod_size, len(passed_ids))
+            labels = cluster_candidates_upgma(dist_mat, n_clusters)
+            clusters: dict[int, list[int]] = {}
+            for pos_idx, c_label in enumerate(labels):
+                clusters.setdefault(int(c_label), []).append(passed_ids[pos_idx])
+
+            cluster_picks: list[list[int]] = []
+            for c_id in sorted(clusters):
+                members = clusters[c_id]
+                by_overall = sorted(
+                    members, key=lambda t: tr_metrics[t].net_over_max_dd, reverse=True
+                )
+                by_chop = sorted(
+                    members, key=lambda t: tr_metrics[t].chop_net_over_dd, reverse=True
+                )
+                picked: list[int] = []
+                for lst in (by_overall, by_chop):
+                    for tid in lst:
+                        if tid not in picked and len(picked) < config.top_per_cluster:
+                            picked.append(tid)
+                cluster_picks.append(picked)
+
+            rank_lookup = {tid: r_idx for lst in cluster_picks for r_idx, tid in enumerate(lst)}
+            raw_combos = {
+                tuple(sorted(p)) for p in product(*cluster_picks) if len(set(p)) == len(cluster_picks)
             }
-        )
+            cand_pods = sorted(raw_combos, key=lambda p: (sum(rank_lookup[t] for t in p), p))[
+                : config.max_candidate_pods
+            ]
+            if len(cand_pods) < 2:
+                split_records.append(
+                    {
+                        "split_idx": split_idx,
+                        "train_blocks": train_blocks,
+                        "status": "FEWER_THAN_TWO_CANDIDATES",
+                        "passed_count": len(passed_ids),
+                    }
+                )
+                continue
+
+            te_slices = _daily_reset_slices(
+                te_tensor.timestamps_ms, bpd, config.reset_bar_offset, segments=te_segments
+            )
+            is_scores_fp: list[float] = []
+            oos_scores_fp: list[float] = []
+            sized_list: list[SizedPodCandidate] = []
+            for pod in cand_pods:
+                sized_tr, _ = _size_pod_if_feasible(
+                    pod, tr_tensor, tr_metrics, config, segments=tr_segments
+                )
+                if sized_tr is None:
+                    continue
+                sized_list.append(sized_tr)
+                is_scores_fp.append(sized_tr.net_over_max_dd)
+
+                solo_te, t_ov_te, delta_ov_te = _build_sparse_overlap_cache(
+                    te_tensor.delta_notional_frac[list(pod)],
+                    te_tensor.net_ret_frac[list(pod)],
+                )
+                unrl_te = (
+                    _compute_netted_unrealized_frac_at_resets(
+                        sized_tr.multipliers,
+                        te_tensor,
+                        pod,
+                        te_slices,
+                        cost_rate,
+                        segments=te_segments,
+                        eps=config.flat_notional_eps_frac,
+                    )
+                    if config.daily_loss_mode == "reset_balance"
+                    else None
+                )
+                ret_te, peak_dd_te, _, _, _, _, _ = _evaluate_weights_unit_scale(
+                    sized_tr.multipliers,
+                    solo_te,
+                    t_ov_te,
+                    delta_ov_te,
+                    cost_rate,
+                    te_slices,
+                    config,
+                    segments=te_segments,
+                    unrl_at_resets=unrl_te,
+                )
+                oos_scores_fp.append(ret_te / max(peak_dd_te, 1e-6))
+
+            n_feas_fp = len(sized_list)
+            if n_feas_fp < 2:
+                split_records.append(
+                    {
+                        "split_idx": split_idx,
+                        "train_blocks": train_blocks,
+                        "status": "FEWER_THAN_TWO_FEASIBLE_CANDIDATES",
+                        "passed_count": len(passed_ids),
+                    }
+                )
+                continue
+
+            best_is = int(np.argmax(np.asarray(is_scores_fp, dtype=np.float64)))
+            ranks = rankdata_average(np.asarray(oos_scores_fp, dtype=np.float64))
+            omega = float(np.clip(ranks[best_is] / float(n_feas_fp + 1), 1e-4, 1.0 - 1e-4))
+            logit = math.log(omega / (1.0 - omega))
+            logits.append(logit)
+            split_records.append(
+                {
+                    "split_idx": split_idx,
+                    "train_blocks": train_blocks,
+                    "status": "OK",
+                    "selected_aliases": sized_list[best_is].aliases,
+                    "selected_multipliers": [float(x) for x in sized_list[best_is].multipliers],
+                    "is_score": float(is_scores_fp[best_is]),
+                    "oos_score": float(oos_scores_fp[best_is]),
+                    "logit": logit,
+                }
+            )
+        finally:
+            del tr_tensor, te_tensor
 
     logits_arr = np.asarray(logits, dtype=np.float64) if logits else np.array([0.0])
     pbo = float(np.mean(logits_arr <= 0.0))
@@ -3872,13 +4219,47 @@ class PropContractSpec:
     funded_target_cap_usd: float | None = None
 
 
-def _extract_leading_number(raw: object) -> float | None:
-    if isinstance(raw, (int, float)) and not isinstance(raw, bool):
+def _extract_leading_number(
+    raw: object,
+    *,
+    clause_hint: str | None = None,
+) -> float | None:
+    if isinstance(raw, bool):
+        return None
+    if isinstance(raw, (int, float)):
         return float(raw)
     if not isinstance(raw, str):
         return None
+
+    text = raw.strip()
+    if text.upper().startswith("AMBIGUOUS") and "(" in text and text.endswith(")"):
+        inner = text[text.index("(") + 1 : -1]
+        clauses = [c.strip() for c in inner.split(";") if c.strip()]
+        labeled = [(c.split(":", 1)[0].strip(), c.split(":", 1)[1].strip()) for c in clauses if ":" in c]
+        if labeled:
+            chosen_val = labeled[0][1]
+            if clause_hint:
+                hint_l = clause_hint.lower()
+                best_match: tuple[int, str] | None = None
+                for lbl, val in labeled:
+                    lbl_l = lbl.lower()
+                    if lbl_l in hint_l or hint_l in lbl_l:
+                        score = len(lbl_l)
+                        if best_match is None or score > best_match[0]:
+                            best_match = (score, val)
+                if best_match is not None:
+                    chosen_val = best_match[1]
+            text = chosen_val
+
+    text = re.sub(r"(?<=\d),(?=\d)", "", text)
+    text_l = text.lower()
+    if "(grow only)" in text_l and (clause_hint is None or "grow" not in clause_hint.lower()):
+        return None
+    if "100/0 default" in text_l:
+        return 80.0 if (clause_hint and "instant" in clause_hint.lower()) else 100.0
+
     token = ""
-    for ch in raw.strip():
+    for ch in text:
         if ch.isdigit() or ch == ".":
             token += ch
         elif token:
@@ -3898,18 +4279,19 @@ def load_prop_contract_spec(
     challenge_fee_usd: float | None = None,
     min_eval_trading_days: int | None = None,
     funded_cycle_days: int = 30,
-    rules_json_path: Path | None = None,
+    rules_json_path: str | Path | None = None,
+    program_filter: str | None = None,
 ) -> PropContractSpec:
     """Load a multi-phase prop contract from ``prop_firms_rules.json`` without inventing missing fees."""
     candidates = (
-        [rules_json_path]
+        [Path(rules_json_path)]
         if rules_json_path is not None
         else [
             Path(__file__).resolve().parents[1] / "prop_firms_rules.json",
-            Path("/home/quant/dev/trading-ops/prop_firms_rules.json"),
+            Path("prop_firms_rules.json"),
         ]
     )
-    resolved_json = next((p for p in candidates if p is not None and p.is_file()), None)
+    resolved_json = next((p for p in candidates if p.is_file()), None)
     firm_obj: dict | None = None
     if resolved_json is not None:
         raw_data = json.loads(resolved_json.read_text(encoding="utf-8"))
@@ -3965,27 +4347,54 @@ def load_prop_contract_spec(
     eval_specs: list[PropPhaseSpec] = []
     funded_spec: PropPhaseSpec | None = None
     split_pct = 0.80
+    filt_lower = program_filter.strip().lower() if program_filter is not None else None
+    clause_hint = program_filter.strip() if program_filter is not None else None
+    stop_eval = False
 
     for ph in firm_obj.get("phases", []):
         ph_name = str(ph.get("phase", ""))
-        base_acct = _extract_leading_number(ph.get("account_size_usd")) or 5_000.0
+        ph_lower = ph_name.lower()
+        is_funded = "funded" in ph_lower
+
+        if filt_lower is None:
+            if "phase_1" in ph_lower and eval_specs:
+                stop_eval = True
+            if stop_eval and not is_funded:
+                continue
+        else:
+            is_generic_funded = is_funded and (
+                ph_lower.strip() == "funded"
+                or "funded (all)" in ph_lower
+                or ("1-step" in filt_lower and "1-step" in ph_lower)
+            )
+            if not (filt_lower in ph_lower or is_generic_funded):
+                continue
+
+        base_acct_num = _extract_leading_number(ph.get("account_size_usd"), clause_hint=clause_hint)
+        base_acct = base_acct_num if base_acct_num is not None else 5_000.0
         scale = float(account_usd) / base_acct
-        tgt_raw = _extract_leading_number(ph.get("profit_target_usd"))
+        tgt_raw = _extract_leading_number(ph.get("profit_target_usd"), clause_hint=clause_hint)
         tgt = tgt_raw * scale if tgt_raw is not None else None
-        dd_raw = _extract_leading_number((ph.get("max_drawdown") or {}).get("amount_usd")) or (
-            0.10 * base_acct
+        dd_num = _extract_leading_number(
+            (ph.get("max_drawdown") or {}).get("amount_usd"),
+            clause_hint=clause_hint,
         )
+        dd_raw = dd_num if dd_num is not None else (0.10 * base_acct)
         dd_usd = dd_raw * scale
         daily_obj = ph.get("daily_loss_limit") or {}
-        daily_raw = _extract_leading_number(daily_obj.get("amount_usd")) or (0.05 * base_acct)
+        daily_num = _extract_leading_number(
+            daily_obj.get("amount_usd"),
+            clause_hint=clause_hint,
+        )
+        daily_raw = daily_num if daily_num is not None else (0.05 * base_acct)
         daily_usd = daily_raw * scale
         basis_str = str(daily_obj.get("basis", "BALANCE")).upper()
         basis: Literal["balance", "equity"] = "equity" if basis_str == "EQUITY" else "balance"
 
         raw_mtd = ph.get("min_trading_days")
-        if min_eval_trading_days is not None and "funded" not in ph_name:
+        if min_eval_trading_days is not None and not is_funded:
             mtd = int(min_eval_trading_days)
-        elif isinstance(raw_mtd, int):
+        elif isinstance(raw_mtd, int) and not isinstance(raw_mtd, bool):
             mtd = raw_mtd
         else:
             mtd = 0
@@ -3993,11 +4402,14 @@ def load_prop_contract_spec(
         cons_obj = ph.get("consistency_rule") or {}
         cons_pct: float | None = None
         if cons_obj.get("exists"):
-            c_num = _extract_leading_number(cons_obj.get("max_single_day_profit_pct"))
+            c_num = _extract_leading_number(
+                cons_obj.get("max_single_day_profit_pct"),
+                clause_hint=clause_hint,
+            )
             if c_num is not None and c_num > 0.0:
                 cons_pct = c_num / 100.0 if c_num > 1.0 else c_num
 
-        ps_raw = _extract_leading_number(ph.get("payout_split_pct"))
+        ps_raw = _extract_leading_number(ph.get("payout_split_pct"), clause_hint=clause_hint)
         if ps_raw is not None and ps_raw > 0.0:
             split_pct = ps_raw / 100.0 if ps_raw > 1.0 else ps_raw
 
@@ -4009,12 +4421,15 @@ def load_prop_contract_spec(
             daily_loss_basis=basis,
             min_trading_days=mtd,
             consistency_max_single_day_pct=cons_pct,
-            horizon_days=funded_cycle_days if "funded" in ph_name else 90,
+            horizon_days=funded_cycle_days if is_funded else 90,
         )
-        if "funded" in ph_name:
+        if is_funded:
             funded_spec = spec_item
         else:
             eval_specs.append(spec_item)
+
+    if not eval_specs:
+        raise ValueError(f"NO_MATCHING_PROP_PHASES:{firm_slug}:{program_filter}")
 
     if funded_spec is None:
         ref = eval_specs[-1]
@@ -4031,20 +4446,11 @@ def load_prop_contract_spec(
 
     eff_funded_days = max(int(funded_cycle_days), funded_spec.min_trading_days)
     if eff_funded_days != funded_spec.horizon_days:
-        funded_spec = PropPhaseSpec(
-            funded_spec.name,
-            funded_spec.profit_target_usd,
-            funded_spec.max_static_dd_usd,
-            funded_spec.daily_loss_limit_usd,
-            funded_spec.daily_loss_basis,
-            funded_spec.min_trading_days,
-            funded_spec.consistency_max_single_day_pct,
-            eff_funded_days,
-        )
+        funded_spec = replace(funded_spec, horizon_days=eff_funded_days)
 
     return PropContractSpec(
         firm_slug=str(firm_obj.get("firm_slug", firm_slug)),
-        program_name=str(firm_obj.get("program_name", "")),
+        program_name=program_filter if program_filter is not None else str(firm_obj.get("program_name", "")),
         account_usd=float(account_usd),
         eval_phases=tuple(eval_specs),
         funded_phase=funded_spec,
@@ -4115,8 +4521,8 @@ def evaluate_multiphase_contract_ev(
 
     for ph in contract.eval_phases:
         gain = np.zeros(n_paths, dtype=np.float64)
+        credited_gain = np.zeros(n_paths, dtype=np.float64)
         active_days = np.zeros(n_paths, dtype=np.int32)
-        max_day_gain = np.zeros(n_paths, dtype=np.float64)
         ph_alive = alive.copy()
         passed = np.zeros(n_paths, dtype=bool)
         daily_arr = day_min_bal if ph.daily_loss_basis == "balance" else day_min_eq
@@ -4149,16 +4555,15 @@ def evaluate_multiphase_contract_ev(
                 (np.abs(d_end) > 1e-9) | (np.abs(d_max) > 1e-9) | (np.abs(d_min) > 1e-9)
             )
             active_days[act_idx] += is_act_day.astype(np.int32)
-            max_day_gain[act_idx] = np.maximum(max_day_gain[act_idx], np.maximum(0.0, d_end))
 
-            if c_frac is not None:
-                eff_target = np.maximum(base_target, max_day_gain[act_idx] / c_frac)
-                hit_pass = ((gain[act_idx] + d_end) >= eff_target) & (
+            if c_frac is not None and base_target > 0.0:
+                day_credit = np.where(d_end > 0.0, np.minimum(d_end, c_frac * base_target), d_end)
+                hit_pass = ((credited_gain[act_idx] + day_credit) >= base_target) & (
                     active_days[act_idx] >= ph.min_trading_days
                 )
             else:
-                eff_target = base_target
-                hit_pass = ((gain[act_idx] + d_max) >= eff_target) & (
+                day_credit = d_end
+                hit_pass = ((gain[act_idx] + d_max) >= base_target) & (
                     active_days[act_idx] >= ph.min_trading_days
                 )
 
@@ -4173,6 +4578,7 @@ def evaluate_multiphase_contract_ev(
             ph_alive[act_idx[win_mask | fail_mask]] = False
             cont = ~(win_mask | fail_mask)
             gain[act_idx[cont]] += d_end[cont]
+            credited_gain[act_idx[cont]] += day_credit[cont]
 
         alive = passed
         phase_pass_rates[ph.name] = round(float(np.mean(alive)) * 100.0, 2)

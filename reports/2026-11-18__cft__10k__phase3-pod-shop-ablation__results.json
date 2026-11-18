@@ -1,0 +1,2480 @@
+{
+  "archive_days": 197,
+  "archive_sha256": "959a4f195863f7578d69a08b7560bafa0eac959e8b695b415cd430b5e993776c",
+  "bybit_meta": {
+    "base_coins": 824,
+    "lookup_utc": "2026-11-18T07:50:15.799422+00:00",
+    "pages": 1
+  },
+  "pit_provenance": "EX_POST_RESERVOIR_ARCHIVE_ZERO_EXCLUSION_LEAKAGE",
+  "roster_sha256": "59896baa926c264464935c894b8854472cd58a47b9b49f7ed129bf030fd0c707",
+  "section_a": {
+    "counts": {
+      "historical_eligible": 254,
+      "markout_breakdown": {
+        "COPYABLE_DRIFT": 146,
+        "REJECT_NEGATIVE_5M_MARKOUT": 106,
+        "REJECT_SUB5M_CHURN": 2
+      },
+      "passed_stage1_tier2": 40,
+      "positive_copyable_drift": 126,
+      "reservoir_train_active": 261
+    },
+    "cpcv": {
+      "full_pipeline_evaluated_splits": 19,
+      "full_pipeline_logits": [
+        1.09861,
+        1.09861,
+        1.38629,
+        -1.09861,
+        0.22314,
+        0.22314,
+        -1.38629,
+        -1.09861,
+        0.69315,
+        -1.38629,
+        0.22314,
+        1.94591,
+        -1.38629,
+        0.69315,
+        1.38629,
+        0.22314,
+        1.09861,
+        0.40547,
+        -0.40547
+      ],
+      "full_pipeline_pbo": 0.3158,
+      "full_pipeline_split_records": [
+        {
+          "is_score": 5.747709610096078,
+          "logit": 1.0986122886681098,
+          "oos_score": 3.2793026857189087,
+          "selected_aliases": [
+            "W#107",
+            "W#174",
+            "W#26"
+          ],
+          "selected_multipliers": [
+            0.21473334130694882,
+            1.5836535944537955,
+            0.019979342809237063
+          ],
+          "split_idx": 0,
+          "status": "OK",
+          "train_blocks": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "is_score": 4.940691712136263,
+          "logit": 1.0986122886681098,
+          "oos_score": 3.706514201478091,
+          "selected_aliases": [
+            "W#190",
+            "W#257",
+            "W312"
+          ],
+          "selected_multipliers": [
+            0.013912282822409765,
+            0.021444262694721213,
+            0.12236455082258456
+          ],
+          "split_idx": 1,
+          "status": "OK",
+          "train_blocks": [
+            0,
+            1,
+            3
+          ]
+        },
+        {
+          "is_score": 3.7327258759800346,
+          "logit": 1.3862943611198908,
+          "oos_score": 3.229236487883987,
+          "selected_aliases": [
+            "W#190",
+            "W#86",
+            "W312"
+          ],
+          "selected_multipliers": [
+            0.013930102214874064,
+            0.006931291734598813,
+            0.08998907745489108
+          ],
+          "split_idx": 2,
+          "status": "OK",
+          "train_blocks": [
+            0,
+            1,
+            4
+          ]
+        },
+        {
+          "is_score": 6.362436555018516,
+          "logit": -1.0986122886681098,
+          "oos_score": 2.0006436586519385,
+          "selected_aliases": [
+            "W#13",
+            "W111",
+            "W312"
+          ],
+          "selected_multipliers": [
+            0.24493740979456197,
+            0.3155113381920569,
+            0.11477640827491707
+          ],
+          "split_idx": 3,
+          "status": "OK",
+          "train_blocks": [
+            0,
+            1,
+            5
+          ]
+        },
+        {
+          "is_score": 6.55227171624821,
+          "logit": 0.22314355131420993,
+          "oos_score": 3.216408285285752,
+          "selected_aliases": [
+            "W#107",
+            "W#13",
+            "W#36"
+          ],
+          "selected_multipliers": [
+            0.3501207308290594,
+            0.24493989148987644,
+            0.009468099599037442
+          ],
+          "split_idx": 4,
+          "status": "OK",
+          "train_blocks": [
+            0,
+            2,
+            3
+          ]
+        },
+        {
+          "is_score": 4.744045299074809,
+          "logit": 0.22314355131420993,
+          "oos_score": 4.260687549614368,
+          "selected_aliases": [
+            "W#107",
+            "W#13",
+            "W#94"
+          ],
+          "selected_multipliers": [
+            0.4785492623206245,
+            0.24023157494312072,
+            5.0
+          ],
+          "split_idx": 5,
+          "status": "OK",
+          "train_blocks": [
+            0,
+            2,
+            4
+          ]
+        },
+        {
+          "is_score": 12.445478485809955,
+          "logit": -1.3862943611198906,
+          "oos_score": -0.7817459655028252,
+          "selected_aliases": [
+            "M45",
+            "W#101",
+            "W#150"
+          ],
+          "selected_multipliers": [
+            0.04803377295243364,
+            0.012772487743012567,
+            2.4925765808934215
+          ],
+          "split_idx": 6,
+          "status": "OK",
+          "train_blocks": [
+            0,
+            2,
+            5
+          ]
+        },
+        {
+          "is_score": 4.443667185792472,
+          "logit": -1.0986122886681098,
+          "oos_score": 0.46444050928708014,
+          "selected_aliases": [
+            "W#120",
+            "W#335",
+            "W312"
+          ],
+          "selected_multipliers": [
+            1.3391812752944894,
+            0.06344880532904516,
+            0.12319373233929153
+          ],
+          "split_idx": 7,
+          "status": "OK",
+          "train_blocks": [
+            0,
+            3,
+            4
+          ]
+        },
+        {
+          "is_score": 7.11713711171756,
+          "logit": 0.6931471805599452,
+          "oos_score": 0.7126323646022614,
+          "selected_aliases": [
+            "W#150",
+            "W111",
+            "W312"
+          ],
+          "selected_multipliers": [
+            1.9719113944906375,
+            0.3692591312514669,
+            0.12236455082258672
+          ],
+          "split_idx": 8,
+          "status": "OK",
+          "train_blocks": [
+            0,
+            3,
+            5
+          ]
+        },
+        {
+          "is_score": 4.905098333388161,
+          "logit": -1.3862943611198906,
+          "oos_score": 0.43679863677492325,
+          "selected_aliases": [
+            "W#275",
+            "W#6",
+            "W312"
+          ],
+          "selected_multipliers": [
+            1.2823579078313945,
+            0.003360382436005903,
+            0.17253281389945999
+          ],
+          "split_idx": 9,
+          "status": "OK",
+          "train_blocks": [
+            0,
+            4,
+            5
+          ]
+        },
+        {
+          "is_score": 4.0619147845552,
+          "logit": 0.22314355131420993,
+          "oos_score": 2.9620344518978836,
+          "selected_aliases": [
+            "W#17",
+            "W#174",
+            "W#26"
+          ],
+          "selected_multipliers": [
+            0.06324935866457206,
+            1.6846568668694397,
+            0.01820869354614217
+          ],
+          "split_idx": 10,
+          "status": "OK",
+          "train_blocks": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "is_score": 5.507679987001927,
+          "logit": 1.9459101490553132,
+          "oos_score": 3.2539113277235763,
+          "selected_aliases": [
+            "W#107",
+            "W#17",
+            "W#47"
+          ],
+          "selected_multipliers": [
+            0.43673775810751597,
+            0.04511778873510544,
+            0.006294079434627426
+          ],
+          "split_idx": 11,
+          "status": "OK",
+          "train_blocks": [
+            1,
+            2,
+            4
+          ]
+        },
+        {
+          "is_score": 12.065249551108616,
+          "logit": -1.3862943611198906,
+          "oos_score": -0.5892784345654961,
+          "selected_aliases": [
+            "M45",
+            "W#107",
+            "W#150"
+          ],
+          "selected_multipliers": [
+            0.05417258256355247,
+            0.28619888608960714,
+            2.2975347957315853
+          ],
+          "split_idx": 12,
+          "status": "OK",
+          "train_blocks": [
+            1,
+            2,
+            5
+          ]
+        },
+        {
+          "is_score": 7.51177480263618,
+          "logit": 0.6931471805599452,
+          "oos_score": 3.1050596805644703,
+          "selected_aliases": [
+            "W#13",
+            "W#17",
+            "W#47"
+          ],
+          "selected_multipliers": [
+            1.2708879463999736,
+            0.04570740353933654,
+            0.004584214306775331
+          ],
+          "split_idx": 13,
+          "status": "OK",
+          "train_blocks": [
+            1,
+            3,
+            4
+          ]
+        },
+        {
+          "is_score": 9.0377543641794,
+          "logit": 1.3862943611198908,
+          "oos_score": 2.15443677454803,
+          "selected_aliases": [
+            "W#13",
+            "W#150",
+            "W111"
+          ],
+          "selected_multipliers": [
+            1.0312077029374,
+            2.1510581080113322,
+            0.4652335740471225
+          ],
+          "split_idx": 14,
+          "status": "OK",
+          "train_blocks": [
+            1,
+            3,
+            5
+          ]
+        },
+        {
+          "is_score": 8.215445107331481,
+          "logit": 0.22314355131420993,
+          "oos_score": 2.372960156791872,
+          "selected_aliases": [
+            "W#13",
+            "W#190",
+            "W#26"
+          ],
+          "selected_multipliers": [
+            0.36004701747496776,
+            0.04829523350231269,
+            0.013661503762265596
+          ],
+          "split_idx": 15,
+          "status": "OK",
+          "train_blocks": [
+            1,
+            4,
+            5
+          ]
+        },
+        {
+          "is_score": 4.14636927789354,
+          "logit": 1.0986122886681098,
+          "oos_score": 4.311362803835284,
+          "selected_aliases": [
+            "W#107",
+            "W#174",
+            "W#290"
+          ],
+          "selected_multipliers": [
+            0.4654447279434186,
+            5.0,
+            0.01820772892015587
+          ],
+          "split_idx": 16,
+          "status": "OK",
+          "train_blocks": [
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "is_score": 8.9798801075277,
+          "logit": 0.4054651081081642,
+          "oos_score": 1.8029140680512976,
+          "selected_aliases": [
+            "M45",
+            "W#13",
+            "W#150"
+          ],
+          "selected_multipliers": [
+            0.02009027311459121,
+            2.383988731327572,
+            2.571750374168548
+          ],
+          "split_idx": 17,
+          "status": "OK",
+          "train_blocks": [
+            2,
+            3,
+            5
+          ]
+        },
+        {
+          "passed_count": 36,
+          "split_idx": 18,
+          "status": "FEWER_THAN_TWO_FEASIBLE_CANDIDATES",
+          "train_blocks": [
+            2,
+            4,
+            5
+          ]
+        },
+        {
+          "is_score": 9.325114109925542,
+          "logit": -0.4054651081081643,
+          "oos_score": 0.3580971948075714,
+          "selected_aliases": [
+            "W#100",
+            "W#150",
+            "W111"
+          ],
+          "selected_multipliers": [
+            1.2227023447546548,
+            2.96731804014044,
+            0.27775041278028334
+          ],
+          "split_idx": 19,
+          "status": "OK",
+          "train_blocks": [
+            3,
+            4,
+            5
+          ]
+        }
+      ],
+      "full_pipeline_status_counts": {
+        "FEWER_THAN_TWO_FEASIBLE_CANDIDATES": 1,
+        "OK": 19
+      },
+      "full_pipeline_total_splits": 20,
+      "leakfree_evaluated_splits": 15,
+      "leakfree_logits": [
+        -0.69315,
+        -0.40547,
+        -1.09861,
+        -0.69315,
+        -1.38629,
+        -1.09861,
+        0.40547,
+        -0.69315,
+        -1.38629,
+        -0.69315,
+        0.69315,
+        -0.69315,
+        -1.38629,
+        -0.40547,
+        0.69315
+      ],
+      "leakfree_pbo": 0.8,
+      "leakfree_total_splits": 20
+    },
+    "oos_outcomes": [
+      {
+        "aliases": [
+          "Whale_H#d50e57",
+          "W#286",
+          "W#217"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 60,
+        "cost_multiplier": 1.0,
+        "cwsa_bars_gt_5pct": 0,
+        "cwsa_clipped_orders": 0,
+        "cwsa_delta_mismatch_bars": 0,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": null,
+        "execution_mode": "bar_delta",
+        "full_window_net_usd": -31.85,
+        "k_weights": [
+          0.000115,
+          9.1e-05,
+          0.000568
+        ],
+        "max_participation_pct": 134.3284,
+        "modeled_sqrt_impact_usd": 0.96,
+        "name": "Naive_Leaderboard_1_over_DD",
+        "p95_participation_pct": 2.7286,
+        "peak_gross_leverage": 0.349,
+        "peak_to_trough_dd_usd": -456.13,
+        "static_floor_dd_usd": -76.94,
+        "sweeps": 1,
+        "terminal_net_usd": -31.85,
+        "tier": null,
+        "total_funding_usd": -9.14,
+        "trades_gt_1pct": 39,
+        "trades_gt_5pct": 18,
+        "unpriced_open_steps": 2,
+        "unverified_volume_trades": 1,
+        "verdict": "TIMEOUT",
+        "worst_daily_usd": -408.12
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 1.0,
+        "cwsa_bars_gt_5pct": 0,
+        "cwsa_clipped_orders": 0,
+        "cwsa_delta_mismatch_bars": 0,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": null,
+        "execution_mode": "bar_delta",
+        "full_window_net_usd": 1121.52,
+        "k_weights": [
+          0.083435,
+          0.089098,
+          0.037609
+        ],
+        "max_participation_pct": 59.6929,
+        "modeled_sqrt_impact_usd": 14.89,
+        "name": "Deep_Legacy_BarDelta_StandaloneProxy",
+        "p95_participation_pct": 1.0519,
+        "peak_gross_leverage": 0.553,
+        "peak_to_trough_dd_usd": -194.49,
+        "static_floor_dd_usd": -15.39,
+        "sweeps": 0,
+        "terminal_net_usd": 805.14,
+        "tier": null,
+        "total_funding_usd": -4.01,
+        "trades_gt_1pct": 55,
+        "trades_gt_5pct": 13,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "PASS",
+        "worst_daily_usd": -139.9
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 1.0,
+        "cwsa_bars_gt_5pct": 0,
+        "cwsa_clipped_orders": 0,
+        "cwsa_delta_mismatch_bars": 0,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": null,
+        "execution_mode": "bar_delta",
+        "full_window_net_usd": 883.48,
+        "k_weights": [
+          0.072173,
+          0.067515,
+          0.038931
+        ],
+        "max_participation_pct": 51.629,
+        "modeled_sqrt_impact_usd": 10.71,
+        "name": "Deep_Euler_Tier1_BarDelta",
+        "p95_participation_pct": 0.9198,
+        "peak_gross_leverage": 0.751,
+        "peak_to_trough_dd_usd": -229.81,
+        "static_floor_dd_usd": -11.71,
+        "sweeps": 0,
+        "terminal_net_usd": 801.32,
+        "tier": 1,
+        "total_funding_usd": -5.56,
+        "trades_gt_1pct": 46,
+        "trades_gt_5pct": 10,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "PASS",
+        "worst_daily_usd": -183.01
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 1.0,
+        "cwsa_bars_gt_5pct": 7,
+        "cwsa_clipped_orders": 10,
+        "cwsa_delta_mismatch_bars": 790,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": 896.69,
+        "execution_mode": "cwsa_one_shot_v3",
+        "full_window_net_usd": 879.91,
+        "k_weights": [
+          0.072173,
+          0.067515,
+          0.038931
+        ],
+        "max_participation_pct": 51.629,
+        "modeled_sqrt_impact_usd": 9.79,
+        "name": "Deep_Euler_Tier1_CWSA",
+        "p95_participation_pct": 0.7624,
+        "peak_gross_leverage": 0.753,
+        "peak_to_trough_dd_usd": -229.81,
+        "static_floor_dd_usd": -12.09,
+        "sweeps": 0,
+        "terminal_net_usd": 800.43,
+        "tier": 1,
+        "total_funding_usd": -5.58,
+        "trades_gt_1pct": 37,
+        "trades_gt_5pct": 7,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "PASS",
+        "worst_daily_usd": -183.01
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 2.0,
+        "cwsa_bars_gt_5pct": 0,
+        "cwsa_clipped_orders": 0,
+        "cwsa_delta_mismatch_bars": 0,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": null,
+        "execution_mode": "bar_delta",
+        "full_window_net_usd": 712.66,
+        "k_weights": [
+          0.072173,
+          0.067515,
+          0.038931
+        ],
+        "max_participation_pct": 51.629,
+        "modeled_sqrt_impact_usd": 10.71,
+        "name": "Deep_Euler_Tier1_BarDelta_2xCost",
+        "p95_participation_pct": 0.9198,
+        "peak_gross_leverage": 0.756,
+        "peak_to_trough_dd_usd": -249.4,
+        "static_floor_dd_usd": -13.16,
+        "sweeps": 0,
+        "terminal_net_usd": 712.66,
+        "tier": 1,
+        "total_funding_usd": -5.75,
+        "trades_gt_1pct": 46,
+        "trades_gt_5pct": 10,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "TIMEOUT",
+        "worst_daily_usd": -187.5
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 2.0,
+        "cwsa_bars_gt_5pct": 7,
+        "cwsa_clipped_orders": 10,
+        "cwsa_delta_mismatch_bars": 790,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": 728.58,
+        "execution_mode": "cwsa_one_shot_v3",
+        "full_window_net_usd": 714.64,
+        "k_weights": [
+          0.072173,
+          0.067515,
+          0.038931
+        ],
+        "max_participation_pct": 51.629,
+        "modeled_sqrt_impact_usd": 9.79,
+        "name": "Deep_Euler_Tier1_CWSA_2xCost",
+        "p95_participation_pct": 0.7624,
+        "peak_gross_leverage": 0.758,
+        "peak_to_trough_dd_usd": -249.4,
+        "static_floor_dd_usd": -12.95,
+        "sweeps": 0,
+        "terminal_net_usd": 714.64,
+        "tier": 1,
+        "total_funding_usd": -7.8,
+        "trades_gt_1pct": 37,
+        "trades_gt_5pct": 7,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "TIMEOUT",
+        "worst_daily_usd": -187.5
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 1.0,
+        "cwsa_bars_gt_5pct": 0,
+        "cwsa_clipped_orders": 0,
+        "cwsa_delta_mismatch_bars": 0,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": null,
+        "execution_mode": "bar_delta",
+        "full_window_net_usd": 1811.29,
+        "k_weights": [
+          0.226845,
+          0.212205,
+          0.122365
+        ],
+        "max_participation_pct": 162.3017,
+        "modeled_sqrt_impact_usd": 54.16,
+        "name": "Deep_Euler_Tier2_BarDelta",
+        "p95_participation_pct": 2.914,
+        "peak_gross_leverage": 0.779,
+        "peak_to_trough_dd_usd": -373.64,
+        "static_floor_dd_usd": -36.81,
+        "sweeps": 0,
+        "terminal_net_usd": 821.98,
+        "tier": 2,
+        "total_funding_usd": -1.19,
+        "trades_gt_1pct": 120,
+        "trades_gt_5pct": 33,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "PASS",
+        "worst_daily_usd": -40.33
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 1.0,
+        "cwsa_bars_gt_5pct": 21,
+        "cwsa_clipped_orders": 28,
+        "cwsa_delta_mismatch_bars": 791,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": 2868.27,
+        "execution_mode": "cwsa_one_shot_v3",
+        "full_window_net_usd": 1693.66,
+        "k_weights": [
+          0.226845,
+          0.212205,
+          0.122365
+        ],
+        "max_participation_pct": 52.6712,
+        "modeled_sqrt_impact_usd": 43.95,
+        "name": "Deep_Euler_Tier2_CWSA",
+        "p95_participation_pct": 2.35,
+        "peak_gross_leverage": 0.78,
+        "peak_to_trough_dd_usd": -402.7,
+        "static_floor_dd_usd": -38.15,
+        "sweeps": 0,
+        "terminal_net_usd": 807.61,
+        "tier": 2,
+        "total_funding_usd": -1.46,
+        "trades_gt_1pct": 101,
+        "trades_gt_5pct": 21,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "PASS",
+        "worst_daily_usd": -40.33
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 2.0,
+        "cwsa_bars_gt_5pct": 0,
+        "cwsa_clipped_orders": 0,
+        "cwsa_delta_mismatch_bars": 0,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": null,
+        "execution_mode": "bar_delta",
+        "full_window_net_usd": 1445.76,
+        "k_weights": [
+          0.226845,
+          0.212205,
+          0.122365
+        ],
+        "max_participation_pct": 162.3017,
+        "modeled_sqrt_impact_usd": 52.91,
+        "name": "Deep_Euler_Tier2_BarDelta_2xCost",
+        "p95_participation_pct": 2.9262,
+        "peak_gross_leverage": 0.781,
+        "peak_to_trough_dd_usd": -466.52,
+        "static_floor_dd_usd": -41.38,
+        "sweeps": 0,
+        "terminal_net_usd": 801.78,
+        "tier": 2,
+        "total_funding_usd": -1.46,
+        "trades_gt_1pct": 117,
+        "trades_gt_5pct": 33,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "PASS",
+        "worst_daily_usd": -42.72
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 2.0,
+        "cwsa_bars_gt_5pct": 21,
+        "cwsa_clipped_orders": 28,
+        "cwsa_delta_mismatch_bars": 791,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": 2350.51,
+        "execution_mode": "cwsa_one_shot_v3",
+        "full_window_net_usd": 1356.19,
+        "k_weights": [
+          0.226845,
+          0.212205,
+          0.122365
+        ],
+        "max_participation_pct": 52.6712,
+        "modeled_sqrt_impact_usd": 42.7,
+        "name": "Deep_Euler_Tier2_CWSA_2xCost",
+        "p95_participation_pct": 2.324,
+        "peak_gross_leverage": 0.781,
+        "peak_to_trough_dd_usd": -405.77,
+        "static_floor_dd_usd": -40.66,
+        "sweeps": 0,
+        "terminal_net_usd": 807.3,
+        "tier": 2,
+        "total_funding_usd": -1.46,
+        "trades_gt_1pct": 98,
+        "trades_gt_5pct": 21,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "PASS",
+        "worst_daily_usd": -42.72
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 1.0,
+        "cwsa_bars_gt_5pct": 0,
+        "cwsa_clipped_orders": 0,
+        "cwsa_delta_mismatch_bars": 0,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": null,
+        "execution_mode": "bar_delta",
+        "full_window_net_usd": 1863.07,
+        "k_weights": [
+          0.298231,
+          0.278984,
+          0.160871
+        ],
+        "max_participation_pct": 213.384,
+        "modeled_sqrt_impact_usd": 76.5,
+        "name": "Deep_Euler_Tier3_BarDelta",
+        "p95_participation_pct": 4.2236,
+        "peak_gross_leverage": 0.584,
+        "peak_to_trough_dd_usd": -226.55,
+        "static_floor_dd_usd": -48.41,
+        "sweeps": 0,
+        "terminal_net_usd": 873.34,
+        "tier": 3,
+        "total_funding_usd": -0.9,
+        "trades_gt_1pct": 136,
+        "trades_gt_5pct": 39,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "PASS",
+        "worst_daily_usd": -53.31
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 1.0,
+        "cwsa_bars_gt_5pct": 24,
+        "cwsa_clipped_orders": 32,
+        "cwsa_delta_mismatch_bars": 790,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": 3675.97,
+        "execution_mode": "cwsa_one_shot_v3",
+        "full_window_net_usd": 1505.33,
+        "k_weights": [
+          0.298231,
+          0.278984,
+          0.160871
+        ],
+        "max_participation_pct": 52.6712,
+        "modeled_sqrt_impact_usd": 60.11,
+        "name": "Deep_Euler_Tier3_CWSA",
+        "p95_participation_pct": 3.0617,
+        "peak_gross_leverage": 1.021,
+        "peak_to_trough_dd_usd": -479.5,
+        "static_floor_dd_usd": -50.18,
+        "sweeps": 0,
+        "terminal_net_usd": 808.02,
+        "tier": 3,
+        "total_funding_usd": -1.44,
+        "trades_gt_1pct": 114,
+        "trades_gt_5pct": 23,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "PASS",
+        "worst_daily_usd": -53.31
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 2.0,
+        "cwsa_bars_gt_5pct": 0,
+        "cwsa_clipped_orders": 0,
+        "cwsa_delta_mismatch_bars": 0,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": null,
+        "execution_mode": "bar_delta",
+        "full_window_net_usd": 944.08,
+        "k_weights": [
+          0.298231,
+          0.278984,
+          0.160871
+        ],
+        "max_participation_pct": 213.384,
+        "modeled_sqrt_impact_usd": 77.0,
+        "name": "Deep_Euler_Tier3_BarDelta_2xCost",
+        "p95_participation_pct": 4.0617,
+        "peak_gross_leverage": 0.585,
+        "peak_to_trough_dd_usd": -226.55,
+        "static_floor_dd_usd": -54.41,
+        "sweeps": 0,
+        "terminal_net_usd": 852.69,
+        "tier": 3,
+        "total_funding_usd": -0.9,
+        "trades_gt_1pct": 137,
+        "trades_gt_5pct": 38,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "PASS",
+        "worst_daily_usd": -56.43
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 2.0,
+        "cwsa_bars_gt_5pct": 24,
+        "cwsa_clipped_orders": 32,
+        "cwsa_delta_mismatch_bars": 789,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": 2999.69,
+        "execution_mode": "cwsa_one_shot_v3",
+        "full_window_net_usd": 1201.99,
+        "k_weights": [
+          0.298231,
+          0.278984,
+          0.160871
+        ],
+        "max_participation_pct": 52.6712,
+        "modeled_sqrt_impact_usd": 61.22,
+        "name": "Deep_Euler_Tier3_CWSA_2xCost",
+        "p95_participation_pct": 3.0522,
+        "peak_gross_leverage": 1.024,
+        "peak_to_trough_dd_usd": -479.77,
+        "static_floor_dd_usd": -53.45,
+        "sweeps": 0,
+        "terminal_net_usd": 815.84,
+        "tier": 3,
+        "total_funding_usd": -1.44,
+        "trades_gt_1pct": 117,
+        "trades_gt_5pct": 23,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "PASS",
+        "worst_daily_usd": -56.43
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 1.0,
+        "cwsa_bars_gt_5pct": 0,
+        "cwsa_clipped_orders": 0,
+        "cwsa_delta_mismatch_bars": 0,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": null,
+        "execution_mode": "bar_delta",
+        "full_window_net_usd": 1863.07,
+        "k_weights": [
+          0.298231,
+          0.278984,
+          0.160871
+        ],
+        "max_participation_pct": 213.384,
+        "modeled_sqrt_impact_usd": 76.5,
+        "name": "Deep_Euler_Tier4_BarDelta",
+        "p95_participation_pct": 4.2236,
+        "peak_gross_leverage": 0.584,
+        "peak_to_trough_dd_usd": -226.55,
+        "static_floor_dd_usd": -48.41,
+        "sweeps": 0,
+        "terminal_net_usd": 873.34,
+        "tier": 4,
+        "total_funding_usd": -0.9,
+        "trades_gt_1pct": 136,
+        "trades_gt_5pct": 39,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "PASS",
+        "worst_daily_usd": -53.31
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 1.0,
+        "cwsa_bars_gt_5pct": 24,
+        "cwsa_clipped_orders": 32,
+        "cwsa_delta_mismatch_bars": 790,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": 3675.97,
+        "execution_mode": "cwsa_one_shot_v3",
+        "full_window_net_usd": 1505.33,
+        "k_weights": [
+          0.298231,
+          0.278984,
+          0.160871
+        ],
+        "max_participation_pct": 52.6712,
+        "modeled_sqrt_impact_usd": 60.11,
+        "name": "Deep_Euler_Tier4_CWSA",
+        "p95_participation_pct": 3.0617,
+        "peak_gross_leverage": 1.021,
+        "peak_to_trough_dd_usd": -479.5,
+        "static_floor_dd_usd": -50.18,
+        "sweeps": 0,
+        "terminal_net_usd": 808.02,
+        "tier": 4,
+        "total_funding_usd": -1.44,
+        "trades_gt_1pct": 114,
+        "trades_gt_5pct": 23,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "PASS",
+        "worst_daily_usd": -53.31
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 2.0,
+        "cwsa_bars_gt_5pct": 0,
+        "cwsa_clipped_orders": 0,
+        "cwsa_delta_mismatch_bars": 0,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": null,
+        "execution_mode": "bar_delta",
+        "full_window_net_usd": 944.08,
+        "k_weights": [
+          0.298231,
+          0.278984,
+          0.160871
+        ],
+        "max_participation_pct": 213.384,
+        "modeled_sqrt_impact_usd": 77.0,
+        "name": "Deep_Euler_Tier4_BarDelta_2xCost",
+        "p95_participation_pct": 4.0617,
+        "peak_gross_leverage": 0.585,
+        "peak_to_trough_dd_usd": -226.55,
+        "static_floor_dd_usd": -54.41,
+        "sweeps": 0,
+        "terminal_net_usd": 852.69,
+        "tier": 4,
+        "total_funding_usd": -0.9,
+        "trades_gt_1pct": 137,
+        "trades_gt_5pct": 38,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "PASS",
+        "worst_daily_usd": -56.43
+      },
+      {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+        "coins_count": 17,
+        "cost_multiplier": 2.0,
+        "cwsa_bars_gt_5pct": 24,
+        "cwsa_clipped_orders": 32,
+        "cwsa_delta_mismatch_bars": 789,
+        "cwsa_missed_orders": 0,
+        "cwsa_net_usd": 2999.69,
+        "execution_mode": "cwsa_one_shot_v3",
+        "full_window_net_usd": 1201.99,
+        "k_weights": [
+          0.298231,
+          0.278984,
+          0.160871
+        ],
+        "max_participation_pct": 52.6712,
+        "modeled_sqrt_impact_usd": 61.22,
+        "name": "Deep_Euler_Tier4_CWSA_2xCost",
+        "p95_participation_pct": 3.0522,
+        "peak_gross_leverage": 1.024,
+        "peak_to_trough_dd_usd": -479.77,
+        "static_floor_dd_usd": -53.45,
+        "sweeps": 0,
+        "terminal_net_usd": 815.84,
+        "tier": 4,
+        "total_funding_usd": -1.44,
+        "trades_gt_1pct": 117,
+        "trades_gt_5pct": 23,
+        "unpriced_open_steps": 0,
+        "unverified_volume_trades": 0,
+        "verdict": "PASS",
+        "worst_daily_usd": -56.43
+      }
+    ],
+    "train_tier_summaries": {
+      "tier_1": {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "binding_constraint": "Tier1_Standalone_Cap",
+        "feasible": true,
+        "k_weights": [
+          0.072173,
+          0.067515,
+          0.038931
+        ],
+        "marginal_cdar_shares": [
+          0.4064,
+          0.4369,
+          0.1567
+        ]
+      },
+      "tier_2": {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "binding_constraint": "Hard_Daily",
+        "feasible": true,
+        "k_weights": [
+          0.226845,
+          0.212205,
+          0.122365
+        ],
+        "marginal_cdar_shares": [
+          0.4064,
+          0.4369,
+          0.1567
+        ]
+      },
+      "tier_3": {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "binding_constraint": "Symbol_1.5x_Cap",
+        "feasible": true,
+        "k_weights": [
+          0.298231,
+          0.278984,
+          0.160871
+        ],
+        "marginal_cdar_shares": [
+          0.4064,
+          0.4369,
+          0.1567
+        ]
+      },
+      "tier_4": {
+        "aliases": [
+          "W#107",
+          "W111",
+          "W312"
+        ],
+        "binding_constraint": "Symbol_1.5x_Cap",
+        "feasible": true,
+        "k_weights": [
+          0.298231,
+          0.278984,
+          0.160871
+        ],
+        "marginal_cdar_shares": [
+          0.4064,
+          0.4369,
+          0.1567
+        ]
+      }
+    }
+  },
+  "section_b": {
+    "2": {
+      "aliases": [
+        "W#107",
+        "W111",
+        "W312"
+      ],
+      "bench_aliases": [
+        "W#284",
+        "W#94",
+        "W#283"
+      ],
+      "d_tier_usd": 300.0,
+      "lifecycle_arms": {
+        "EPISODE_CUSUM_ONLY": {
+          "bars_gt_5pct_count": 8,
+          "blended_breakeven_fee_usd": 5.56,
+          "blended_p_funded_pct": 0.72,
+          "final_equity_usd": 10508.8,
+          "guardian_breach_reason": null,
+          "guardian_breached": false,
+          "guardian_sweeps": 0,
+          "guardian_target_passed": false,
+          "label": "EPISODE_CUSUM_ONLY",
+          "max_pm03_conservation_err": 0.0,
+          "net_pnl_usd": 508.8,
+          "promoted_bench_seats": [],
+          "resized_seat_events": 0,
+          "retired_seats": [
+            "W#107",
+            "W111",
+            "W312"
+          ],
+          "static_floor_dd_usd": -32.08
+        },
+        "GUARDIAN_MANDATE_PAUSE_STATIC_HOLD": {
+          "bars_gt_5pct_count": 8,
+          "blended_breakeven_fee_usd": 6.13,
+          "blended_p_funded_pct": 0.78,
+          "final_equity_usd": 10508.8,
+          "guardian_breach_reason": null,
+          "guardian_breached": false,
+          "guardian_sweeps": 0,
+          "guardian_target_passed": false,
+          "label": "GUARDIAN_MANDATE_PAUSE_STATIC_HOLD",
+          "max_pm03_conservation_err": 0.0,
+          "net_pnl_usd": 508.8,
+          "promoted_bench_seats": [],
+          "resized_seat_events": 0,
+          "retired_seats": [
+            "W#107",
+            "W111",
+            "W312"
+          ],
+          "static_floor_dd_usd": -32.08
+        },
+        "NEXT_FLAT_RELEASE": {
+          "bars_gt_5pct_count": 8,
+          "blended_breakeven_fee_usd": 5.07,
+          "blended_p_funded_pct": 0.64,
+          "final_equity_usd": 10508.8,
+          "guardian_breach_reason": null,
+          "guardian_breached": false,
+          "guardian_sweeps": 0,
+          "guardian_target_passed": false,
+          "label": "NEXT_FLAT_RELEASE",
+          "max_pm03_conservation_err": 0.0,
+          "net_pnl_usd": 508.8,
+          "promoted_bench_seats": [],
+          "resized_seat_events": 0,
+          "retired_seats": [
+            "W#107",
+            "W111",
+            "W312"
+          ],
+          "static_floor_dd_usd": -32.08
+        },
+        "RESEARCH_LEADER_REDUCE_FREEZE": {
+          "bars_gt_5pct_count": 8,
+          "blended_breakeven_fee_usd": 5.22,
+          "blended_p_funded_pct": 0.62,
+          "final_equity_usd": 10508.8,
+          "guardian_breach_reason": null,
+          "guardian_breached": false,
+          "guardian_sweeps": 0,
+          "guardian_target_passed": false,
+          "label": "RESEARCH_LEADER_REDUCE_FREEZE",
+          "max_pm03_conservation_err": 0.0,
+          "net_pnl_usd": 508.8,
+          "promoted_bench_seats": [],
+          "resized_seat_events": 0,
+          "retired_seats": [
+            "W#107",
+            "W111",
+            "W312"
+          ],
+          "static_floor_dd_usd": -32.08
+        }
+      },
+      "replacement_modes": {
+        "LEAVE_RISK_UNUSED": {
+          "bars_gt_5pct_count": 8,
+          "blended_breakeven_fee_usd": 3.97,
+          "blended_p_funded_pct": 0.48,
+          "final_equity_usd": 10508.8,
+          "guardian_breach_reason": null,
+          "guardian_breached": false,
+          "guardian_sweeps": 0,
+          "guardian_target_passed": false,
+          "label": "LEAVE_RISK_UNUSED",
+          "max_pm03_conservation_err": 0.0,
+          "net_pnl_usd": 508.8,
+          "promoted_bench_seats": [],
+          "resized_seat_events": 0,
+          "retired_seats": [
+            "W#107",
+            "W111",
+            "W312"
+          ],
+          "static_floor_dd_usd": -32.08
+        },
+        "PROMOTE_PIT_TOP_BENCH_NEW_POS_ONLY": {
+          "bars_gt_5pct_count": 8,
+          "blended_breakeven_fee_usd": 165.63,
+          "blended_p_funded_pct": 45.58,
+          "final_equity_usd": 10643.57,
+          "guardian_breach_reason": null,
+          "guardian_breached": false,
+          "guardian_sweeps": 0,
+          "guardian_target_passed": true,
+          "label": "PROMOTE_PIT_TOP_BENCH_NEW_POS_ONLY",
+          "max_pm03_conservation_err": 0.0,
+          "net_pnl_usd": 643.57,
+          "promoted_bench_seats": [
+            "W#284",
+            "W#94",
+            "W#283"
+          ],
+          "resized_seat_events": 0,
+          "retired_seats": [
+            "W#107",
+            "W111",
+            "W312",
+            "W#284",
+            "W#94",
+            "W#283"
+          ],
+          "static_floor_dd_usd": -32.08
+        },
+        "RESIZE_HEALTHY_SEATS": {
+          "bars_gt_5pct_count": 8,
+          "blended_breakeven_fee_usd": 7.1,
+          "blended_p_funded_pct": 0.78,
+          "final_equity_usd": 10544.9,
+          "guardian_breach_reason": null,
+          "guardian_breached": false,
+          "guardian_sweeps": 0,
+          "guardian_target_passed": false,
+          "label": "RESIZE_HEALTHY_SEATS",
+          "max_pm03_conservation_err": 0.0,
+          "net_pnl_usd": 544.9,
+          "promoted_bench_seats": [],
+          "resized_seat_events": 1,
+          "retired_seats": [
+            "W#107",
+            "W111",
+            "W312"
+          ],
+          "static_floor_dd_usd": -32.08
+        }
+      },
+      "tier": 2
+    },
+    "3": {
+      "aliases": [
+        "W#107",
+        "W111",
+        "W312"
+      ],
+      "bench_aliases": [
+        "W#284",
+        "W#94",
+        "W#283"
+      ],
+      "d_tier_usd": 500.0,
+      "lifecycle_arms": {
+        "EPISODE_CUSUM_ONLY": {
+          "bars_gt_5pct_count": 8,
+          "blended_breakeven_fee_usd": 5.76,
+          "blended_p_funded_pct": 0.74,
+          "final_equity_usd": 10501.19,
+          "guardian_breach_reason": null,
+          "guardian_breached": false,
+          "guardian_sweeps": 0,
+          "guardian_target_passed": false,
+          "label": "EPISODE_CUSUM_ONLY",
+          "max_pm03_conservation_err": 0.0,
+          "net_pnl_usd": 501.19,
+          "promoted_bench_seats": [],
+          "resized_seat_events": 0,
+          "retired_seats": [
+            "W#107",
+            "W111",
+            "W312"
+          ],
+          "static_floor_dd_usd": -42.19
+        },
+        "GUARDIAN_MANDATE_PAUSE_STATIC_HOLD": {
+          "bars_gt_5pct_count": 8,
+          "blended_breakeven_fee_usd": 6.83,
+          "blended_p_funded_pct": 0.86,
+          "final_equity_usd": 10501.19,
+          "guardian_breach_reason": null,
+          "guardian_breached": false,
+          "guardian_sweeps": 0,
+          "guardian_target_passed": false,
+          "label": "GUARDIAN_MANDATE_PAUSE_STATIC_HOLD",
+          "max_pm03_conservation_err": 0.0,
+          "net_pnl_usd": 501.19,
+          "promoted_bench_seats": [],
+          "resized_seat_events": 0,
+          "retired_seats": [
+            "W#107",
+            "W111",
+            "W312"
+          ],
+          "static_floor_dd_usd": -42.19
+        },
+        "NEXT_FLAT_RELEASE": {
+          "bars_gt_5pct_count": 8,
+          "blended_breakeven_fee_usd": 6.16,
+          "blended_p_funded_pct": 0.76,
+          "final_equity_usd": 10501.19,
+          "guardian_breach_reason": null,
+          "guardian_breached": false,
+          "guardian_sweeps": 0,
+          "guardian_target_passed": false,
+          "label": "NEXT_FLAT_RELEASE",
+          "max_pm03_conservation_err": 0.0,
+          "net_pnl_usd": 501.19,
+          "promoted_bench_seats": [],
+          "resized_seat_events": 0,
+          "retired_seats": [
+            "W#107",
+            "W111",
+            "W312"
+          ],
+          "static_floor_dd_usd": -42.19
+        },
+        "RESEARCH_LEADER_REDUCE_FREEZE": {
+          "bars_gt_5pct_count": 8,
+          "blended_breakeven_fee_usd": 6.04,
+          "blended_p_funded_pct": 0.72,
+          "final_equity_usd": 10501.19,
+          "guardian_breach_reason": null,
+          "guardian_breached": false,
+          "guardian_sweeps": 0,
+          "guardian_target_passed": false,
+          "label": "RESEARCH_LEADER_REDUCE_FREEZE",
+          "max_pm03_conservation_err": 0.0,
+          "net_pnl_usd": 501.19,
+          "promoted_bench_seats": [],
+          "resized_seat_events": 0,
+          "retired_seats": [
+            "W#107",
+            "W111",
+            "W312"
+          ],
+          "static_floor_dd_usd": -42.19
+        }
+      },
+      "replacement_modes": {
+        "LEAVE_RISK_UNUSED": {
+          "bars_gt_5pct_count": 8,
+          "blended_breakeven_fee_usd": 4.48,
+          "blended_p_funded_pct": 0.56,
+          "final_equity_usd": 10501.19,
+          "guardian_breach_reason": null,
+          "guardian_breached": false,
+          "guardian_sweeps": 0,
+          "guardian_target_passed": false,
+          "label": "LEAVE_RISK_UNUSED",
+          "max_pm03_conservation_err": 0.0,
+          "net_pnl_usd": 501.19,
+          "promoted_bench_seats": [],
+          "resized_seat_events": 0,
+          "retired_seats": [
+            "W#107",
+            "W111",
+            "W312"
+          ],
+          "static_floor_dd_usd": -42.19
+        },
+        "PROMOTE_PIT_TOP_BENCH_NEW_POS_ONLY": {
+          "bars_gt_5pct_count": 8,
+          "blended_breakeven_fee_usd": 207.01,
+          "blended_p_funded_pct": 53.28,
+          "final_equity_usd": 10654.23,
+          "guardian_breach_reason": null,
+          "guardian_breached": false,
+          "guardian_sweeps": 0,
+          "guardian_target_passed": true,
+          "label": "PROMOTE_PIT_TOP_BENCH_NEW_POS_ONLY",
+          "max_pm03_conservation_err": 0.0,
+          "net_pnl_usd": 654.23,
+          "promoted_bench_seats": [
+            "W#284",
+            "W#94",
+            "W#283"
+          ],
+          "resized_seat_events": 0,
+          "retired_seats": [
+            "W#107",
+            "W111",
+            "W312",
+            "W#284",
+            "W#94",
+            "W#283"
+          ],
+          "static_floor_dd_usd": -42.19
+        },
+        "RESIZE_HEALTHY_SEATS": {
+          "bars_gt_5pct_count": 8,
+          "blended_breakeven_fee_usd": 7.01,
+          "blended_p_funded_pct": 0.8,
+          "final_equity_usd": 10548.64,
+          "guardian_breach_reason": null,
+          "guardian_breached": false,
+          "guardian_sweeps": 0,
+          "guardian_target_passed": false,
+          "label": "RESIZE_HEALTHY_SEATS",
+          "max_pm03_conservation_err": 0.0,
+          "net_pnl_usd": 548.64,
+          "promoted_bench_seats": [],
+          "resized_seat_events": 1,
+          "retired_seats": [
+            "W#107",
+            "W111",
+            "W312"
+          ],
+          "static_floor_dd_usd": -42.19
+        }
+      },
+      "tier": 3
+    }
+  },
+  "section_c": {
+    "pit_strict_nov05": {
+      "active_records": 291,
+      "asof_iso": "2026-11-05T00:00:00Z",
+      "historical_eligible": 261,
+      "outcomes": [
+        {
+          "aliases": [
+            "W#210",
+            "W#315",
+            "W083"
+          ],
+          "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+          "coins_count": 41,
+          "cost_multiplier": 1.0,
+          "cwsa_bars_gt_5pct": 0,
+          "cwsa_clipped_orders": 0,
+          "cwsa_delta_mismatch_bars": 0,
+          "cwsa_missed_orders": 0,
+          "cwsa_net_usd": null,
+          "execution_mode": "bar_delta",
+          "full_window_net_usd": -369.7,
+          "k_weights": [
+            0.018075,
+            3.822563,
+            0.03186
+          ],
+          "max_participation_pct": 27.4251,
+          "modeled_sqrt_impact_usd": 1.68,
+          "name": "PIT_Strict_Nov05_Tier2_bar_delta",
+          "p95_participation_pct": 3.1872,
+          "peak_gross_leverage": 0.375,
+          "peak_to_trough_dd_usd": -425.36,
+          "static_floor_dd_usd": -369.7,
+          "sweeps": 1,
+          "terminal_net_usd": -369.7,
+          "tier": 2,
+          "total_funding_usd": 0.05,
+          "trades_gt_1pct": 2,
+          "trades_gt_5pct": 1,
+          "unpriced_open_steps": 0,
+          "unverified_volume_trades": 0,
+          "verdict": "RIGHT_CENSORED_AT_ARCHIVE_END",
+          "worst_daily_usd": -408.83
+        },
+        {
+          "aliases": [
+            "W#210",
+            "W#315",
+            "W083"
+          ],
+          "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+          "coins_count": 41,
+          "cost_multiplier": 1.0,
+          "cwsa_bars_gt_5pct": 1,
+          "cwsa_clipped_orders": 1,
+          "cwsa_delta_mismatch_bars": 20,
+          "cwsa_missed_orders": 0,
+          "cwsa_net_usd": -386.23,
+          "execution_mode": "cwsa_one_shot_v3",
+          "full_window_net_usd": -399.26,
+          "k_weights": [
+            0.018075,
+            3.822563,
+            0.03186
+          ],
+          "max_participation_pct": 12.9908,
+          "modeled_sqrt_impact_usd": 0.71,
+          "name": "PIT_Strict_Nov05_Tier2_cwsa_one_shot_v3",
+          "p95_participation_pct": 2.2595,
+          "peak_gross_leverage": 0.295,
+          "peak_to_trough_dd_usd": -430.63,
+          "static_floor_dd_usd": -399.26,
+          "sweeps": 1,
+          "terminal_net_usd": -399.26,
+          "tier": 2,
+          "total_funding_usd": -1.48,
+          "trades_gt_1pct": 2,
+          "trades_gt_5pct": 1,
+          "unpriced_open_steps": 0,
+          "unverified_volume_trades": 0,
+          "verdict": "RIGHT_CENSORED_AT_ARCHIVE_END",
+          "worst_daily_usd": -408.83
+        }
+      ],
+      "positive_copyable_drift": 131,
+      "registry_inventory_sha256": "c1ddde0aa37ff3647b8040556c295ad7f46f10167c6894804a107c4365172086",
+      "roster_sha256": "119c623b7d088ebace29a611d624681294768d04d26cc3f1e7263c67d3b144bc",
+      "selected_aliases": [
+        "W#210",
+        "W#315",
+        "W083"
+      ],
+      "selected_k_weights": [
+        0.018075,
+        3.822563,
+        0.03186
+      ],
+      "train_lookback_days": 90
+    },
+    "walk_forward_folds": [
+      {
+        "aliases": [
+          "W#174",
+          "W#47",
+          "W312"
+        ],
+        "binding_constraint": "Hard_Daily",
+        "eval_end_iso": "2026-08-28T23:55:00+00:00",
+        "fold_idx": 0,
+        "label": "Tier2_MarginalEuler",
+        "multipliers": [
+          2.108492,
+          0.001712,
+          0.116338
+        ],
+        "oos_max_daily_loss": 0.00298,
+        "oos_net_ret_frac": 0.01823,
+        "oos_static_floor_dd": 0.00262,
+        "oos_status": "RIGHT_CENSORED_OPEN",
+        "retrospective_evidence": {
+          "account_scope": "VENDOR_LISTED_PARTIAL_ACCOUNT",
+          "clock_basis": "SOURCE_EVENT_TIME_NOT_FIRST_KNOWN",
+          "kind": "RETROSPECTIVE_ESTIMATE",
+          "original_first_known_verified": false,
+          "prospective_source_book": false,
+          "scientifically_qualified": false,
+          "source_gaps": [],
+          "trading_authorized": false
+        },
+        "tier": 2,
+        "train_end_iso": "2026-07-29T23:55:00+00:00",
+        "train_start_iso": "2026-05-01T00:00:00+00:00"
+      },
+      {
+        "aliases": [
+          "W#26",
+          "W#283",
+          "W312"
+        ],
+        "binding_constraint": "Tier1_Standalone_Cap",
+        "eval_end_iso": "2026-08-28T23:55:00+00:00",
+        "fold_idx": 0,
+        "label": "Tier1_StandaloneProxy",
+        "multipliers": [
+          0.00888,
+          0.007447,
+          0.038063
+        ],
+        "oos_max_daily_loss": 0.00303,
+        "oos_net_ret_frac": 0.02035,
+        "oos_static_floor_dd": 0.00298,
+        "oos_status": "RIGHT_CENSORED_OPEN",
+        "retrospective_evidence": {
+          "account_scope": "VENDOR_LISTED_PARTIAL_ACCOUNT",
+          "clock_basis": "SOURCE_EVENT_TIME_NOT_FIRST_KNOWN",
+          "kind": "RETROSPECTIVE_ESTIMATE",
+          "original_first_known_verified": false,
+          "prospective_source_book": false,
+          "scientifically_qualified": false,
+          "source_gaps": [],
+          "trading_authorized": false
+        },
+        "tier": 1,
+        "train_end_iso": "2026-07-29T23:55:00+00:00",
+        "train_start_iso": "2026-05-01T00:00:00+00:00"
+      },
+      {
+        "aliases": [
+          "W#100",
+          "W#97",
+          "W111"
+        ],
+        "binding_constraint": "Hard_MaxDD",
+        "eval_end_iso": "2026-09-27T23:55:00+00:00",
+        "fold_idx": 1,
+        "label": "Tier2_MarginalEuler",
+        "multipliers": [
+          0.611616,
+          0.004362,
+          0.337137
+        ],
+        "oos_max_daily_loss": 0.05826,
+        "oos_net_ret_frac": 0.35297,
+        "oos_static_floor_dd": 0.00897,
+        "oos_status": "PASS",
+        "retrospective_evidence": {
+          "account_scope": "VENDOR_LISTED_PARTIAL_ACCOUNT",
+          "clock_basis": "SOURCE_EVENT_TIME_NOT_FIRST_KNOWN",
+          "kind": "RETROSPECTIVE_ESTIMATE",
+          "original_first_known_verified": false,
+          "prospective_source_book": false,
+          "scientifically_qualified": false,
+          "source_gaps": [],
+          "trading_authorized": false
+        },
+        "tier": 2,
+        "train_end_iso": "2026-08-28T23:55:00+00:00",
+        "train_start_iso": "2026-05-31T00:00:00+00:00"
+      },
+      {
+        "aliases": [
+          "W#174",
+          "W#97",
+          "W111"
+        ],
+        "binding_constraint": "Tier1_Standalone_Cap",
+        "eval_end_iso": "2026-09-27T23:55:00+00:00",
+        "fold_idx": 1,
+        "label": "Tier1_StandaloneProxy",
+        "multipliers": [
+          0.598242,
+          0.000806,
+          0.073601
+        ],
+        "oos_max_daily_loss": 0.01943,
+        "oos_net_ret_frac": 0.08506,
+        "oos_static_floor_dd": 0.00241,
+        "oos_status": "PASS",
+        "retrospective_evidence": {
+          "account_scope": "VENDOR_LISTED_PARTIAL_ACCOUNT",
+          "clock_basis": "SOURCE_EVENT_TIME_NOT_FIRST_KNOWN",
+          "kind": "RETROSPECTIVE_ESTIMATE",
+          "original_first_known_verified": false,
+          "prospective_source_book": false,
+          "scientifically_qualified": false,
+          "source_gaps": [],
+          "trading_authorized": false
+        },
+        "tier": 1,
+        "train_end_iso": "2026-08-28T23:55:00+00:00",
+        "train_start_iso": "2026-05-31T00:00:00+00:00"
+      },
+      {
+        "aliases": [
+          "W#315",
+          "W#48",
+          "W083"
+        ],
+        "binding_constraint": "Hard_Daily",
+        "eval_end_iso": "2026-10-27T23:55:00+00:00",
+        "fold_idx": 2,
+        "label": "Tier2_MarginalEuler",
+        "multipliers": [
+          1.502927,
+          0.041434,
+          0.037512
+        ],
+        "oos_max_daily_loss": 0.02058,
+        "oos_net_ret_frac": 0.02293,
+        "oos_static_floor_dd": 0.00336,
+        "oos_status": "RIGHT_CENSORED_OPEN",
+        "retrospective_evidence": {
+          "account_scope": "VENDOR_LISTED_PARTIAL_ACCOUNT",
+          "clock_basis": "SOURCE_EVENT_TIME_NOT_FIRST_KNOWN",
+          "kind": "RETROSPECTIVE_ESTIMATE",
+          "original_first_known_verified": false,
+          "prospective_source_book": false,
+          "scientifically_qualified": false,
+          "source_gaps": [],
+          "trading_authorized": false
+        },
+        "tier": 2,
+        "train_end_iso": "2026-09-27T23:55:00+00:00",
+        "train_start_iso": "2026-06-30T00:00:00+00:00"
+      },
+      {
+        "aliases": [
+          "W#315",
+          "W#48",
+          "W083"
+        ],
+        "binding_constraint": "Tier1_Standalone_Cap",
+        "eval_end_iso": "2026-10-27T23:55:00+00:00",
+        "fold_idx": 2,
+        "label": "Tier1_StandaloneProxy",
+        "multipliers": [
+          0.518504,
+          0.022973,
+          0.014155
+        ],
+        "oos_max_daily_loss": 0.01082,
+        "oos_net_ret_frac": 0.00385,
+        "oos_static_floor_dd": 0.00588,
+        "oos_status": "RIGHT_CENSORED_OPEN",
+        "retrospective_evidence": {
+          "account_scope": "VENDOR_LISTED_PARTIAL_ACCOUNT",
+          "clock_basis": "SOURCE_EVENT_TIME_NOT_FIRST_KNOWN",
+          "kind": "RETROSPECTIVE_ESTIMATE",
+          "original_first_known_verified": false,
+          "prospective_source_book": false,
+          "scientifically_qualified": false,
+          "source_gaps": [],
+          "trading_authorized": false
+        },
+        "tier": 1,
+        "train_end_iso": "2026-09-27T23:55:00+00:00",
+        "train_start_iso": "2026-06-30T00:00:00+00:00"
+      }
+    ]
+  },
+  "section_d": {
+    "blocked_fail_closed": {
+      "propr_1step_eval_phases": 1,
+      "propr_2step_eval_phases": 2,
+      "slug": "propr:classic_2step:phase_1",
+      "status": "BLOCKED_UNSUPPORTED_TRAILING_BASIS:INTRADAY_EQUITY"
+    },
+    "firms": [
+      {
+        "consistency_max_single_day_pct": null,
+        "daily_loss_basis": "balance",
+        "eval_phases_count": 2,
+        "firm_slug": "crypto-fund-trader",
+        "oos_full_window_net_usd": 1536.84,
+        "oos_static_floor_dd_usd": -38.15,
+        "oos_terminal_net_usd": 807.61,
+        "oos_verdict": "PASS",
+        "oos_worst_daily_usd": -40.33,
+        "payout_split_pct": 0.8,
+        "regimes": {
+          "75%-Chop": {
+            "fee_110_sensitivity": {
+              "account_usd": 10000.0,
+              "breakeven_fee_usd": 598.23,
+              "challenge_fee_usd": 110.0,
+              "ev_per_day_usd": 8.0,
+              "ev_status": "VERIFIED_FEE_NET_EV",
+              "expected_gross_payout_usd": 598.23,
+              "firm_slug": "crypto-fund-trader",
+              "med_days_to_payout": 61.0,
+              "n_eff_blocks": 8.71,
+              "n_paths": 5000,
+              "n_source_days": 61,
+              "net_ev_ci95_usd": [
+                190.24,
+                717.29
+              ],
+              "net_ev_usd": 488.23,
+              "p_funded_payout_ci95_pct": [
+                30.92,
+                85.19
+              ],
+              "p_funded_payout_pct": 61.6,
+              "p_pass_all_eval_pct": 77.06,
+              "phase_pass_rates_pct": {
+                "phase_1": 84.58,
+                "phase_2": 77.06
+              },
+              "regime": "75%-Chop"
+            },
+            "fee_unverified": {
+              "account_usd": 10000.0,
+              "breakeven_fee_usd": 598.23,
+              "challenge_fee_usd": null,
+              "ev_per_day_usd": null,
+              "ev_status": "BREAK_EVEN_ONLY_FEE_UNVERIFIED",
+              "expected_gross_payout_usd": 598.23,
+              "firm_slug": "crypto-fund-trader",
+              "med_days_to_payout": 61.0,
+              "n_eff_blocks": 8.71,
+              "n_paths": 5000,
+              "n_source_days": 61,
+              "net_ev_ci95_usd": null,
+              "net_ev_usd": null,
+              "p_funded_payout_ci95_pct": [
+                30.92,
+                85.19
+              ],
+              "p_funded_payout_pct": 61.6,
+              "p_pass_all_eval_pct": 77.06,
+              "phase_pass_rates_pct": {
+                "phase_1": 84.58,
+                "phase_2": 77.06
+              },
+              "regime": "75%-Chop"
+            }
+          },
+          "Blended": {
+            "fee_110_sensitivity": {
+              "account_usd": 10000.0,
+              "breakeven_fee_usd": 590.98,
+              "challenge_fee_usd": 110.0,
+              "ev_per_day_usd": 7.76,
+              "ev_status": "VERIFIED_FEE_NET_EV",
+              "expected_gross_payout_usd": 590.98,
+              "firm_slug": "crypto-fund-trader",
+              "med_days_to_payout": 62.0,
+              "n_eff_blocks": 8.71,
+              "n_paths": 5000,
+              "n_source_days": 61,
+              "net_ev_ci95_usd": [
+                186.33,
+                708.01
+              ],
+              "net_ev_usd": 480.98,
+              "p_funded_payout_ci95_pct": [
+                30.84,
+                85.13
+              ],
+              "p_funded_payout_pct": 61.5,
+              "p_pass_all_eval_pct": 76.54,
+              "phase_pass_rates_pct": {
+                "phase_1": 84.42,
+                "phase_2": 76.54
+              },
+              "regime": "Blended"
+            },
+            "fee_unverified": {
+              "account_usd": 10000.0,
+              "breakeven_fee_usd": 590.98,
+              "challenge_fee_usd": null,
+              "ev_per_day_usd": null,
+              "ev_status": "BREAK_EVEN_ONLY_FEE_UNVERIFIED",
+              "expected_gross_payout_usd": 590.98,
+              "firm_slug": "crypto-fund-trader",
+              "med_days_to_payout": 62.0,
+              "n_eff_blocks": 8.71,
+              "n_paths": 5000,
+              "n_source_days": 61,
+              "net_ev_ci95_usd": null,
+              "net_ev_usd": null,
+              "p_funded_payout_ci95_pct": [
+                30.84,
+                85.13
+              ],
+              "p_funded_payout_pct": 61.5,
+              "p_pass_all_eval_pct": 76.54,
+              "phase_pass_rates_pct": {
+                "phase_1": 84.42,
+                "phase_2": 76.54
+              },
+              "regime": "Blended"
+            }
+          }
+        },
+        "slug": "crypto-fund-trader:two_phase:phase_1"
+      },
+      {
+        "consistency_max_single_day_pct": 0.4,
+        "daily_loss_basis": "equity",
+        "eval_phases_count": 2,
+        "firm_slug": "hyrotrader",
+        "oos_full_window_net_usd": 2383.49,
+        "oos_static_floor_dd_usd": -38.15,
+        "oos_terminal_net_usd": 1005.12,
+        "oos_verdict": "PASS",
+        "oos_worst_daily_usd": -153.44,
+        "payout_split_pct": 0.8,
+        "regimes": {
+          "75%-Chop": {
+            "fee_110_sensitivity": {
+              "account_usd": 10000.0,
+              "breakeven_fee_usd": 962.84,
+              "challenge_fee_usd": 110.0,
+              "ev_per_day_usd": 11.68,
+              "ev_status": "VERIFIED_FEE_NET_EV",
+              "expected_gross_payout_usd": 962.84,
+              "firm_slug": "hyrotrader",
+              "med_days_to_payout": 73.0,
+              "n_eff_blocks": 8.71,
+              "n_paths": 5000,
+              "n_source_days": 61,
+              "net_ev_ci95_usd": [
+                521.85,
+                908.31
+              ],
+              "net_ev_usd": 852.84,
+              "p_funded_payout_ci95_pct": [
+                61.63,
+                99.33
+              ],
+              "p_funded_payout_pct": 93.92,
+              "p_pass_all_eval_pct": 97.72,
+              "phase_pass_rates_pct": {
+                "phase_1": 98.46,
+                "phase_2": 97.72
+              },
+              "regime": "75%-Chop"
+            },
+            "fee_unverified": {
+              "account_usd": 10000.0,
+              "breakeven_fee_usd": 962.84,
+              "challenge_fee_usd": null,
+              "ev_per_day_usd": null,
+              "ev_status": "BREAK_EVEN_ONLY_FEE_UNVERIFIED",
+              "expected_gross_payout_usd": 962.84,
+              "firm_slug": "hyrotrader",
+              "med_days_to_payout": 73.0,
+              "n_eff_blocks": 8.71,
+              "n_paths": 5000,
+              "n_source_days": 61,
+              "net_ev_ci95_usd": null,
+              "net_ev_usd": null,
+              "p_funded_payout_ci95_pct": [
+                61.63,
+                99.33
+              ],
+              "p_funded_payout_pct": 93.92,
+              "p_pass_all_eval_pct": 97.72,
+              "phase_pass_rates_pct": {
+                "phase_1": 98.46,
+                "phase_2": 97.72
+              },
+              "regime": "75%-Chop"
+            }
+          },
+          "Blended": {
+            "fee_110_sensitivity": {
+              "account_usd": 10000.0,
+              "breakeven_fee_usd": 952.66,
+              "challenge_fee_usd": 110.0,
+              "ev_per_day_usd": 11.54,
+              "ev_status": "VERIFIED_FEE_NET_EV",
+              "expected_gross_payout_usd": 952.66,
+              "firm_slug": "hyrotrader",
+              "med_days_to_payout": 73.0,
+              "n_eff_blocks": 8.71,
+              "n_paths": 5000,
+              "n_source_days": 61,
+              "net_ev_ci95_usd": [
+                512.91,
+                901.2
+              ],
+              "net_ev_usd": 842.66,
+              "p_funded_payout_ci95_pct": [
+                61.14,
+                99.25
+              ],
+              "p_funded_payout_pct": 93.5,
+              "p_pass_all_eval_pct": 97.62,
+              "phase_pass_rates_pct": {
+                "phase_1": 98.42,
+                "phase_2": 97.62
+              },
+              "regime": "Blended"
+            },
+            "fee_unverified": {
+              "account_usd": 10000.0,
+              "breakeven_fee_usd": 952.66,
+              "challenge_fee_usd": null,
+              "ev_per_day_usd": null,
+              "ev_status": "BREAK_EVEN_ONLY_FEE_UNVERIFIED",
+              "expected_gross_payout_usd": 952.66,
+              "firm_slug": "hyrotrader",
+              "med_days_to_payout": 73.0,
+              "n_eff_blocks": 8.71,
+              "n_paths": 5000,
+              "n_source_days": 61,
+              "net_ev_ci95_usd": null,
+              "net_ev_usd": null,
+              "p_funded_payout_ci95_pct": [
+                61.14,
+                99.25
+              ],
+              "p_funded_payout_pct": 93.5,
+              "p_pass_all_eval_pct": 97.62,
+              "phase_pass_rates_pct": {
+                "phase_1": 98.42,
+                "phase_2": 97.62
+              },
+              "regime": "Blended"
+            }
+          }
+        },
+        "slug": "hyrotrader:two_step:phase_1"
+      },
+      {
+        "consistency_max_single_day_pct": null,
+        "daily_loss_basis": "balance",
+        "eval_phases_count": 1,
+        "firm_slug": "vanta-trading",
+        "oos_full_window_net_usd": 1522.53,
+        "oos_static_floor_dd_usd": -38.15,
+        "oos_terminal_net_usd": 1005.12,
+        "oos_verdict": "PASS",
+        "oos_worst_daily_usd": -40.33,
+        "payout_split_pct": 1.0,
+        "regimes": {
+          "75%-Chop": {
+            "fee_110_sensitivity": {
+              "account_usd": 10000.0,
+              "breakeven_fee_usd": 365.13,
+              "challenge_fee_usd": 110.0,
+              "ev_per_day_usd": 5.1,
+              "ev_status": "VERIFIED_FEE_NET_EV",
+              "expected_gross_payout_usd": 365.13,
+              "firm_slug": "vanta-trading",
+              "med_days_to_payout": 50.0,
+              "n_eff_blocks": 8.71,
+              "n_paths": 5000,
+              "n_source_days": 61,
+              "net_ev_ci95_usd": [
+                10.7,
+                656.62
+              ],
+              "net_ev_usd": 255.13,
+              "p_funded_payout_ci95_pct": [
+                9.71,
+                61.64
+              ],
+              "p_funded_payout_pct": 29.36,
+              "p_pass_all_eval_pct": 55.18,
+              "phase_pass_rates_pct": {
+                "phase_1": 55.18
+              },
+              "regime": "75%-Chop"
+            },
+            "fee_unverified": {
+              "account_usd": 10000.0,
+              "breakeven_fee_usd": 365.13,
+              "challenge_fee_usd": null,
+              "ev_per_day_usd": null,
+              "ev_status": "BREAK_EVEN_ONLY_FEE_UNVERIFIED",
+              "expected_gross_payout_usd": 365.13,
+              "firm_slug": "vanta-trading",
+              "med_days_to_payout": 50.0,
+              "n_eff_blocks": 8.71,
+              "n_paths": 5000,
+              "n_source_days": 61,
+              "net_ev_ci95_usd": null,
+              "net_ev_usd": null,
+              "p_funded_payout_ci95_pct": [
+                9.71,
+                61.64
+              ],
+              "p_funded_payout_pct": 29.36,
+              "p_pass_all_eval_pct": 55.18,
+              "phase_pass_rates_pct": {
+                "phase_1": 55.18
+              },
+              "regime": "75%-Chop"
+            }
+          },
+          "Blended": {
+            "fee_110_sensitivity": {
+              "account_usd": 10000.0,
+              "breakeven_fee_usd": 366.26,
+              "challenge_fee_usd": 110.0,
+              "ev_per_day_usd": 5.02,
+              "ev_status": "VERIFIED_FEE_NET_EV",
+              "expected_gross_payout_usd": 366.26,
+              "firm_slug": "vanta-trading",
+              "med_days_to_payout": 51.0,
+              "n_eff_blocks": 8.71,
+              "n_paths": 5000,
+              "n_source_days": 61,
+              "net_ev_ci95_usd": [
+                9.8,
+                667.15
+              ],
+              "net_ev_usd": 256.26,
+              "p_funded_payout_ci95_pct": [
+                9.43,
+                61.19
+              ],
+              "p_funded_payout_pct": 28.84,
+              "p_pass_all_eval_pct": 54.0,
+              "phase_pass_rates_pct": {
+                "phase_1": 54.0
+              },
+              "regime": "Blended"
+            },
+            "fee_unverified": {
+              "account_usd": 10000.0,
+              "breakeven_fee_usd": 366.26,
+              "challenge_fee_usd": null,
+              "ev_per_day_usd": null,
+              "ev_status": "BREAK_EVEN_ONLY_FEE_UNVERIFIED",
+              "expected_gross_payout_usd": 366.26,
+              "firm_slug": "vanta-trading",
+              "med_days_to_payout": 51.0,
+              "n_eff_blocks": 8.71,
+              "n_paths": 5000,
+              "n_source_days": 61,
+              "net_ev_ci95_usd": null,
+              "net_ev_usd": null,
+              "p_funded_payout_ci95_pct": [
+                9.43,
+                61.19
+              ],
+              "p_funded_payout_pct": 28.84,
+              "p_pass_all_eval_pct": 54.0,
+              "phase_pass_rates_pct": {
+                "phase_1": 54.0
+              },
+              "regime": "Blended"
+            }
+          }
+        },
+        "slug": "vanta-trading:classic_1step_3pct:phase_1"
+      },
+      {
+        "consistency_max_single_day_pct": null,
+        "daily_loss_basis": "balance",
+        "eval_phases_count": 1,
+        "firm_slug": "propr",
+        "oos_full_window_net_usd": 1522.53,
+        "oos_static_floor_dd_usd": -38.15,
+        "oos_terminal_net_usd": 1005.12,
+        "oos_verdict": "PASS",
+        "oos_worst_daily_usd": -40.33,
+        "payout_split_pct": 0.8,
+        "regimes": {
+          "75%-Chop": {
+            "fee_110_sensitivity": {
+              "account_usd": 10000.0,
+              "breakeven_fee_usd": 294.94,
+              "challenge_fee_usd": 110.0,
+              "ev_per_day_usd": 3.7,
+              "ev_status": "VERIFIED_FEE_NET_EV",
+              "expected_gross_payout_usd": 294.94,
+              "firm_slug": "propr",
+              "med_days_to_payout": 50.0,
+              "n_eff_blocks": 8.71,
+              "n_paths": 5000,
+              "n_source_days": 61,
+              "net_ev_ci95_usd": [
+                -12.35,
+                508.27
+              ],
+              "net_ev_usd": 184.94,
+              "p_funded_payout_ci95_pct": [
+                9.75,
+                61.71
+              ],
+              "p_funded_payout_pct": 29.44,
+              "p_pass_all_eval_pct": 54.78,
+              "phase_pass_rates_pct": {
+                "phase_1 (Classic 1-Step | Turbo 1-Step | Pro 1-Step)": 54.78
+              },
+              "regime": "75%-Chop"
+            },
+            "fee_unverified": {
+              "account_usd": 10000.0,
+              "breakeven_fee_usd": 294.94,
+              "challenge_fee_usd": null,
+              "ev_per_day_usd": null,
+              "ev_status": "BREAK_EVEN_ONLY_FEE_UNVERIFIED",
+              "expected_gross_payout_usd": 294.94,
+              "firm_slug": "propr",
+              "med_days_to_payout": 50.0,
+              "n_eff_blocks": 8.71,
+              "n_paths": 5000,
+              "n_source_days": 61,
+              "net_ev_ci95_usd": null,
+              "net_ev_usd": null,
+              "p_funded_payout_ci95_pct": [
+                9.75,
+                61.71
+              ],
+              "p_funded_payout_pct": 29.44,
+              "p_pass_all_eval_pct": 54.78,
+              "phase_pass_rates_pct": {
+                "phase_1 (Classic 1-Step | Turbo 1-Step | Pro 1-Step)": 54.78
+              },
+              "regime": "75%-Chop"
+            }
+          },
+          "Blended": {
+            "fee_110_sensitivity": {
+              "account_usd": 10000.0,
+              "breakeven_fee_usd": 313.35,
+              "challenge_fee_usd": 110.0,
+              "ev_per_day_usd": 4.07,
+              "ev_status": "VERIFIED_FEE_NET_EV",
+              "expected_gross_payout_usd": 313.35,
+              "firm_slug": "propr",
+              "med_days_to_payout": 50.0,
+              "n_eff_blocks": 8.71,
+              "n_paths": 5000,
+              "n_source_days": 61,
+              "net_ev_ci95_usd": [
+                -2.95,
+                526.56
+              ],
+              "net_ev_usd": 203.35,
+              "p_funded_payout_ci95_pct": [
+                10.61,
+                63.1
+              ],
+              "p_funded_payout_pct": 31.06,
+              "p_pass_all_eval_pct": 55.08,
+              "phase_pass_rates_pct": {
+                "phase_1 (Classic 1-Step | Turbo 1-Step | Pro 1-Step)": 55.08
+              },
+              "regime": "Blended"
+            },
+            "fee_unverified": {
+              "account_usd": 10000.0,
+              "breakeven_fee_usd": 313.35,
+              "challenge_fee_usd": null,
+              "ev_per_day_usd": null,
+              "ev_status": "BREAK_EVEN_ONLY_FEE_UNVERIFIED",
+              "expected_gross_payout_usd": 313.35,
+              "firm_slug": "propr",
+              "med_days_to_payout": 50.0,
+              "n_eff_blocks": 8.71,
+              "n_paths": 5000,
+              "n_source_days": 61,
+              "net_ev_ci95_usd": null,
+              "net_ev_usd": null,
+              "p_funded_payout_ci95_pct": [
+                10.61,
+                63.1
+              ],
+              "p_funded_payout_pct": 31.06,
+              "p_pass_all_eval_pct": 55.08,
+              "phase_pass_rates_pct": {
+                "phase_1 (Classic 1-Step | Turbo 1-Step | Pro 1-Step)": 55.08
+              },
+              "regime": "Blended"
+            }
+          }
+        },
+        "slug": "propr:classic_1step:phase_1"
+      }
+    ],
+    "pod_aliases": [
+      "W#107",
+      "W111",
+      "W312"
+    ],
+    "pod_k_weights": [
+      0.226845,
+      0.212205,
+      0.122365
+    ]
+  },
+  "stage_timings_s": {
+    "discover_archive_s": 0.19,
+    "ingest_fills_s": 5.32,
+    "markouts_and_train_replay_s": 330.74,
+    "oos_ablations_s": 1041.28,
+    "peak_rss_mb": 5717.64,
+    "stage2_and_cpcv_s": 289.63,
+    "total_s": 2489.06,
+    "walk_forward_and_pit_strict_s": 821.9
+  },
+  "status": "RESEARCH_PHASE3_ABLATION",
+  "window": {
+    "archive_end_iso": "2026-11-14T00:00:00Z",
+    "oos_end_iso": "2026-11-01T00:00:00Z",
+    "pit_strict_iso": "2026-11-05T00:00:00Z",
+    "split_iso": "2026-09-01T00:00:00Z",
+    "start_iso": "2026-05-01T00:00:00Z",
+    "wf_end_iso": "2026-10-28T00:00:00Z"
+  }
+}
