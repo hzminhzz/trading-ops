@@ -628,3 +628,198 @@ def test_falsifier_f_latched_cusum_euler_marginal_shares_and_capacity(tmp_path: 
 
     cap_unp = cr.audit_1m_bar_participation(["BTC"], deltas, opens_c, np.full((1, 3), np.nan))
     assert cap_unp.status == "UNPROVEN_VOLUME"
+
+
+def test_reconcile_live_executor_fill_economics_and_schema_states(tmp_path: Path) -> None:
+    start_dt = datetime(2026, 9, 1, 0, 0, tzinfo=UTC)
+    cp_ms = int((start_dt + timedelta(minutes=5)).timestamp() * 1000)
+    t0_ms = cp_ms - 300_000
+    opens = np.full(10, 100.0, dtype=np.float64)
+    opens[2] = 100.2
+    _write_1m_bars(tmp_path, "BTC", start_dt, 10, opens, opens.copy())
+
+    legacy_db = tmp_path / "legacy.sqlite"
+    con = sqlite3.connect(legacy_db)
+    con.executescript(
+        f"""
+        CREATE TABLE processed_waves (
+            wave_key TEXT PRIMARY KEY,
+            next_cp_ms INTEGER NOT NULL,
+            processed_at_ms INTEGER NOT NULL,
+            intents_count INTEGER NOT NULL
+        );
+        CREATE TABLE order_intents (
+            intent_id TEXT PRIMARY KEY,
+            wave_key TEXT NOT NULL,
+            symbol TEXT NOT NULL,
+            quantity TEXT NOT NULL,
+            reduce_only INTEGER NOT NULL,
+            status TEXT NOT NULL,
+            broker_id TEXT,
+            reason TEXT,
+            created_at_ms INTEGER NOT NULL,
+            updated_at_ms INTEGER NOT NULL
+        );
+        INSERT INTO processed_waves VALUES ('w1', {cp_ms}, {t0_ms + 30_000}, 1);
+        INSERT INTO order_intents VALUES (
+            'i1', 'w1', 'BTC/USDT:USDT', '0.5', 0, 'FILLED', 'b1', NULL,
+            {t0_ms + 120_000}, {t0_ms + 120_500}
+        );
+        """
+    )
+    con.close()
+    res_legacy = cr.reconcile_live_executor_and_cwsa(executor_db=legacy_db, store_root=tmp_path)
+    ex_legacy = res_legacy["executor"]
+    assert ex_legacy["broker_fill_slippage_status"] == (
+        "BLOCKED_EVIDENCE:EXECUTOR_SQLITE_OMITS_FILL_PRICE_AND_FEE"
+    )
+    assert "intents_with_fill_economics" not in ex_legacy
+    assert ex_legacy["mean_adverse_dispatch_lag_bps"] == pytest.approx(20.0, abs=1e-6)
+
+    empty_upg_db = tmp_path / "upgraded_empty.sqlite"
+    con = sqlite3.connect(empty_upg_db)
+    con.executescript(
+        f"""
+        CREATE TABLE processed_waves (
+            wave_key TEXT PRIMARY KEY,
+            next_cp_ms INTEGER NOT NULL,
+            processed_at_ms INTEGER NOT NULL,
+            intents_count INTEGER NOT NULL
+        );
+        CREATE TABLE order_intents (
+            intent_id TEXT PRIMARY KEY,
+            wave_key TEXT NOT NULL,
+            symbol TEXT NOT NULL,
+            quantity TEXT NOT NULL,
+            reduce_only INTEGER NOT NULL,
+            status TEXT NOT NULL,
+            broker_id TEXT,
+            reason TEXT,
+            created_at_ms INTEGER NOT NULL,
+            updated_at_ms INTEGER NOT NULL,
+            filled_quantity TEXT,
+            avg_price TEXT,
+            exec_fee TEXT
+        );
+        CREATE TABLE order_executions (
+            exec_id TEXT PRIMARY KEY,
+            intent_id TEXT NOT NULL,
+            exec_price TEXT NOT NULL,
+            exec_qty TEXT NOT NULL,
+            exec_fee TEXT NOT NULL,
+            exec_time_ms INTEGER NOT NULL
+        );
+        INSERT INTO processed_waves VALUES ('w1', {cp_ms}, {t0_ms + 30_000}, 1);
+        INSERT INTO order_intents VALUES (
+            'i1', 'w1', 'BTC/USDT:USDT', '0.5', 0, 'FILLED', 'b1', NULL,
+            {t0_ms + 120_000}, {t0_ms + 120_500}, NULL, NULL, NULL
+        );
+        """
+    )
+    con.close()
+    res_empty = cr.reconcile_live_executor_and_cwsa(executor_db=empty_upg_db, store_root=tmp_path)
+    ex_empty = res_empty["executor"]
+    assert ex_empty["broker_fill_slippage_status"] == "SCHEMA_READY_NO_BACKFILLED_FILLS"
+    assert ex_empty["intents_with_fill_economics"] == 0
+    assert ex_empty["realized_fees_usd"] == 0.0
+    assert ex_empty["matched_fill_slippage_intents"] == 0
+    assert ex_empty["mean_realized_fill_slippage_bps"] is None
+
+    upg_db = tmp_path / "upgraded_filled.sqlite"
+    con = sqlite3.connect(upg_db)
+    con.executescript(
+        f"""
+        CREATE TABLE processed_waves (
+            wave_key TEXT PRIMARY KEY,
+            next_cp_ms INTEGER NOT NULL,
+            processed_at_ms INTEGER NOT NULL,
+            intents_count INTEGER NOT NULL
+        );
+        CREATE TABLE order_intents (
+            intent_id TEXT PRIMARY KEY,
+            wave_key TEXT NOT NULL,
+            symbol TEXT NOT NULL,
+            quantity TEXT NOT NULL,
+            reduce_only INTEGER NOT NULL,
+            status TEXT NOT NULL,
+            broker_id TEXT,
+            reason TEXT,
+            created_at_ms INTEGER NOT NULL,
+            updated_at_ms INTEGER NOT NULL,
+            filled_quantity TEXT,
+            avg_price TEXT,
+            exec_fee TEXT
+        );
+        CREATE TABLE order_executions (
+            exec_id TEXT PRIMARY KEY,
+            intent_id TEXT NOT NULL,
+            exec_price TEXT NOT NULL,
+            exec_qty TEXT NOT NULL,
+            exec_fee TEXT NOT NULL,
+            exec_time_ms INTEGER NOT NULL
+        );
+        INSERT INTO processed_waves VALUES ('w1', {cp_ms}, {t0_ms + 30_000}, 4);
+        INSERT INTO order_intents VALUES
+            ('i1', 'w1', 'BTC/USDT:USDT', '0.5', 0, 'FILLED', 'b1', NULL,
+             {t0_ms + 120_000}, {t0_ms + 120_500}, '0.5', '100.5', '0.25'),
+            ('i2', 'w1', 'BTC/USDT:USDT', '-0.4', 0, 'CANCELLED', 'b2', 'ioc_partial',
+             {t0_ms + 120_000}, {t0_ms + 120_500}, '0.2', '99.9', '0.15'),
+            ('i3', 'w1', 'BTC/USDT:USDT', '0.2', 0, 'PARTIAL', 'b3', NULL,
+             {t0_ms + 120_000}, {t0_ms + 120_500}, '0.1', '100.3', '0.10'),
+            ('i4', 'w1', 'BTC/USDT:USDT', '0.3', 0, 'CANCELLED', 'b4', 'ioc_zero',
+             {t0_ms + 120_000}, {t0_ms + 120_500}, '0', NULL, NULL);
+        INSERT INTO order_executions VALUES
+            ('e1', 'i1', '100.5', '0.5', '0.25', {t0_ms + 120_300}),
+            ('e2', 'i2', '99.9', '0.2', '0.15', {t0_ms + 120_350}),
+            ('e3', 'i3', '100.3', '0.1', '0.10', {t0_ms + 120_400});
+        """
+    )
+    con.close()
+    res_upg = cr.reconcile_live_executor_and_cwsa(executor_db=upg_db, store_root=tmp_path)
+    ex_upg = res_upg["executor"]
+    assert ex_upg["broker_fill_slippage_status"] == "AVAILABLE"
+    assert ex_upg["intents_with_fill_economics"] == 3
+    assert ex_upg["realized_fees_usd"] == pytest.approx(0.5, abs=1e-9)
+    assert ex_upg["matched_fill_slippage_intents"] == 3
+    assert ex_upg["mean_realized_fill_slippage_bps"] == pytest.approx(30.0, abs=1e-6)
+    assert ex_upg["p50_realized_fill_slippage_bps"] == pytest.approx(30.0, abs=1e-6)
+    assert ex_upg["p90_realized_fill_slippage_bps"] == pytest.approx(46.0, abs=1e-6)
+    assert ex_upg["mean_adverse_dispatch_lag_bps"] == pytest.approx(20.0, abs=1e-6)
+
+    standalone_db = tmp_path / "standalone.sqlite"
+    con = sqlite3.connect(standalone_db)
+    con.executescript(
+        f"""
+        CREATE TABLE processed_waves (
+            wave_key TEXT PRIMARY KEY,
+            next_cp_ms INTEGER NOT NULL,
+            processed_at_ms INTEGER NOT NULL,
+            intents_count INTEGER NOT NULL
+        );
+        CREATE TABLE order_intents (
+            intent_id TEXT PRIMARY KEY,
+            wave_key TEXT NOT NULL,
+            symbol TEXT NOT NULL,
+            quantity TEXT NOT NULL,
+            reduce_only INTEGER NOT NULL,
+            status TEXT NOT NULL,
+            created_at_ms INTEGER NOT NULL,
+            updated_at_ms INTEGER NOT NULL,
+            filled_quantity TEXT,
+            avg_price TEXT,
+            exec_fee TEXT
+        );
+        INSERT INTO order_intents VALUES (
+            'i_solo', 'unjoined_wave', 'BTC/USDT:USDT', '0.2', 0, 'FILLED',
+            {t0_ms + 60_000}, {t0_ms + 60_500}, '0.2', '100.5', '0.12'
+        );
+        """
+    )
+    con.close()
+    res_solo = cr.reconcile_live_executor_and_cwsa(executor_db=standalone_db)
+    ex_solo = res_solo["executor"]
+    assert ex_solo["broker_fill_slippage_status"] == "AVAILABLE"
+    assert ex_solo["intents_with_fill_economics"] == 1
+    assert ex_solo["realized_fees_usd"] == pytest.approx(0.12, abs=1e-9)
+    assert ex_solo["matched_fill_slippage_intents"] == 0
+    assert ex_solo["mean_realized_fill_slippage_bps"] is None

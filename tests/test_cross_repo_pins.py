@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import importlib
+import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -29,11 +31,72 @@ def test_cross_repo_pin_ancestry_and_contracts_when_siblings_present() -> None:
         copytrade_pm_root=COPYTRADE_PM_ROOT,
     )
     assert status["ancestry_valid"] is True
-    assert status["status"] in ("SYNCED", "PRODUCTION_PIN_PROMOTION_PENDING")
+    assert status["status"] in (
+        "SYNCED",
+        "PRODUCTION_PIN_PROMOTION_PENDING",
+        "TRADING_OPS_PIN_BEHIND",
+    )
     contracts = status["contracts"]
     assert contracts["default_sizing_policy"] == "FIXED_K_NATIVE_QUANTITY"
     assert contracts["trading_authorized"] is False
     assert contracts["execution_mode"] == "SHADOW"
+
+
+def _git(repo: Path, *args: str) -> str:
+    proc = subprocess.run(
+        ["git", "-C", str(repo), *args],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return proc.stdout.strip()
+
+
+def test_cross_repo_pin_status_ancestry_directions(tmp_path: Path) -> None:
+    pm_repo = tmp_path / "copytrade-pm"
+    pm_repo.mkdir()
+    _git(pm_repo, "init")
+    _git(pm_repo, "config", "user.name", "test")
+    _git(pm_repo, "config", "user.email", "test@example.com")
+    (pm_repo / "f.txt").write_text("base\n", encoding="utf-8")
+    _git(pm_repo, "add", "f.txt")
+    _git(pm_repo, "commit", "-m", "c1")
+    c1 = _git(pm_repo, "rev-parse", "HEAD")
+
+    (pm_repo / "f.txt").write_text("ahead\n", encoding="utf-8")
+    _git(pm_repo, "commit", "-am", "c2")
+    c2 = _git(pm_repo, "rev-parse", "HEAD")
+
+    _git(pm_repo, "checkout", "-b", "side", c1)
+    (pm_repo / "f.txt").write_text("side\n", encoding="utf-8")
+    _git(pm_repo, "commit", "-am", "c3")
+    c3 = _git(pm_repo, "rev-parse", "HEAD")
+
+    ops_root = tmp_path / "trading-ops"
+    prod_root = tmp_path / "prop-production"
+    (prod_root / "src" / "prop_production").mkdir(parents=True)
+    ops_root.mkdir()
+
+    for ops_rev, prod_rev, expected_status, expected_valid, expected_ready in (
+        (c2, c2, "SYNCED", True, True),
+        (c2, c1, "PRODUCTION_PIN_PROMOTION_PENDING", True, False),
+        (c1, c2, "TRADING_OPS_PIN_BEHIND", True, False),
+        (c3, c2, "DIVERGED_PIN_ERROR", False, False),
+    ):
+        (ops_root / "pyproject.toml").write_text(
+            f'[tool.uv.sources]\ncopytrade-pm = {{ git = "x", rev = "{ops_rev}" }}\n',
+            encoding="utf-8",
+        )
+        (prod_root / "src" / "prop_production" / "compatibility.json").write_text(
+            json.dumps({"repositories": {"copytrade-pm": {"commit": prod_rev}}}),
+            encoding="utf-8",
+        )
+        res = cr.check_cross_repo_pin_status(
+            ops_root, prop_production_root=prod_root, copytrade_pm_root=pm_repo
+        )
+        assert res["status"] == expected_status
+        assert res["ancestry_valid"] is expected_valid
+        assert res["promotion_ready"] is expected_ready
 
 
 def test_guardian_spec_from_challenge_spec_matches_canonical_prop_firms(

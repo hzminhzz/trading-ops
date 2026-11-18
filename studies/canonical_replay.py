@@ -154,22 +154,22 @@ def check_cross_repo_pin_status(
         ancestry_valid = True
         status = "SYNCED"
     elif copytrade_pm_root is not None and Path(copytrade_pm_root).exists():
-        proc = subprocess.run(
-            [
-                "git",
-                "-C",
-                str(copytrade_pm_root),
-                "merge-base",
-                "--is-ancestor",
-                compat_commit,
-                trading_ops_rev,
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        ancestry_valid = proc.returncode == 0
-        status = "PRODUCTION_PIN_PROMOTION_PENDING" if ancestry_valid else "DIVERGED_PIN_ERROR"
+        ancestry_valid = False
+        status = "DIVERGED_PIN_ERROR"
+        for anc, desc, candidate in (
+            (compat_commit, trading_ops_rev, "PRODUCTION_PIN_PROMOTION_PENDING"),
+            (trading_ops_rev, compat_commit, "TRADING_OPS_PIN_BEHIND"),
+        ):
+            proc = subprocess.run(
+                ["git", "-C", str(copytrade_pm_root), "merge-base", "--is-ancestor", anc, desc],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            if proc.returncode == 0:
+                ancestry_valid = True
+                status = candidate
+                break
     else:
         ancestry_valid = False
         status = "DIVERGED_PIN_ERROR"
@@ -3277,17 +3277,46 @@ def reconcile_live_executor_and_cwsa(
                 intent_cols = {
                     r[1] for r in con.execute("PRAGMA table_info(order_intents)").fetchall()
                 }
-                has_fill_px = bool({"avg_price", "fill_price", "exec_price"} & intent_cols)
-                has_fill_fee = bool({"exec_fee", "fee", "fee_usd"} & intent_cols)
+                fill_px_col = next(
+                    (c for c in ("avg_price", "fill_price", "exec_price") if c in intent_cols),
+                    None,
+                )
+                fill_fee_col = next(
+                    (c for c in ("exec_fee", "fee", "fee_usd") if c in intent_cols),
+                    None,
+                )
+                has_fill_qty = "filled_quantity" in intent_cols
+                has_fill_px = fill_px_col is not None
+                has_fill_fee = fill_fee_col is not None
 
+                px_expr = f"o.{fill_px_col}" if fill_px_col is not None else "NULL"
+                fee_expr = f"o.{fill_fee_col}" if fill_fee_col is not None else "NULL"
+                fqty_expr = "o.filled_quantity" if has_fill_qty else "NULL"
                 intents = con.execute(
-                    """
-                    SELECT o.symbol, o.quantity, o.status, o.created_at_ms, w.next_cp_ms
+                    f"""
+                    SELECT o.symbol, o.quantity, o.status, o.created_at_ms, w.next_cp_ms,
+                           {px_expr}, {fee_expr}, {fqty_expr}
                     FROM order_intents o
                     JOIN processed_waves w USING (wave_key)
                     WHERE w.next_cp_ms > 0
                     """
                 ).fetchall()
+
+                intents_with_fill_economics = 0
+                realized_fees_usd = 0.0
+                if has_fill_px and has_fill_fee:
+                    econ_rows = con.execute(
+                        f"SELECT {fill_px_col}, {fill_fee_col} FROM order_intents "
+                        f"WHERE {fill_px_col} IS NOT NULL AND {fill_fee_col} IS NOT NULL"
+                    ).fetchall()
+                    for px_raw, fee_raw in econ_rows:
+                        px_s, fee_s = str(px_raw).strip(), str(fee_raw).strip()
+                        if not px_s or not fee_s:
+                            continue
+                        px_f, fee_f = float(px_s), float(fee_s)
+                        if np.isfinite(px_f) and np.isfinite(fee_f):
+                            intents_with_fill_economics += 1
+                            realized_fees_usd += fee_f
             finally:
                 con.close()
 
@@ -3296,10 +3325,27 @@ def reconcile_live_executor_and_cwsa(
             disp_lags = [float(r[3] - (r[4] - 300_000)) for r in intents]
 
             matched_lag_bps: list[float] = []
+            fill_slippage_bps: list[float] = []
             unmatched_intents = 0
             if resolved_store is not None and resolved_store.exists():
-                for sym, qty_raw, status_raw, created_ms, next_cp_ms in intents:
-                    if str(status_raw) != "FILLED":
+                for (
+                    sym,
+                    qty_raw,
+                    status_raw,
+                    created_ms,
+                    next_cp_ms,
+                    fill_px_raw,
+                    _fill_fee_raw,
+                    fill_qty_raw,
+                ) in intents:
+                    status_str = str(status_raw)
+                    is_filled = status_str == "FILLED"
+                    want_slippage = (
+                        has_fill_px
+                        and has_fill_fee
+                        and status_str in ("FILLED", "PARTIAL", "CANCELLED")
+                    )
+                    if not is_filled and not want_slippage:
                         continue
                     qty = float(qty_raw)
                     if abs(qty) <= 1e-12:
@@ -3307,14 +3353,33 @@ def reconcile_live_executor_and_cwsa(
                     sign = 1.0 if qty > 0.0 else -1.0
                     coin = str(sym).split("/")[0]
                     cp_min = ((int(next_cp_ms) - 300_000) // 60_000) * 60_000
-                    disp_min = (int(created_ms) // 60_000) * 60_000
                     px_cp = _lookup_1m_open_at_ms(resolved_store, coin, cp_min, price_cache)
-                    px_disp = _lookup_1m_open_at_ms(resolved_store, coin, disp_min, price_cache)
-                    if px_cp is not None and px_disp is not None:
-                        # Adverse drift > 0 when price moved against the follower's order direction.
-                        matched_lag_bps.append(sign * (px_disp - px_cp) / px_cp * 1e4)
-                    else:
-                        unmatched_intents += 1
+                    if is_filled:
+                        disp_min = (int(created_ms) // 60_000) * 60_000
+                        px_disp = _lookup_1m_open_at_ms(resolved_store, coin, disp_min, price_cache)
+                        if px_cp is not None and px_disp is not None:
+                            # Adverse drift > 0 when price moved against the follower's order direction.
+                            matched_lag_bps.append(sign * (px_disp - px_cp) / px_cp * 1e4)
+                        else:
+                            unmatched_intents += 1
+                    if want_slippage and px_cp is not None and fill_px_raw is not None:
+                        fill_px_s = str(fill_px_raw).strip()
+                        if fill_px_s:
+                            fill_px = float(fill_px_s)
+                            fill_qty_ok = True
+                            if fill_qty_raw is not None and str(fill_qty_raw).strip():
+                                fill_qty_ok = abs(float(fill_qty_raw)) > 1e-12
+                            if fill_qty_ok and np.isfinite(fill_px) and fill_px > 0.0:
+                                fill_slippage_bps.append(sign * (fill_px - px_cp) / px_cp * 1e4)
+
+            if has_fill_px and has_fill_fee:
+                fill_status = (
+                    "AVAILABLE"
+                    if intents_with_fill_economics > 0
+                    else "SCHEMA_READY_NO_BACKFILLED_FILLS"
+                )
+            else:
+                fill_status = "BLOCKED_EVIDENCE:EXECUTOR_SQLITE_OMITS_FILL_PRICE_AND_FEE"
 
             exec_summary: dict[str, Any] = {
                 "status": "PARTIAL_TIMING_AND_LAG_DRIFT_VERIFIED" if wave_lags else "EMPTY_WAVES",
@@ -3345,12 +3410,31 @@ def reconcile_live_executor_and_cwsa(
                     if matched_lag_bps
                     else None
                 ),
-                "broker_fill_slippage_status": (
-                    "AVAILABLE"
-                    if (has_fill_px and has_fill_fee)
-                    else "BLOCKED_EVIDENCE:EXECUTOR_SQLITE_OMITS_FILL_PRICE_AND_FEE"
-                ),
+                "broker_fill_slippage_status": fill_status,
             }
+            if has_fill_px and has_fill_fee:
+                exec_summary.update(
+                    {
+                        "intents_with_fill_economics": intents_with_fill_economics,
+                        "realized_fees_usd": round(realized_fees_usd, 6),
+                        "matched_fill_slippage_intents": len(fill_slippage_bps),
+                        "mean_realized_fill_slippage_bps": (
+                            round(float(np.mean(fill_slippage_bps)), 4)
+                            if fill_slippage_bps
+                            else None
+                        ),
+                        "p50_realized_fill_slippage_bps": (
+                            round(float(np.median(fill_slippage_bps)), 4)
+                            if fill_slippage_bps
+                            else None
+                        ),
+                        "p90_realized_fill_slippage_bps": (
+                            round(float(np.quantile(fill_slippage_bps, 0.90)), 4)
+                            if fill_slippage_bps
+                            else None
+                        ),
+                    }
+                )
             out["executor"] = exec_summary
 
     cwsa_list: list[dict[str, Any]] = []

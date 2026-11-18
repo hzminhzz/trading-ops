@@ -1,0 +1,219 @@
+{
+  "schema": "trading_ops_paper_promotion_proposal_v1",
+  "created_at": "2026-11-18T10:45:00Z",
+  "status": "SHADOW_ONLY",
+  "execution_mode": "SHADOW_ONLY",
+  "stage": "CWSA_SHADOW_AND_PAPER_ADMISSION_PENDING_UPSTREAM_SEAL",
+  "trading_authorized": false,
+  "order_route": "NONE",
+  "target_release_contract": "portfolio_release_v2",
+  "target_mandate_contract": "copy_mandate_v1",
+  "target_account_profile": {
+    "firm": "crypto-fund-trader",
+    "program": "crypto-fund-trader:two_phase:phase_1",
+    "account_usd": 10000,
+    "daily_loss_limit_usd": 500,
+    "daily_loss_basis": "balance",
+    "daily_reset_utc": "00:05",
+    "max_static_dd_usd": 1000,
+    "profit_target_usd": 800,
+    "sizing_policy": "FIXED_K_NATIVE_QUANTITY",
+    "tier": 2,
+    "tier_dd_ceiling_usd": 300,
+    "tier_daily_ceiling_usd": 150
+  },
+  "candidate": {
+    "source_study_report": "reports/2026-11-18__cft__10k__phase3-pod-shop-ablation.md",
+    "source_results_json": "reports/2026-11-18__cft__10k__phase3-pod-shop-ablation__results.json",
+    "source_study_script": "studies/2026-11-18__cft__10k__phase3-pod-shop-ablation.py",
+    "source_adr": "docs/adr/0001-copytrading-pod-shop-redesign.md",
+    "proposed_portfolio_id": "research.cft/Phase4EulerTier2Shadow",
+    "tier": 2,
+    "aliases": [
+      "W#107",
+      "W111",
+      "W312"
+    ],
+    "k_weights": [
+      "0.226845",
+      "0.212205",
+      "0.122365"
+    ],
+    "marginal_cdar_shares": [
+      0.4064,
+      0.4369,
+      0.1567
+    ],
+    "binding_constraint": "Hard_Daily",
+    "members": [
+      {
+        "label": "W#107",
+        "venue": "hyperliquid",
+        "network": "mainnet",
+        "frozen_k": "0.226845",
+        "marginal_cdar_share": 0.4064,
+        "role": "primary"
+      },
+      {
+        "label": "W111",
+        "venue": "hyperliquid",
+        "network": "mainnet",
+        "frozen_k": "0.212205",
+        "marginal_cdar_share": 0.4369,
+        "role": "primary"
+      },
+      {
+        "label": "W312",
+        "venue": "hyperliquid",
+        "network": "mainnet",
+        "frozen_k": "0.122365",
+        "marginal_cdar_share": 0.1567,
+        "role": "primary"
+      }
+    ],
+    "replacement_bench": {
+      "aliases": [
+        "W#284",
+        "W#94",
+        "W#283"
+      ],
+      "admission_policy": "PROMOTE_PIT_TOP_BENCH_NEW_POS_ONLY",
+      "note": "Pre-vetted causal PIT replacement bench requiring new-position-only admission and a new signed mandate generation."
+    }
+  },
+  "research_evidence": {
+    "archive_sha256": "959a4f195863f7578d69a08b7560bafa0eac959e8b695b415cd430b5e993776c",
+    "roster_sha256": "59896baa926c264464935c894b8854472cd58a47b9b49f7ed129bf030fd0c707",
+    "pit_provenance": "EX_POST_RESERVOIR_ARCHIVE_ZERO_EXCLUSION_LEAKAGE",
+    "archive_days": 197,
+    "archive_window": "2026-05-01T00:00:00Z..2026-11-14T00:00:00Z",
+    "train_window": "2026-05-01T00:00:00Z..2026-09-01T00:00:00Z",
+    "oos_window": "2026-09-01T00:00:00Z..2026-11-01T00:00:00Z",
+    "cpcv_full_pipeline_pbo": 0.3158,
+    "cpcv_full_pipeline_splits": "19/20",
+    "cpcv_leakfree_pbo": 0.8,
+    "cpcv_leakfree_splits": "15/20",
+    "oos_bar_delta_1x": {
+      "verdict": "PASS",
+      "terminal_net_usd": 821.98,
+      "full_window_net_usd": 1811.29,
+      "static_floor_dd_usd": -36.81,
+      "peak_to_trough_dd_usd": -373.64,
+      "worst_daily_usd": -40.33,
+      "sweeps": 0,
+      "peak_gross_leverage": 0.779,
+      "total_funding_usd": -1.19
+    },
+    "oos_bar_delta_2x": {
+      "verdict": "PASS",
+      "terminal_net_usd": 801.78,
+      "full_window_net_usd": 1445.76,
+      "static_floor_dd_usd": -41.38,
+      "peak_to_trough_dd_usd": -466.52,
+      "worst_daily_usd": -42.72,
+      "sweeps": 0
+    },
+    "oos_cwsa_one_shot_v3_1x": {
+      "verdict": "PASS",
+      "terminal_net_usd": 807.61,
+      "full_window_net_usd": 1693.66,
+      "cwsa_net_usd": 2868.27,
+      "static_floor_dd_usd": -38.15,
+      "peak_to_trough_dd_usd": -402.7,
+      "worst_daily_usd": -40.33,
+      "sweeps": 0,
+      "peak_gross_leverage": 0.78,
+      "total_funding_usd": -1.46,
+      "capacity_status": "CAPACITY_BREACH_GT_5PCT",
+      "cwsa_bars_gt_5pct": 21,
+      "trades_gt_5pct": 21,
+      "trades_gt_1pct": 101,
+      "max_participation_pct": 52.6712,
+      "p95_participation_pct": 2.35,
+      "cwsa_clipped_orders": 28,
+      "cwsa_delta_mismatch_bars": 791,
+      "cwsa_missed_orders": 0,
+      "modeled_sqrt_impact_usd": 43.95
+    },
+    "oos_cwsa_one_shot_v3_2x": {
+      "verdict": "PASS",
+      "terminal_net_usd": 807.3,
+      "full_window_net_usd": 1356.19,
+      "cwsa_net_usd": 2350.51,
+      "static_floor_dd_usd": -40.66,
+      "peak_to_trough_dd_usd": -405.77,
+      "worst_daily_usd": -42.72,
+      "sweeps": 0
+    },
+    "section_b_bench_promotion": {
+      "policy": "PROMOTE_PIT_TOP_BENCH_NEW_POS_ONLY",
+      "bench_aliases": [
+        "W#284",
+        "W#94",
+        "W#283"
+      ],
+      "net_pnl_usd": 643.57,
+      "static_floor_dd_usd": -32.08,
+      "guardian_target_passed": true,
+      "blended_p_funded_pct": 45.58,
+      "blended_breakeven_fee_usd": 165.63,
+      "max_pm03_conservation_err": 0.0
+    },
+    "section_c_pit_strict_nov05": {
+      "asof_iso": "2026-11-05T00:00:00Z",
+      "roster_sha256": "119c623b7d088ebace29a611d624681294768d04d26cc3f1e7263c67d3b144bc",
+      "selected_aliases": [
+        "W#210",
+        "W#315",
+        "W083"
+      ],
+      "verdict": "RIGHT_CENSORED_AT_ARCHIVE_END",
+      "bar_delta_net_usd": -369.7,
+      "cwsa_one_shot_v3_net_usd": -399.26
+    },
+    "section_d_cft_10k_ev": {
+      "blended_p_funded_pct": 61.5,
+      "blended_p_funded_ci95_pct": [
+        30.84,
+        85.13
+      ],
+      "blended_breakeven_fee_usd": 590.98,
+      "chop_75pct_p_funded_pct": 61.6,
+      "chop_75pct_p_funded_ci95_pct": [
+        30.92,
+        85.19
+      ],
+      "chop_75pct_breakeven_fee_usd": 598.23,
+      "ev_status": "BREAK_EVEN_ONLY_FEE_UNVERIFIED"
+    }
+  },
+  "unresolved_gates": [
+    {
+      "code": "BLOCKED_UPSTREAM_SEAL_AND_SIGNATURES",
+      "status": "BLOCKED",
+      "detail": "Upstream copytrade-pm portfolio_release_v2 sealing, Ed25519 copy_mandate_v1 signatures, prop-production compatibility pin alignment, and upgraded executor.sqlite fill-price and fee backfill remain pending."
+    },
+    {
+      "code": "CAPACITY_BREACH_GT_5PCT",
+      "status": "UNRESOLVED",
+      "bars_gt_5pct": 21,
+      "max_participation_pct": 52.6712,
+      "detail": "Twenty-one protective reduction and volume-drought bars exceeded 5 percent 1m bar volume under cwsa_one_shot_v3."
+    },
+    {
+      "code": "POST_NOV4_PIT_UNPROVEN",
+      "status": "UNPROVEN",
+      "detail": "Post-Nov-4 PIT_STRICT_ASOF evaluation over 9 days ended at -399.26 USD under cwsa_one_shot_v3 with RIGHT_CENSORED_AT_ARCHIVE_END status."
+    }
+  ],
+  "cwsa_shadow_admission_plan": {
+    "trading_ops_copytrade_pm_rev": "1cccd2049e77d39035746ccf4400dbde9c284aca",
+    "prop_production_copytrade_pm_pin": "404c8d173d6bcb76b466ba69e597beea6ee81dc4",
+    "pin_status": "PRODUCTION_PIN_PROMOTION_PENDING",
+    "approval_gated_steps": [
+      "1. Seal the Tier 2 primary roster and causal bench metadata in copytrade-pm under portfolio_release_v2 with explicit approval.",
+      "2. Issue Ed25519-signed copy_mandate_v1 payloads and align prop-production compatibility.json to the released copytrade-pm pin.",
+      "3. Run prospective CWSA shadow and paper observation without live order routing until capacity and fill-economics gates clear."
+    ]
+  }
+}
