@@ -18,10 +18,12 @@ Provides four reusable building blocks for ``trading-ops`` and ``portfolio-resea
 
 from __future__ import annotations
 
+import json
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from itertools import combinations, product
+from pathlib import Path
 from typing import Any, Literal
 
 import numpy as np
@@ -232,6 +234,8 @@ class PodConstructorConfig:
     max_tilt_multiplier: float = 1.50
     min_tilt_comparisons: int = 1
     reject_unknown_tilt: bool = True
+    reject_hidden_bagholder: bool = True
+    max_bagholder_open_loss_ratio: float = 0.50
     min_active_bar_frac: float = 0.01
     baseline_port_dd_frac: float = 0.02
     min_baseline_order_usd: float = 0.0  # >0 filters q10_order at baseline k before clustering
@@ -256,6 +260,8 @@ class PodConstructorConfig:
     hard_daily_buffer_frac: float = 0.75
     min_risk_share: float = 0.15
     max_risk_share: float = 0.45
+    risk_share_mode: Literal["standalone_proxy", "marginal_euler"] = "standalone_proxy"
+    max_marginal_cdar_share: float | None = None
     max_k_mult: float = 5.0  # Safety ceiling on per-wallet multiplier under FIXED_K_NATIVE_QUANTITY
 
     # Stage 4 Validation
@@ -270,6 +276,7 @@ class PodConstructorConfig:
     cusum_warn_h: float = 2.50
     cusum_kill_h: float = 4.00
     mae_kill_multiple: float = 2.50
+    latch_kill_state: bool = True
 
     min_episode_notional_usd: float = 10.0
     min_overlap_days: int = 5
@@ -444,9 +451,25 @@ class TraderAuditMetrics:
     raw_ropn_mean: float = 0.0
     eb_ropn_mean: float = 0.0
     eb_ropn_post_sd: float = 0.0
+    right_censored_pnl_frac: float = 0.0
     style_sleeve: StyleSleeve = "unlabeled"
     win_hold_p95_bars: float | None = None
     within_ep_scaling_median: float = 1.0
+
+    @property
+    def mean_ep_ropn(self) -> float:
+        """Backward-compatible alias for ``raw_ropn_mean``."""
+        return self.raw_ropn_mean
+
+    @property
+    def eb_shrunk_ropn(self) -> float:
+        """Backward-compatible alias for ``eb_ropn_mean``."""
+        return self.eb_ropn_mean
+
+    @property
+    def eb_ropn_se(self) -> float:
+        """Backward-compatible alias for ``eb_ropn_post_sd``."""
+        return self.eb_ropn_post_sd
 
 
 @dataclass(frozen=True)
@@ -486,6 +509,8 @@ class SizedPodCandidate:
     min_lot_warnings: tuple[str, ...] = ()
     peak_symbol_exposure_frac: float = 0.0
     peak_gross_exposure_frac: float = 0.0
+    marginal_cdar_shares: tuple[float, ...] = ()
+    marginal_daily_cvar_shares: tuple[float, ...] = ()
 
 
 @dataclass
@@ -499,6 +524,69 @@ class RosterCUSUMState:
     recent_symbol_notionals: list[np.ndarray] = field(default_factory=list)
     status: Literal["OK", "WARN_THROTTLE_0.5X", "KILL_CONTAIN_0X"] = "OK"
     reasons: tuple[str, ...] = ()
+    terminal_kill_latched: bool = False
+    latched_at_episode: int | None = None
+    latched_reasons: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, object]:
+        """Serialize CUSUM state for persistent storage across process restarts."""
+        return {
+            "alias": self.alias,
+            "s_decay": float(self.s_decay),
+            "s_tilt": float(self.s_tilt),
+            "episodes_observed": int(self.episodes_observed),
+            "recent_symbol_notionals": [arr.tolist() for arr in self.recent_symbol_notionals],
+            "status": self.status,
+            "reasons": list(self.reasons),
+            "terminal_kill_latched": bool(self.terminal_kill_latched),
+            "latched_at_episode": self.latched_at_episode,
+            "latched_reasons": list(self.latched_reasons),
+        }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> RosterCUSUMState:
+        """Restore persisted CUSUM state including any terminal kill latch."""
+        raw_recent = data.get("recent_symbol_notionals", [])
+        recent = (
+            [np.asarray(x, dtype=np.float64) for x in raw_recent]
+            if isinstance(raw_recent, Sequence) and not isinstance(raw_recent, (str, bytes))
+            else []
+        )
+        raw_reasons = data.get("reasons", [])
+        reasons = (
+            tuple(str(x) for x in raw_reasons)
+            if isinstance(raw_reasons, Sequence) and not isinstance(raw_reasons, (str, bytes))
+            else ()
+        )
+        raw_latched = data.get("latched_reasons", [])
+        latched_reasons = (
+            tuple(str(x) for x in raw_latched)
+            if isinstance(raw_latched, Sequence) and not isinstance(raw_latched, (str, bytes))
+            else ()
+        )
+        lat_ep = data.get("latched_at_episode")
+        return cls(
+            alias=str(data["alias"]),
+            s_decay=float(data.get("s_decay", 0.0)),  # type: ignore[arg-type]
+            s_tilt=float(data.get("s_tilt", 0.0)),  # type: ignore[arg-type]
+            episodes_observed=int(data.get("episodes_observed", 0)),  # type: ignore[arg-type]
+            recent_symbol_notionals=recent,
+            status=str(data.get("status", "OK")),  # type: ignore[arg-type]
+            reasons=reasons,
+            terminal_kill_latched=bool(data.get("terminal_kill_latched", False)),
+            latched_at_episode=int(lat_ep) if isinstance(lat_ep, (int, float)) else None,
+            latched_reasons=latched_reasons,
+        )
+
+    def reset_for_new_mandate_generation(self) -> None:
+        """Explicitly clear latch and accumulators only when a new approved mandate generation starts."""
+        self.s_decay = 0.0
+        self.s_tilt = 0.0
+        self.status = "OK"
+        self.reasons = ()
+        self.terminal_kill_latched = False
+        self.latched_at_episode = None
+        self.latched_reasons = ()
 
 
 # ---------------------------------------------------------------------------
@@ -1509,6 +1597,9 @@ def stage1_audit_traders(
     censored_counts = np.zeros(n_traders, dtype=np.int64)
     left_censored_counts = np.zeros(n_traders, dtype=np.int64)
     right_censored_counts = np.zeros(n_traders, dtype=np.int64)
+    right_censored_pnls = np.zeros(n_traders, dtype=np.float64)
+    closed_gains_vec = np.zeros(n_traders, dtype=np.float64)
+    tot_ret_vec = np.zeros(n_traders, dtype=np.float64)
     open_exposures = np.zeros(n_traders, dtype=np.float64)
     style_sleeves: list[StyleSleeve] = ["unlabeled"] * n_traders
     win_hold_p95_list: list[float | None] = [None] * n_traders
@@ -1556,6 +1647,7 @@ def stage1_audit_traders(
         static_dd_vec[i] = static_dd
         cdar95_vec[i] = max(cdar95, 1e-6)
         tot_ret = float(cum_r[-1]) if cum_r.size > 0 else 0.0
+        tot_ret_vec[i] = tot_ret
         net_dd_vec[i] = tot_ret / max(peak_dd, 1e-6)
 
         if tensor.chop_mask is not None and np.any(tensor.chop_mask):
@@ -1574,6 +1666,7 @@ def stage1_audit_traders(
         left_censored_counts[i] = left_c_cnt
         right_censored_counts[i] = right_c_cnt
         censored_counts[i] = censored_cnt
+        right_censored_pnls[i] = float(np.sum(ep_all["ep_pnl"][ep_all["ep_right_censored"]]))
         if n_bars > 0:
             open_exposures[i] = float(
                 sum(abs(float(tensor.notional_frac[i, s, -1])) for s in range(n_syms))
@@ -1588,6 +1681,7 @@ def stage1_audit_traders(
         ep_sym = ep["ep_symbol_notional"]
         n_ep = ep_pnl.size
         uncensored_counts[i] = n_ep
+        closed_gains_vec[i] = float(np.sum(np.maximum(0.0, ep_pnl))) if n_ep > 0 else 0.0
 
         style_sleeves[i] = classify_holding_style_sleeve(
             ep_dur,
@@ -1694,6 +1788,15 @@ def stage1_audit_traders(
             reasons.append("tilt_unknown")
         if net_dd_vec[i] <= 0.0 and chop_net_dd_vec[i] <= 0.0:
             reasons.append("non_positive_net_return")
+        if config.reject_hidden_bagholder and right_censored_pnls[i] < -1e-9:
+            closed_g = float(closed_gains_vec[i])
+            if (tot_ret_vec[i] <= 0.0) or (
+                abs(float(right_censored_pnls[i]))
+                > config.max_bagholder_open_loss_ratio * max(closed_g, 1e-8)
+            ):
+                reasons.append(
+                    f"right_censored_bagholder(open_pnl={right_censored_pnls[i]:.4f},closed_gains={closed_g:.4f})"
+                )
         if config.min_baseline_order_usd > 0.0:
             if config.baseline_port_dd_frac <= 0.0:
                 raise ValueError("baseline_port_dd_frac must be positive when min_baseline_order_usd > 0")
@@ -1737,6 +1840,7 @@ def stage1_audit_traders(
                 raw_ropn_mean=float(raw_ropn_vec[i]),
                 eb_ropn_mean=float(eb_ropn_vec[i]),
                 eb_ropn_post_sd=float(eb_ropn_sd_vec[i]),
+                right_censored_pnl_frac=float(right_censored_pnls[i]),
                 style_sleeve=style_sleeves[i],
                 win_hold_p95_bars=win_hold_p95_list[i],
                 within_ep_scaling_median=float(scaling_med_vec[i]),
@@ -2309,6 +2413,137 @@ def _evaluate_weights_unit_scale(
     return res[:7]
 
 
+def compute_euler_marginal_risk_shares(
+    weights: np.ndarray,
+    solo_net: np.ndarray,
+    t_ov: np.ndarray,
+    delta_ov: np.ndarray,
+    cost_rate: float,
+    day_slices: Sequence[tuple[int, int]],
+    config: PodConstructorConfig,
+    *,
+    segments: Sequence[tuple[int, int]] | None = None,
+    unrl_at_resets: np.ndarray | None = None,
+) -> tuple[tuple[float, ...], tuple[float, ...]]:
+    """Compute exact Euler additive member contributions to portfolio CDaR and DailyCVaR.
+
+    Attributes overlap cost-netting savings proportionally to traded member turnover at each
+    overlap cell so ``sum_m r_attr[m, t] == r_net[t]`` everywhere, and decomposes tail
+    underwater (single- or multi-segment) and daily losses identically to 1.0.
+    """
+    m_size, n_bars = solo_net.shape
+    w = np.asarray(weights, dtype=np.float64)
+    w_sum = float(np.sum(w))
+    w_norm = (w / w_sum) if w_sum > 1e-12 else np.full(m_size, 1.0 / max(1, m_size), dtype=np.float64)
+
+    r_attr = w[:, None] * solo_net
+    if t_ov.size > 0:
+        scaled = np.abs(delta_ov * w[None, :])
+        denom = np.sum(scaled, axis=1)
+        netted_cost = np.abs(delta_ov @ w) * cost_rate
+        diff = (denom * cost_rate) - netted_cost
+        valid_e = denom > 1e-18
+        if np.any(valid_e):
+            share_e = np.divide(
+                scaled, denom[:, None], out=np.zeros_like(scaled), where=valid_e[:, None]
+            )
+            contrib_e = share_e * diff[:, None]
+            for m_idx in range(m_size):
+                np.add.at(r_attr[m_idx], t_ov, contrib_e[:, m_idx])
+
+    r_net = np.sum(r_attr, axis=0)
+    cum_r = np.cumsum(r_net)
+    cum_m = np.cumsum(r_attr, axis=1)
+
+    valid_segs = (
+        [(int(s), int(e)) for s, e in segments if e > s]
+        if (segments is not None and len(segments) > 1)
+        else ([(0, n_bars)] if n_bars > 0 else [])
+    )
+    if not valid_segs:
+        cdar_shares = tuple(1.0 / m_size for _ in range(m_size))
+    else:
+        uw_parts: list[np.ndarray] = []
+        uw_contrib_parts: list[np.ndarray] = []
+        for s_seg, e_seg in valid_segs:
+            cum_seg = np.cumsum(r_net[s_seg:e_seg])
+            cum_m_seg = np.cumsum(r_attr[:, s_seg:e_seg], axis=1)
+            running_peak = np.maximum(0.0, np.maximum.accumulate(cum_seg))
+            uw_parts.append(running_peak - cum_seg)
+            rp_pad = np.concatenate(([0.0], running_peak))
+            up_bars = np.flatnonzero(rp_pad[1:] > rp_pad[:-1])
+            if up_bars.size == 0:
+                uw_contrib_parts.append(-cum_m_seg)
+            else:
+                local_idx = np.arange(e_seg - s_seg, dtype=np.intp)
+                pos = np.searchsorted(up_bars, local_idx, side="right") - 1
+                has_peak = pos >= 0
+                peak_bars = up_bars[np.maximum(pos, 0)]
+                peak_contrib = np.where(has_peak[None, :], cum_m_seg[:, peak_bars], 0.0)
+                uw_contrib_parts.append(peak_contrib - cum_m_seg)
+
+        underwater = np.concatenate(uw_parts) if len(uw_parts) > 1 else uw_parts[0]
+        uw_contrib = (
+            np.concatenate(uw_contrib_parts, axis=1)
+            if len(uw_contrib_parts) > 1
+            else uw_contrib_parts[0]
+        )
+        q_alpha = float(np.quantile(underwater, config.cdar_alpha)) if underwater.size > 0 else 0.0
+        tail_idx = np.flatnonzero(underwater >= q_alpha)
+        cdar_val = float(np.mean(underwater[tail_idx])) if tail_idx.size > 0 else q_alpha
+        if cdar_val <= 1e-12 or tail_idx.size == 0:
+            cdar_shares = tuple(1.0 / m_size for _ in range(m_size))
+        else:
+            comp_cdar = np.mean(uw_contrib[:, tail_idx], axis=1)
+            cdar_shares = tuple(float(x / cdar_val) for x in comp_cdar)
+
+    n_days = len(day_slices)
+    if n_days == 0:
+        dcvar_shares = tuple(1.0 / m_size for _ in range(m_size))
+    else:
+        daily_losses = np.empty(n_days, dtype=np.float64)
+        daily_comp = np.zeros((m_size, n_days), dtype=np.float64)
+        for di, (sb, eb) in enumerate(day_slices):
+            base_r = cum_r[sb - 1] if sb > 0 else 0.0
+            base_m = cum_m[:, sb - 1] if sb > 0 else np.zeros(m_size, dtype=np.float64)
+            intraday = cum_r[sb:eb] - base_r
+            if config.daily_loss_mode == "intraday_trailing":
+                peaks = np.maximum(0.0, np.maximum.accumulate(intraday))
+                dd_in = peaks - intraday
+                rel_t = int(np.argmax(dd_in))
+                loss_d = float(dd_in[rel_t])
+                if peaks[rel_t] <= 0.0:
+                    peak_m = base_m
+                else:
+                    rel_p = int(np.argmax(intraday[: rel_t + 1]))
+                    peak_m = cum_m[:, sb + rel_p]
+                trough_m = cum_m[:, sb + rel_t]
+                if loss_d > 0.0:
+                    daily_comp[:, di] = peak_m - trough_m
+            else:
+                unrl_carry = float(unrl_at_resets[di]) if unrl_at_resets is not None else 0.0
+                rel_t = int(np.argmin(intraday))
+                min_intra = float(intraday[rel_t])
+                loss_d = float(max(0.0, -unrl_carry, -(unrl_carry + min_intra)))
+                if loss_d > 0.0:
+                    if min_intra >= 0.0:
+                        daily_comp[:, di] = loss_d * w_norm
+                    else:
+                        daily_comp[:, di] = (base_m - cum_m[:, sb + rel_t]) - unrl_carry * w_norm
+            daily_losses[di] = loss_d
+
+        q99 = float(np.quantile(daily_losses, config.daily_cvar_alpha))
+        tail_days = daily_losses >= q99
+        dcvar_val = float(np.mean(daily_losses[tail_days])) if np.any(tail_days) else q99
+        if dcvar_val <= 1e-12 or not np.any(tail_days):
+            dcvar_shares = tuple(1.0 / m_size for _ in range(m_size))
+        else:
+            comp_dc = np.mean(daily_comp[:, tail_days], axis=1)
+            dcvar_shares = tuple(float(x / dcvar_val) for x in comp_dc)
+
+    return cdar_shares, dcvar_shares
+
+
 def size_pod_dual_barrier(
     pod_indices: Sequence[int],
     tensor: UnitCopy5mTensor,
@@ -2396,13 +2631,38 @@ def size_pod_dual_barrier(
         if config.sizing_tier == 1
         else None
     )
+    enforce_marginal = (config.risk_share_mode == "marginal_euler") or (
+        config.max_marginal_cdar_share is not None
+    )
+    marginal_cap = (
+        float(config.max_marginal_cdar_share)
+        if config.max_marginal_cdar_share is not None
+        else s_hi
+    )
 
-    def score_shares(shares: np.ndarray) -> tuple[float, np.ndarray, str, tuple[float, ...]]:
+    def _marginal_ok(m_shares: tuple[float, ...]) -> bool:
+        if max(m_shares) > marginal_cap + 1e-9:
+            return False
+        return not (config.risk_share_mode == "marginal_euler" and min(m_shares) < s_lo - 1e-9)
+
+    def score_shares(
+        shares: np.ndarray,
+    ) -> tuple[
+        bool,
+        float,
+        np.ndarray,
+        str,
+        tuple[float, ...],
+        tuple[float, ...],
+        tuple[float, ...],
+        np.ndarray,
+        np.ndarray | None,
+    ]:
         # Map risk shares s_i into unit direction w_i proportional to s_i / risk_i
         w = shares / risk_unit
         w_sum = float(np.sum(w))
         if w_sum <= 1e-12:
-            return -1e9, np.zeros(m_size), "INVALID", (0.0,) * 9
+            return False, -1e9, np.zeros(m_size), "INVALID", (0.0,) * 9, (), (), w, None
         w /= w_sum
 
         unrl_resets = (
@@ -2419,6 +2679,34 @@ def size_pod_dual_barrier(
             if config.daily_loss_mode == "reset_balance"
             else None
         )
+
+        m_cdar_s: tuple[float, ...] = ()
+        m_dcvar_s: tuple[float, ...] = ()
+        if enforce_marginal:
+            m_cdar_s, m_dcvar_s = compute_euler_marginal_risk_shares(
+                w,
+                solo_net,
+                t_ov,
+                delta_ov,
+                cost_rate,
+                day_slices,
+                config,
+                segments=segments,
+                unrl_at_resets=unrl_resets,
+            )
+            if not _marginal_ok(m_cdar_s):
+                return (
+                    False,
+                    -1e9,
+                    np.zeros(m_size),
+                    "MARGINAL_BOUND_EXCEEDED",
+                    (0.0,) * 9,
+                    m_cdar_s,
+                    m_dcvar_s,
+                    w,
+                    unrl_resets,
+                )
+
         ret_u, peak_u, static_u, cdar_u, dcvar_u, mdaily_u, sav_u, cum_r_u = _evaluate_weights_with_cum(
             w,
             solo_net,
@@ -2473,6 +2761,7 @@ def size_pod_dual_barrier(
         k_vec = lam * w
         scaled_ret = lam * ret_u
         return (
+            True,
             scaled_ret,
             k_vec,
             bind_name,
@@ -2487,6 +2776,10 @@ def size_pod_dual_barrier(
                 lam * peak_sym_u,
                 lam * peak_gross_u,
             ),
+            m_cdar_s,
+            m_dcvar_s,
+            w,
+            unrl_resets,
         )
 
     # Generate deterministic grid over feasible bounded risk-share simplex [min_s, max_s]
@@ -2500,14 +2793,33 @@ def size_pod_dual_barrier(
 
     best_obj = -float("inf")
     best_s = np.full(m_size, 1.0 / m_size)
-    best_res: tuple[float, np.ndarray, str, tuple[float, ...]] | None = None
+    best_res: (
+        tuple[
+            bool,
+            float,
+            np.ndarray,
+            str,
+            tuple[float, ...],
+            tuple[float, ...],
+            tuple[float, ...],
+            np.ndarray,
+            np.ndarray | None,
+        ]
+        | None
+    ) = None
 
     for s_vec in candidates_s:
         res = score_shares(s_vec)
-        if res[0] > best_obj:
-            best_obj = res[0]
+        if res[0] and (best_res is None or res[1] > best_obj):
+            best_obj = res[1]
             best_s = s_vec
             best_res = res
+
+    if best_res is None:
+        raise ValueError(
+            f"INFEASIBLE_MARGINAL_RISK_SHARE_BOUNDS: pod={pod}, "
+            f"mode={config.risk_share_mode}, max_marginal_cdar_share={marginal_cap}"
+        )
 
     # Local coordinate refinement around best simplex grid point
     for delta in (0.025, 0.01):
@@ -2523,24 +2835,47 @@ def size_pod_dual_barrier(
                     trial[b] -= delta
                     if trial[a] <= s_hi + 1e-9 and trial[b] >= s_lo - 1e-9:
                         res = score_shares(trial)
-                        if res[0] > best_obj + 1e-9:
-                            best_obj = res[0]
+                        if res[0] and res[1] > best_obj + 1e-9:
+                            best_obj = res[1]
                             best_s = trial
                             best_res = res
                             improved = True
 
     assert best_res is not None
-    _, k_opt, bind_name, (
-        net_ret,
-        cdar,
-        peak_dd,
-        static_dd,
-        dcvar,
-        mdaily,
-        savings,
-        peak_sym_exp,
-        peak_gross_exp,
+    (
+        _,
+        _,
+        k_opt,
+        bind_name,
+        (
+            net_ret,
+            cdar,
+            peak_dd,
+            static_dd,
+            dcvar,
+            mdaily,
+            savings,
+            peak_sym_exp,
+            peak_gross_exp,
+        ),
+        m_cdar_s,
+        m_dcvar_s,
+        best_w,
+        best_unrl,
     ) = best_res
+    if not m_cdar_s:
+        m_cdar_s, m_dcvar_s = compute_euler_marginal_risk_shares(
+            best_w,
+            solo_net,
+            t_ov,
+            delta_ov,
+            cost_rate,
+            day_slices,
+            config,
+            segments=segments,
+            unrl_at_resets=best_unrl,
+        )
+
     warnings_list: list[str] = []
     for k_val, idx in zip(k_opt, pod):
         m_info = metrics_list[idx]
@@ -2581,6 +2916,8 @@ def size_pod_dual_barrier(
         min_lot_warnings=tuple(warnings_list),
         peak_symbol_exposure_frac=peak_sym_exp,
         peak_gross_exposure_frac=peak_gross_exp,
+        marginal_cdar_shares=m_cdar_s,
+        marginal_daily_cvar_shares=m_dcvar_s,
     )
 
 
@@ -3505,6 +3842,439 @@ def run_stationary_block_mc_on_daily_blocks(
     }
 
 
+@dataclass(frozen=True)
+class PropPhaseSpec:
+    """Single evaluation or funded phase specification for multi-phase contract EV."""
+
+    name: str
+    profit_target_usd: float | None
+    max_static_dd_usd: float
+    daily_loss_limit_usd: float
+    daily_loss_basis: Literal["balance", "equity"] = "balance"
+    min_trading_days: int = 0
+    consistency_max_single_day_pct: float | None = None
+    horizon_days: int = 90
+
+
+@dataclass(frozen=True)
+class PropContractSpec:
+    """Complete multi-phase prop-firm contract state machine for Net Payout EV pricing."""
+
+    firm_slug: str
+    program_name: str
+    account_usd: float
+    eval_phases: tuple[PropPhaseSpec, ...]
+    funded_phase: PropPhaseSpec
+    payout_split_pct: float = 0.80
+    challenge_fee_usd: float | None = None
+    fee_refunded_on_first_payout: bool = False
+    funded_cycle_days: int = 14
+    funded_target_cap_usd: float | None = None
+
+
+def _extract_leading_number(raw: object) -> float | None:
+    if isinstance(raw, (int, float)) and not isinstance(raw, bool):
+        return float(raw)
+    if not isinstance(raw, str):
+        return None
+    token = ""
+    for ch in raw.strip():
+        if ch.isdigit() or ch == ".":
+            token += ch
+        elif token:
+            break
+    if not token or token == ".":
+        return None
+    try:
+        return float(token)
+    except ValueError:
+        return None
+
+
+def load_prop_contract_spec(
+    firm_slug: str,
+    *,
+    account_usd: float = 10_000.0,
+    challenge_fee_usd: float | None = None,
+    min_eval_trading_days: int | None = None,
+    funded_cycle_days: int = 30,
+    rules_json_path: Path | None = None,
+) -> PropContractSpec:
+    """Load a multi-phase prop contract from ``prop_firms_rules.json`` without inventing missing fees."""
+    candidates = (
+        [rules_json_path]
+        if rules_json_path is not None
+        else [
+            Path(__file__).resolve().parents[1] / "prop_firms_rules.json",
+            Path("/home/quant/dev/trading-ops/prop_firms_rules.json"),
+        ]
+    )
+    resolved_json = next((p for p in candidates if p is not None and p.is_file()), None)
+    firm_obj: dict | None = None
+    if resolved_json is not None:
+        raw_data = json.loads(resolved_json.read_text(encoding="utf-8"))
+        for entry in raw_data.get("firms", []):
+            if entry.get("firm_slug") == firm_slug:
+                firm_obj = entry
+                break
+
+    if firm_obj is None:
+        if firm_slug == "crypto-fund-trader":
+            scale = account_usd / 5_000.0
+            m_days = 5 if min_eval_trading_days is None else int(min_eval_trading_days)
+            eff_funded_days = max(int(funded_cycle_days), 15)
+            p1 = PropPhaseSpec(
+                "phase_1", 400.0 * scale, 500.0 * scale, 250.0 * scale, "balance", m_days, None, 90
+            )
+            p2 = PropPhaseSpec(
+                "phase_2", 250.0 * scale, 500.0 * scale, 250.0 * scale, "balance", m_days, None, 90
+            )
+            funded = PropPhaseSpec(
+                "funded",
+                None,
+                500.0 * scale,
+                250.0 * scale,
+                "balance",
+                15,
+                None,
+                eff_funded_days,
+            )
+            return PropContractSpec(
+                firm_slug=firm_slug,
+                program_name="2-Phase",
+                account_usd=float(account_usd),
+                eval_phases=(p1, p2),
+                funded_phase=funded,
+                payout_split_pct=0.80,
+                challenge_fee_usd=challenge_fee_usd,
+                funded_cycle_days=eff_funded_days,
+            )
+        raise FileNotFoundError(f"PROP_FIRM_NOT_FOUND:{firm_slug}")
+
+    fee_val = challenge_fee_usd
+    pricing = firm_obj.get("pricing_usd")
+    if fee_val is None and isinstance(pricing, Mapping):
+        key = str(int(account_usd))
+        val = pricing.get(key)
+        if isinstance(val, (int, float)):
+            fee_val = float(val)
+        elif isinstance(val, Mapping) and val:
+            first_num = next((float(v) for v in val.values() if isinstance(v, (int, float))), None)
+            fee_val = first_num
+
+    eval_specs: list[PropPhaseSpec] = []
+    funded_spec: PropPhaseSpec | None = None
+    split_pct = 0.80
+
+    for ph in firm_obj.get("phases", []):
+        ph_name = str(ph.get("phase", ""))
+        base_acct = _extract_leading_number(ph.get("account_size_usd")) or 5_000.0
+        scale = float(account_usd) / base_acct
+        tgt_raw = _extract_leading_number(ph.get("profit_target_usd"))
+        tgt = tgt_raw * scale if tgt_raw is not None else None
+        dd_raw = _extract_leading_number((ph.get("max_drawdown") or {}).get("amount_usd")) or (
+            0.10 * base_acct
+        )
+        dd_usd = dd_raw * scale
+        daily_obj = ph.get("daily_loss_limit") or {}
+        daily_raw = _extract_leading_number(daily_obj.get("amount_usd")) or (0.05 * base_acct)
+        daily_usd = daily_raw * scale
+        basis_str = str(daily_obj.get("basis", "BALANCE")).upper()
+        basis: Literal["balance", "equity"] = "equity" if basis_str == "EQUITY" else "balance"
+
+        raw_mtd = ph.get("min_trading_days")
+        if min_eval_trading_days is not None and "funded" not in ph_name:
+            mtd = int(min_eval_trading_days)
+        elif isinstance(raw_mtd, int):
+            mtd = raw_mtd
+        else:
+            mtd = 0
+
+        cons_obj = ph.get("consistency_rule") or {}
+        cons_pct: float | None = None
+        if cons_obj.get("exists"):
+            c_num = _extract_leading_number(cons_obj.get("max_single_day_profit_pct"))
+            if c_num is not None and c_num > 0.0:
+                cons_pct = c_num / 100.0 if c_num > 1.0 else c_num
+
+        ps_raw = _extract_leading_number(ph.get("payout_split_pct"))
+        if ps_raw is not None and ps_raw > 0.0:
+            split_pct = ps_raw / 100.0 if ps_raw > 1.0 else ps_raw
+
+        spec_item = PropPhaseSpec(
+            name=ph_name,
+            profit_target_usd=tgt,
+            max_static_dd_usd=dd_usd,
+            daily_loss_limit_usd=daily_usd,
+            daily_loss_basis=basis,
+            min_trading_days=mtd,
+            consistency_max_single_day_pct=cons_pct,
+            horizon_days=funded_cycle_days if "funded" in ph_name else 90,
+        )
+        if "funded" in ph_name:
+            funded_spec = spec_item
+        else:
+            eval_specs.append(spec_item)
+
+    if funded_spec is None:
+        ref = eval_specs[-1]
+        funded_spec = PropPhaseSpec(
+            "funded",
+            None,
+            ref.max_static_dd_usd,
+            ref.daily_loss_limit_usd,
+            ref.daily_loss_basis,
+            0,
+            None,
+            funded_cycle_days,
+        )
+
+    eff_funded_days = max(int(funded_cycle_days), funded_spec.min_trading_days)
+    if eff_funded_days != funded_spec.horizon_days:
+        funded_spec = PropPhaseSpec(
+            funded_spec.name,
+            funded_spec.profit_target_usd,
+            funded_spec.max_static_dd_usd,
+            funded_spec.daily_loss_limit_usd,
+            funded_spec.daily_loss_basis,
+            funded_spec.min_trading_days,
+            funded_spec.consistency_max_single_day_pct,
+            eff_funded_days,
+        )
+
+    return PropContractSpec(
+        firm_slug=str(firm_obj.get("firm_slug", firm_slug)),
+        program_name=str(firm_obj.get("program_name", "")),
+        account_usd=float(account_usd),
+        eval_phases=tuple(eval_specs),
+        funded_phase=funded_spec,
+        payout_split_pct=split_pct,
+        challenge_fee_usd=fee_val,
+        funded_cycle_days=eff_funded_days,
+    )
+
+
+def _wilson_ci95(p_hat: float, n_eff: float) -> tuple[float, float]:
+    z = 1.959963984540054
+    z2 = z * z
+    denom = 1.0 + z2 / max(n_eff, 1.0)
+    center = (p_hat + z2 / (2.0 * max(n_eff, 1.0))) / denom
+    half = (
+        z
+        * math.sqrt(
+            max(0.0, (p_hat * (1.0 - p_hat) + z2 / (4.0 * max(n_eff, 1.0))) / max(n_eff, 1.0))
+        )
+    ) / denom
+    return max(0.0, center - half), min(1.0, center + half)
+
+
+def evaluate_multiphase_contract_ev(
+    blocks: tuple[np.ndarray, ...],
+    contract: PropContractSpec,
+    regime: Literal["Blended", "75%-Chop"] = "Blended",
+    *,
+    n_paths: int = 5_000,
+    mean_block_days: float = 7.0,
+    rng: np.random.Generator | None = None,
+) -> dict[str, object]:
+    """Simulate Fee -> Eval Phase(s) -> Funded Payout state machine with N_eff 95% CIs."""
+    if len(blocks) == 7:
+        is_chop, day_end, day_max, day_min_eq, _day_swept, day_max_first, day_min_bal = blocks
+    elif len(blocks) == 6:
+        is_chop, day_end, day_max, day_min_eq, _day_swept, day_max_first = blocks
+        day_min_bal = day_min_eq
+    else:
+        raise ValueError(f"UNEXPECTED_MC_BLOCKS_LEN:{len(blocks)}")
+
+    n_days = day_end.size
+    if regime == "Blended":
+        probs = np.full(n_days, 1.0 / n_days, dtype=np.float64)
+    elif regime == "75%-Chop":
+        chop_n = int(np.sum(is_chop))
+        trend_n = n_days - chop_n
+        if chop_n == 0 or trend_n == 0:
+            probs = np.full(n_days, 1.0 / n_days, dtype=np.float64)
+        else:
+            probs = np.where(is_chop, 0.75 / chop_n, 0.25 / trend_n)
+    else:
+        raise ValueError(f"Unsupported regime: {regime}")
+
+    total_horizon = sum(p.horizon_days for p in contract.eval_phases) + contract.funded_cycle_days
+    sample_idx = sample_stationary_block_indices(
+        n_days=n_days,
+        n_paths=n_paths,
+        horizon_days=max(1, total_horizon),
+        mean_block_days=mean_block_days,
+        day_jump_probs=probs,
+        rng=rng,
+    )
+
+    cursor = np.zeros(n_paths, dtype=np.int32)
+    alive = np.ones(n_paths, dtype=bool)
+    phase_pass_rates: dict[str, float] = {}
+
+    for ph in contract.eval_phases:
+        gain = np.zeros(n_paths, dtype=np.float64)
+        active_days = np.zeros(n_paths, dtype=np.int32)
+        max_day_gain = np.zeros(n_paths, dtype=np.float64)
+        ph_alive = alive.copy()
+        passed = np.zeros(n_paths, dtype=bool)
+        daily_arr = day_min_bal if ph.daily_loss_basis == "balance" else day_min_eq
+        c_frac = (
+            (
+                ph.consistency_max_single_day_pct / 100.0
+                if ph.consistency_max_single_day_pct > 1.0
+                else ph.consistency_max_single_day_pct
+            )
+            if ph.consistency_max_single_day_pct is not None
+            and ph.consistency_max_single_day_pct > 0.0
+            else None
+        )
+        base_target = float(ph.profit_target_usd or 0.0)
+
+        for _ in range(ph.horizon_days):
+            act_idx = np.flatnonzero(ph_alive)
+            if act_idx.size == 0:
+                break
+            d_i = sample_idx[act_idx, cursor[act_idx]]
+            cursor[act_idx] += 1
+
+            d_end = day_end[d_i]
+            d_max = day_max[d_i]
+            d_min = day_min_eq[d_i]
+            d_dly = daily_arr[d_i]
+            d_mf = day_max_first[d_i]
+
+            is_act_day = (
+                (np.abs(d_end) > 1e-9) | (np.abs(d_max) > 1e-9) | (np.abs(d_min) > 1e-9)
+            )
+            active_days[act_idx] += is_act_day.astype(np.int32)
+            max_day_gain[act_idx] = np.maximum(max_day_gain[act_idx], np.maximum(0.0, d_end))
+
+            if c_frac is not None:
+                eff_target = np.maximum(base_target, max_day_gain[act_idx] / c_frac)
+                hit_pass = ((gain[act_idx] + d_end) >= eff_target) & (
+                    active_days[act_idx] >= ph.min_trading_days
+                )
+            else:
+                eff_target = base_target
+                hit_pass = ((gain[act_idx] + d_max) >= eff_target) & (
+                    active_days[act_idx] >= ph.min_trading_days
+                )
+
+            hit_fail = ((gain[act_idx] + d_min) <= -ph.max_static_dd_usd) | (
+                d_dly <= -ph.daily_loss_limit_usd
+            )
+            both_pf = hit_pass & hit_fail
+            win_mask = (hit_pass & ~hit_fail) | (both_pf & d_mf)
+            fail_mask = hit_fail & ~win_mask
+
+            passed[act_idx[win_mask]] = True
+            ph_alive[act_idx[win_mask | fail_mask]] = False
+            cont = ~(win_mask | fail_mask)
+            gain[act_idx[cont]] += d_end[cont]
+
+        alive = passed
+        phase_pass_rates[ph.name] = round(float(np.mean(alive)) * 100.0, 2)
+
+    funded_gain = np.zeros(n_paths, dtype=np.float64)
+    funded_days = np.zeros(n_paths, dtype=np.int32)
+    f_alive = alive.copy()
+    f_ph = contract.funded_phase
+    f_daily_arr = day_min_bal if f_ph.daily_loss_basis == "balance" else day_min_eq
+    for _ in range(contract.funded_cycle_days):
+        act_idx = np.flatnonzero(f_alive)
+        if act_idx.size == 0:
+            break
+        d_i = sample_idx[act_idx, cursor[act_idx]]
+        cursor[act_idx] += 1
+
+        d_end = day_end[d_i]
+        d_max = day_max[d_i]
+        d_min = day_min_eq[d_i]
+        d_dly = f_daily_arr[d_i]
+        is_act_day = (np.abs(d_end) > 1e-9) | (np.abs(d_max) > 1e-9) | (np.abs(d_min) > 1e-9)
+        funded_days[act_idx] += is_act_day.astype(np.int32)
+
+        hit_fail = ((funded_gain[act_idx] + d_min) <= -f_ph.max_static_dd_usd) | (
+            d_dly <= -f_ph.daily_loss_limit_usd
+        )
+        f_alive[act_idx[hit_fail]] = False
+        surv = ~hit_fail
+        funded_gain[act_idx[surv]] += d_end[surv]
+
+    if contract.funded_target_cap_usd is not None:
+        capped_gain = np.minimum(np.maximum(0.0, funded_gain), contract.funded_target_cap_usd)
+    else:
+        capped_gain = np.maximum(0.0, funded_gain)
+
+    paid_mask = f_alive & (capped_gain > 0.0) & (funded_days >= f_ph.min_trading_days)
+    gross_no_refund = np.where(paid_mask, capped_gain * contract.payout_split_pct, 0.0)
+    refund_bonus = (
+        float(contract.challenge_fee_usd)
+        if (contract.fee_refunded_on_first_payout and contract.challenge_fee_usd is not None)
+        else 0.0
+    )
+    gross_payouts = np.where(paid_mask, gross_no_refund + refund_bonus, 0.0)
+
+    p_eval_all = float(np.mean(alive))
+    p_payout = float(np.mean(paid_mask))
+    n_eff_blocks = max(2.0, n_days / max(1.0, mean_block_days))
+    ci_lo, ci_hi = _wilson_ci95(p_payout, n_eff_blocks)
+
+    exp_gross_no_refund = float(np.mean(gross_no_refund))
+    exp_gross = float(np.mean(gross_payouts))
+    cond_payout = float(np.mean(gross_payouts[paid_mask])) if np.any(paid_mask) else 0.0
+    gross_ci_lo = ci_lo * cond_payout
+    gross_ci_hi = ci_hi * cond_payout
+    med_days_total = float(np.median(cursor[paid_mask])) if np.any(paid_mask) else -1.0
+
+    breakeven_fee = (
+        exp_gross_no_refund / max(1.0 - p_payout, 1e-9)
+        if contract.fee_refunded_on_first_payout
+        else exp_gross
+    )
+
+    if contract.challenge_fee_usd is not None:
+        fee = float(contract.challenge_fee_usd)
+        net_ev = exp_gross - fee
+        net_ci_lo = gross_ci_lo - fee
+        net_ci_hi = gross_ci_hi - fee
+        ev_per_day = net_ev / med_days_total if med_days_total > 0.0 else None
+        ev_status = "VERIFIED_FEE_NET_EV"
+    else:
+        net_ev = None
+        net_ci_lo = None
+        net_ci_hi = None
+        ev_per_day = None
+        ev_status = "BREAK_EVEN_ONLY_FEE_UNVERIFIED"
+
+    return {
+        "firm_slug": contract.firm_slug,
+        "account_usd": contract.account_usd,
+        "regime": regime,
+        "n_paths": int(n_paths),
+        "n_source_days": int(n_days),
+        "n_eff_blocks": round(n_eff_blocks, 2),
+        "phase_pass_rates_pct": phase_pass_rates,
+        "p_pass_all_eval_pct": round(p_eval_all * 100.0, 2),
+        "p_funded_payout_pct": round(p_payout * 100.0, 2),
+        "p_funded_payout_ci95_pct": [round(ci_lo * 100.0, 2), round(ci_hi * 100.0, 2)],
+        "expected_gross_payout_usd": round(exp_gross, 2),
+        "breakeven_fee_usd": round(breakeven_fee, 2),
+        "challenge_fee_usd": contract.challenge_fee_usd,
+        "net_ev_usd": round(net_ev, 2) if net_ev is not None else None,
+        "net_ev_ci95_usd": (
+            [round(net_ci_lo, 2), round(net_ci_hi, 2)]
+            if net_ci_lo is not None and net_ci_hi is not None
+            else None
+        ),
+        "med_days_to_payout": round(med_days_total, 1),
+        "ev_per_day_usd": round(ev_per_day, 2) if ev_per_day is not None else None,
+        "ev_status": ev_status,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Stage 5 Advisory Monitor: Episode-Time CUSUM for wallet-research Stage 1
 # ---------------------------------------------------------------------------
@@ -3524,11 +4294,16 @@ def update_roster_episode_cusum(
     """Update Page's dual-channel CUSUM (edge decay + behavioral tilt) for roster audit.
 
     Emits non-executing governance status (``OK`` / ``WARN_THROTTLE_0.5X`` /
-    ``KILL_CONTAIN_0X``) to feed the manual ``Contain -> Replace -> Version`` workflow.
+    ``KILL_CONTAIN_0X``) with an explicit terminal latch across restarts until a new
+    mandate generation resets the monitor.
     """
     if not baseline.qualified:
         state.status = "KILL_CONTAIN_0X"
         state.reasons = ("UNQUALIFIED_EPISODE_BASELINE",)
+        if config.latch_kill_state and not state.terminal_kill_latched:
+            state.terminal_kill_latched = True
+            state.latched_at_episode = state.episodes_observed
+            state.latched_reasons = state.reasons
         return state
     state.episodes_observed += 1
     z_pnl = (ep_return - baseline.mean_ep_return) / max(baseline.std_ep_return, 1e-5)
@@ -3567,6 +4342,15 @@ def update_roster_episode_cusum(
     if reasons:
         state.status = "KILL_CONTAIN_0X"
         state.reasons = tuple(reasons)
+        if config.latch_kill_state and not state.terminal_kill_latched:
+            state.terminal_kill_latched = True
+            state.latched_at_episode = state.episodes_observed
+            state.latched_reasons = tuple(reasons)
+        return state
+
+    if config.latch_kill_state and state.terminal_kill_latched:
+        state.status = "KILL_CONTAIN_0X"
+        state.reasons = state.latched_reasons or ("LATCHED_KILL_RETIREMENT",)
         return state
 
     warn_reasons: list[str] = []

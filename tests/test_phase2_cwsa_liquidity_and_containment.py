@@ -486,7 +486,9 @@ def test_retirement_latch_is_irreversible_even_if_subsequent_shadow_episode_wins
             ep_symbol_notional=np.array([0.5, 0.5], dtype=np.float64),
             bar_ts_ms=int(grid[307 + step_i]),
         )
-    assert st.roster_cusum.status == "OK"
+    assert st.cusum_pos == pytest.approx(0.0)
+    assert st.roster_cusum.status == "KILL_CONTAIN_0X"
+    assert st.roster_cusum.terminal_kill_latched is True
     assert st.state == prp.SeatState.RETIRED
     assert st.current_k_scale == pytest.approx(0.0)
 

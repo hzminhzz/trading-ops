@@ -440,12 +440,19 @@ def load_universe_asof(
 
         aliases_by_wid: dict[int, list[tuple[int, int, str]]] = {}
         if _table_exists(con, "wallet_aliases"):
-            for wid, alias, known_at, rid in con.execute(
-                "SELECT wallet_id, alias, known_at, rowid FROM wallet_aliases"
-            ).fetchall():
-                aliases_by_wid.setdefault(int(wid), []).append(
-                    (_parse_utc_us(known_at), int(rid), str(alias))
-                )
+            cols = {r[1] for r in con.execute("PRAGMA table_info(wallet_aliases)").fetchall()}
+            if "known_at" in cols:
+                for wid, alias, known_at, rid in con.execute(
+                    "SELECT wallet_id, alias, known_at, rowid FROM wallet_aliases"
+                ).fetchall():
+                    aliases_by_wid.setdefault(int(wid), []).append(
+                        (_parse_utc_us(known_at), int(rid), str(alias))
+                    )
+            else:
+                for wid, alias, rid in con.execute(
+                    "SELECT wallet_id, alias, rowid FROM wallet_aliases"
+                ).fetchall():
+                    aliases_by_wid.setdefault(int(wid), []).append((0, int(rid), str(alias)))
     finally:
         con.close()
 
@@ -3095,3 +3102,308 @@ def simulate_cwsa_one_shot_replay(
         l1_screen=l1_res,
         participation_audit=audit,
     )
+
+
+@dataclass(frozen=True)
+class CapacityAuditResult:
+    """Ex-post 1-minute bar participation and square-root market-impact diagnostic."""
+
+    evaluated_trades: int
+    unverified_volume_trades: int
+    max_participation: float
+    p95_participation: float
+    trades_gt_1pct: int
+    trades_gt_5pct: int
+    worst_coin: str | None
+    modeled_sqrt_impact_usd: float
+    status: Literal[
+        "OK",
+        "WARN_PARTICIPATION_GT_1PCT",
+        "CAPACITY_BREACH_GT_5PCT",
+        "UNPROVEN_VOLUME",
+    ]
+
+
+def audit_1m_bar_participation(
+    coins: Sequence[str],
+    executed_deltas: np.ndarray,
+    trade_open: np.ndarray,
+    quote_volume_on_grid: np.ndarray,
+    *,
+    impact_coeff_bps: float = 10.0,
+) -> CapacityAuditResult:
+    """Measure executed follower order participation against 1-minute USD quote volume."""
+    deltas = np.asarray(executed_deltas, dtype=np.float64)
+    opens = np.asarray(trade_open, dtype=np.float64)
+    qvols = np.asarray(quote_volume_on_grid, dtype=np.float64)
+    if deltas.shape != opens.shape or deltas.shape != qvols.shape:
+        raise ValueError(f"CAPACITY_SHAPE_MISMATCH:{deltas.shape}:{opens.shape}:{qvols.shape}")
+    if deltas.shape[0] != len(coins):
+        raise ValueError(f"COIN_COUNT_MISMATCH:{len(coins)}:{deltas.shape[0]}")
+
+    nz_s, nz_t = np.where(np.abs(deltas) > 1e-12)
+    evaluated = 0
+    unverified = 0
+    parts: list[float] = []
+    worst_coin: str | None = None
+    max_part = 0.0
+    trades_gt_1 = 0
+    trades_gt_5 = 0
+    impact_usd = 0.0
+
+    for si, ti in zip(nz_s.tolist(), nz_t.tolist()):
+        px = float(opens[si, ti])
+        if not (np.isfinite(px) and px > 0.0):
+            continue
+        evaluated += 1
+        notional = abs(float(deltas[si, ti])) * px
+        qv = float(qvols[si, ti])
+        if not (np.isfinite(qv) and qv > 0.0):
+            unverified += 1
+            continue
+        part = notional / qv
+        parts.append(part)
+        if part > max_part:
+            max_part = part
+            worst_coin = str(coins[si])
+        if part > 0.01:
+            trades_gt_1 += 1
+        if part > 0.05:
+            trades_gt_5 += 1
+        impact_usd += notional * (impact_coeff_bps * 1e-4) * math.sqrt(min(part, 1.0))
+
+    p95_part = float(np.quantile(parts, 0.95)) if parts else 0.0
+    if evaluated > 0 and unverified == evaluated:
+        status: Literal[
+            "OK",
+            "WARN_PARTICIPATION_GT_1PCT",
+            "CAPACITY_BREACH_GT_5PCT",
+            "UNPROVEN_VOLUME",
+        ] = "UNPROVEN_VOLUME"
+    elif trades_gt_5 > 0:
+        status = "CAPACITY_BREACH_GT_5PCT"
+    elif trades_gt_1 > 0:
+        status = "WARN_PARTICIPATION_GT_1PCT"
+    else:
+        status = "OK"
+
+    return CapacityAuditResult(
+        evaluated_trades=evaluated,
+        unverified_volume_trades=unverified,
+        max_participation=round(max_part, 6),
+        p95_participation=round(p95_part, 6),
+        trades_gt_1pct=trades_gt_1,
+        trades_gt_5pct=trades_gt_5,
+        worst_coin=worst_coin,
+        modeled_sqrt_impact_usd=round(impact_usd, 4),
+        status=status,
+    )
+
+
+def _lookup_1m_open_at_ms(
+    store_root: Path,
+    coin: str,
+    target_ms: int,
+    cache: dict[str, tuple[np.ndarray, np.ndarray]],
+) -> float | None:
+    """Look up exact 1m open price for ``coin`` at ``target_ms`` from Bybit or HL store."""
+    if coin not in cache:
+        ts_min = np.zeros(0, dtype=np.int64)
+        op_arr = np.zeros(0, dtype=np.float64)
+        bybit_dir = store_root / f"crypto_futures_minute_{coin}USDT_PERP"
+        hl_dir = store_root / f"crypto_futures_ohlcv_1m_HYPERLIQUID_{coin}_PERP"
+        pqs = sorted(bybit_dir.glob("year=*/month=*/data.parquet")) if bybit_dir.is_dir() else []
+        if not pqs and hl_dir.is_dir():
+            pqs = sorted(hl_dir.glob("year=*/month=*/day=*/data.parquet"))
+        if pqs:
+            df = (
+                pl.scan_parquet(
+                    [str(p) for p in pqs],
+                    schema=pl.Schema({"timestamp": pl.Datetime("us", "UTC"), "open": pl.Float64}),
+                    hive_partitioning=False,
+                    extra_columns="ignore",
+                    cast_options=pl.ScanCastOptions(
+                        datetime_cast="millisecond-upcast",
+                        float_cast="upcast",
+                    ),
+                )
+                .unique(subset="timestamp", keep="first")
+                .sort("timestamp")
+                .collect(engine="streaming")
+            )
+            if not df.is_empty():
+                ts_min = df["timestamp"].dt.epoch("ms").to_numpy().astype(np.int64, copy=False)
+                op_arr = df["open"].to_numpy().astype(np.float64, copy=False)
+        cache[coin] = (ts_min, op_arr)
+
+    ts_arr, open_arr = cache[coin]
+    if ts_arr.size == 0:
+        return None
+    idx = int(np.searchsorted(ts_arr, target_ms))
+    if idx < ts_arr.size and int(ts_arr[idx]) == target_ms:
+        px = float(open_arr[idx])
+        return px if np.isfinite(px) and px > 0.0 else None
+    return None
+
+
+def reconcile_live_executor_and_cwsa(
+    *,
+    executor_db: Path | str | None = None,
+    cwsa_paper_dbs: Sequence[Path | str] = (),
+    store_root: Path | str | None = None,
+) -> dict[str, Any]:
+    """Reconcile read-only live Bybit executor & CWSA paper SQLite timing and slippage evidence."""
+    out: dict[str, Any] = {
+        "executor": {"status": "BLOCKED_EVIDENCE:NO_EXECUTOR_DB"},
+        "cwsa_paper": [],
+    }
+    price_cache: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+    resolved_store = Path(store_root).expanduser() if store_root is not None else None
+
+    if executor_db is not None:
+        edb = Path(executor_db).expanduser()
+        if not edb.exists():
+            out["executor"] = {"status": f"BLOCKED_EVIDENCE:MISSING_EXECUTOR_DB:{edb}"}
+        else:
+            con = sqlite3.connect(f"file:{edb.resolve()}?mode=ro", uri=True)
+            try:
+                if con.execute("PRAGMA quick_check").fetchone()[0] != "ok":
+                    raise ValueError(f"EXECUTOR_INTEGRITY_FAILED:{edb}")
+                wave_rows = con.execute(
+                    "SELECT next_cp_ms, processed_at_ms FROM processed_waves WHERE next_cp_ms > 0"
+                ).fetchall()
+                wave_lags = [float(proc - (cp - 300_000)) for cp, proc in wave_rows]
+
+                intent_cols = {
+                    r[1] for r in con.execute("PRAGMA table_info(order_intents)").fetchall()
+                }
+                has_fill_px = bool({"avg_price", "fill_price", "exec_price"} & intent_cols)
+                has_fill_fee = bool({"exec_fee", "fee", "fee_usd"} & intent_cols)
+
+                intents = con.execute(
+                    """
+                    SELECT o.symbol, o.quantity, o.status, o.created_at_ms, w.next_cp_ms
+                    FROM order_intents o
+                    JOIN processed_waves w USING (wave_key)
+                    WHERE w.next_cp_ms > 0
+                    """
+                ).fetchall()
+            finally:
+                con.close()
+
+            filled_cnt = sum(1 for r in intents if str(r[2]) == "FILLED")
+            non_filled_cnt = len(intents) - filled_cnt
+            disp_lags = [float(r[3] - (r[4] - 300_000)) for r in intents]
+
+            matched_lag_bps: list[float] = []
+            unmatched_intents = 0
+            if resolved_store is not None and resolved_store.exists():
+                for sym, qty_raw, status_raw, created_ms, next_cp_ms in intents:
+                    if str(status_raw) != "FILLED":
+                        continue
+                    qty = float(qty_raw)
+                    if abs(qty) <= 1e-12:
+                        continue
+                    sign = 1.0 if qty > 0.0 else -1.0
+                    coin = str(sym).split("/")[0]
+                    cp_min = ((int(next_cp_ms) - 300_000) // 60_000) * 60_000
+                    disp_min = (int(created_ms) // 60_000) * 60_000
+                    px_cp = _lookup_1m_open_at_ms(resolved_store, coin, cp_min, price_cache)
+                    px_disp = _lookup_1m_open_at_ms(resolved_store, coin, disp_min, price_cache)
+                    if px_cp is not None and px_disp is not None:
+                        # Adverse drift > 0 when price moved against the follower's order direction.
+                        matched_lag_bps.append(sign * (px_disp - px_cp) / px_cp * 1e4)
+                    else:
+                        unmatched_intents += 1
+
+            exec_summary: dict[str, Any] = {
+                "status": "PARTIAL_TIMING_AND_LAG_DRIFT_VERIFIED" if wave_lags else "EMPTY_WAVES",
+                "waves_count": len(wave_lags),
+                "wave_lag_ms_p50": round(float(np.median(wave_lags)), 1) if wave_lags else None,
+                "wave_lag_ms_p90": (
+                    round(float(np.quantile(wave_lags, 0.90)), 1) if wave_lags else None
+                ),
+                "wave_lag_ms_max": round(float(np.max(wave_lags)), 1) if wave_lags else None,
+                "intents_total": len(intents),
+                "intents_filled": filled_cnt,
+                "intents_non_filled": non_filled_cnt,
+                "dispatch_lag_ms_p50": round(float(np.median(disp_lags)), 1) if disp_lags else None,
+                "dispatch_lag_ms_p90": (
+                    round(float(np.quantile(disp_lags, 0.90)), 1) if disp_lags else None
+                ),
+                "dispatch_lag_ms_max": round(float(np.max(disp_lags)), 1) if disp_lags else None,
+                "matched_1m_lag_intents": len(matched_lag_bps),
+                "unmatched_1m_intents": unmatched_intents,
+                "mean_adverse_dispatch_lag_bps": (
+                    round(float(np.mean(matched_lag_bps)), 4) if matched_lag_bps else None
+                ),
+                "p50_dispatch_lag_bps": (
+                    round(float(np.median(matched_lag_bps)), 4) if matched_lag_bps else None
+                ),
+                "p90_dispatch_lag_bps": (
+                    round(float(np.quantile(matched_lag_bps, 0.90)), 4)
+                    if matched_lag_bps
+                    else None
+                ),
+                "broker_fill_slippage_status": (
+                    "AVAILABLE"
+                    if (has_fill_px and has_fill_fee)
+                    else "BLOCKED_EVIDENCE:EXECUTOR_SQLITE_OMITS_FILL_PRICE_AND_FEE"
+                ),
+            }
+            out["executor"] = exec_summary
+
+    cwsa_list: list[dict[str, Any]] = []
+    for raw_db in cwsa_paper_dbs:
+        pdb = Path(raw_db).expanduser()
+        if not pdb.exists():
+            cwsa_list.append({"db": pdb.name, "status": f"BLOCKED_EVIDENCE:MISSING:{pdb}"})
+            continue
+        con = sqlite3.connect(f"file:{pdb.resolve()}?mode=ro", uri=True)
+        try:
+            if con.execute("PRAGMA quick_check").fetchone()[0] != "ok":
+                raise ValueError(f"CWSA_INTEGRITY_FAILED:{pdb}")
+            events_cnt = (
+                int(con.execute("SELECT count(*) FROM events").fetchone()[0])
+                if _table_exists(con, "events")
+                else 0
+            )
+            pub_lags: list[float] = []
+            complete_cnt = 0
+            n_waves = 0
+            if _table_exists(con, "chapter2_wave_receipts"):
+                for (payload_raw,) in con.execute(
+                    "SELECT payload FROM chapter2_wave_receipts"
+                ).fetchall():
+                    n_waves += 1
+                    obj = json.loads(payload_raw)
+                    if obj.get("coverage_complete"):
+                        complete_cnt += 1
+                    cp_ms = obj.get("checkpoint_ms")
+                    rec_ms = obj.get("recorded_ms")
+                    if isinstance(cp_ms, (int, float)) and isinstance(rec_ms, (int, float)):
+                        pub_lags.append(float(rec_ms - cp_ms))
+        finally:
+            con.close()
+
+        cwsa_list.append(
+            {
+                "db": f"{pdb.parent.name}/{pdb.name}",
+                "wave_receipts_count": n_waves,
+                "coverage_complete_frac": round(complete_cnt / max(1, n_waves), 6)
+                if n_waves
+                else 0.0,
+                "publish_lag_ms_p50": round(float(np.median(pub_lags)), 1) if pub_lags else None,
+                "publish_lag_ms_p95": (
+                    round(float(np.quantile(pub_lags, 0.95)), 1) if pub_lags else None
+                ),
+                "pm03_events_count": events_cnt,
+                "cwsa_pm03_fills_status": (
+                    "AVAILABLE"
+                    if events_cnt > 0
+                    else "BLOCKED_EVIDENCE:CWSA_PAPER_EVENTS_EMPTY_NO_SIGNED_MANDATE"
+                ),
+            }
+        )
+    out["cwsa_paper"] = cwsa_list
+    return out

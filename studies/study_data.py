@@ -7,10 +7,11 @@ import hashlib
 import itertools
 import json
 import os
+import sqlite3
 import urllib.parse
 import urllib.request
 from collections import defaultdict
-from collections.abc import Callable, MutableMapping, Sequence
+from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -575,7 +576,37 @@ class LazyPrices:
         )
 
         self.cache: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+        self.vol_cache: dict[tuple[str, int, int, int], np.ndarray] = {}
+        self._bars_1m_cache: dict[str, tuple[np.ndarray, np.ndarray, np.ndarray]] = {}
         self.stats: dict[str, dict] = {}
+
+    def bybit_minute_paths(
+        self,
+        coin: str,
+        *,
+        start_dt: datetime | None = None,
+        end_dt: datetime | None = None,
+    ) -> list[str]:
+        """Return sorted Bybit USDT perpetual 1m Parquet files overlapping the UTC range."""
+        coin_dir = self.store_root / f"crypto_futures_minute_{coin}USDT_PERP"
+        if not coin_dir.is_dir():
+            return []
+        eff_start = self.start_dt if start_dt is None else start_dt
+        eff_end = self.end_dt if end_dt is None else end_dt
+        eff_end_incl = eff_end - timedelta(milliseconds=1)
+        start_ym = (eff_start.year, eff_start.month)
+        end_ym = (eff_end_incl.year, eff_end_incl.month)
+        selected: list[str] = []
+        for path in sorted(coin_dir.glob("year=*/month=*/data.parquet")):
+            year = month = None
+            for part in path.parts:
+                if part.startswith("year="):
+                    year = int(part.removeprefix("year="))
+                elif part.startswith("month="):
+                    month = int(part.removeprefix("month="))
+            if year is None or month is None or (start_ym <= (year, month) <= end_ym):
+                selected.append(str(path))
+        return selected
 
     def coin_paths(
         self,
@@ -736,11 +767,38 @@ class LazyPrices:
         self.stats[coin] = stat
         return trade, mark
 
+    def load_1m_arrays(self, coin: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Return sorted ``(ts_ms, open, close)`` 1-minute bar arrays across ``[start_dt, end_dt)``."""
+        if coin in self._bars_1m_cache:
+            return self._bars_1m_cache[coin]
+        plan = self.build_scan_plan(coin)
+        if plan is None:
+            empty_ts = np.zeros(0, dtype=np.int64)
+            empty_px = np.zeros(0, dtype=np.float64)
+            self._bars_1m_cache[coin] = (empty_ts, empty_px, empty_px)
+            return self._bars_1m_cache[coin]
+        bars = plan.collect(engine=self.engine)
+        if bars.is_empty():
+            empty_ts = np.zeros(0, dtype=np.int64)
+            empty_px = np.zeros(0, dtype=np.float64)
+            self._bars_1m_cache[coin] = (empty_ts, empty_px, empty_px)
+            return self._bars_1m_cache[coin]
+        ts_ms = bars["timestamp"].dt.epoch("ms").to_numpy().astype(np.int64, copy=False)
+        open_arr = bars["open"].to_numpy().astype(np.float64, copy=False)
+        close_arr = bars["close"].to_numpy().astype(np.float64, copy=False)
+        self._bars_1m_cache[coin] = (ts_ms, open_arr, close_arr)
+        return self._bars_1m_cache[coin]
+
+    def get_quote_volume_on_grid(self, coin: str) -> np.ndarray:
+        """Return 1-minute execution-bar USD quote volume aligned to ``self.grid``."""
+        return load_1m_volumes_on_grid([coin], self.grid, self, self.vol_cache)[0]
+
 
 OHLCV_VOL_SCAN_SCHEMA = pl.Schema(
     {
         "timestamp": pl.Datetime("us", "UTC"),
         "open": pl.Float64,
+        "close": pl.Float64,
         "volume": pl.Float64,
         "quote_volume": pl.Float64,
     }
@@ -758,9 +816,15 @@ def _scan_vike_volume_lf(
     vol_exprs: list[pl.Expr] = []
     if "quote_volume" in cols:
         vol_exprs.append(pl.col("quote_volume").cast(pl.Float64).fill_nan(None))
-    if "volume" in cols and "open" in cols:
+    price_cols = [c for c in ("open", "close") if c in cols]
+    if "volume" in cols and price_cols:
+        px_expr = (
+            pl.coalesce(*(pl.col(c).cast(pl.Float64).fill_nan(None) for c in price_cols))
+            if len(price_cols) > 1
+            else pl.col(price_cols[0]).cast(pl.Float64).fill_nan(None)
+        )
         vol_exprs.append(
-            (pl.col("volume").cast(pl.Float64) * pl.col("open").cast(pl.Float64)).fill_nan(None)
+            (pl.col("volume").cast(pl.Float64).fill_nan(None) * px_expr).fill_nan(None)
         )
     if not vol_exprs:
         return None
@@ -791,6 +855,40 @@ def _scan_vike_volume_lf(
     )
 
 
+def _scan_store_volume_lf(
+    paths: list[str],
+    start_lit: pl.Expr,
+    end_lit: pl.Expr,
+    src_rank: int,
+) -> pl.LazyFrame:
+    return (
+        pl.scan_parquet(
+            paths,
+            schema=OHLCV_VOL_SCAN_SCHEMA,
+            hive_partitioning=False,
+            missing_columns="insert",
+            extra_columns="ignore",
+            cast_options=OHLCV_CAST_OPTIONS,
+        )
+        .filter((pl.col("timestamp") >= start_lit) & (pl.col("timestamp") < end_lit))
+        .with_columns(
+            pl.coalesce(
+                pl.col("quote_volume").fill_nan(None),
+                (
+                    pl.col("volume").fill_nan(None)
+                    * pl.coalesce(
+                        pl.col("close").fill_nan(None),
+                        pl.col("open").fill_nan(None),
+                    )
+                ).fill_nan(None),
+            ).alias("vol_usd")
+        )
+        .select(["timestamp", "vol_usd"])
+        .filter(pl.col("vol_usd").is_not_null() & pl.col("vol_usd").is_not_nan())
+        .with_columns(pl.lit(src_rank, dtype=pl.UInt8).alias("_src"))
+    )
+
+
 def load_1m_volumes_on_grid(
     coins: Sequence[str],
     grid_ms: np.ndarray,
@@ -805,7 +903,7 @@ def load_1m_volumes_on_grid(
         return np.zeros((len(coins), 0), dtype=np.float64)
 
     cache: MutableMapping[tuple[str, int, int, int], np.ndarray] = (
-        vol_cache if vol_cache is not None else {}
+        vol_cache if vol_cache is not None else prices.vol_cache
     )
     g_key = (int(grid_arr[0]), int(grid_arr[-1]), int(grid_arr.size))
     missing = [c for c in coins if (c, *g_key) not in cache]
@@ -829,35 +927,18 @@ def load_1m_volumes_on_grid(
 
         for coin in missing:
             key = (coin, *g_key)
-            paths = prices.coin_paths(coin, start_day=exp_start_day, end_day=exp_end_day)
+            bybit_paths = prices.bybit_minute_paths(coin, start_dt=start_dt, end_dt=end_dt)
+            hl_paths = prices.coin_paths(coin, start_day=exp_start_day, end_day=exp_end_day)
             vike_path = prices._vike_path(coin)
             parts: list[pl.LazyFrame] = []
-            if paths:
-                store_lf = (
-                    pl.scan_parquet(
-                        paths,
-                        schema=OHLCV_VOL_SCAN_SCHEMA,
-                        hive_partitioning=False,
-                        missing_columns="insert",
-                        extra_columns="ignore",
-                        cast_options=OHLCV_CAST_OPTIONS,
-                    )
-                    .filter((pl.col("timestamp") >= start_lit) & (pl.col("timestamp") < end_lit))
-                    .with_columns(
-                        pl.coalesce(
-                            pl.col("quote_volume").fill_nan(None),
-                            (pl.col("volume") * pl.col("open")).fill_nan(None),
-                        ).alias("vol_usd")
-                    )
-                    .select(["timestamp", "vol_usd"])
-                    .filter(pl.col("vol_usd").is_not_null() & pl.col("vol_usd").is_not_nan())
-                    .with_columns(pl.lit(0, dtype=pl.UInt8).alias("_src"))
-                )
-                parts.append(store_lf)
+            if bybit_paths:
+                parts.append(_scan_store_volume_lf(bybit_paths, start_lit, end_lit, 0))
+            if hl_paths:
+                parts.append(_scan_store_volume_lf(hl_paths, start_lit, end_lit, 1))
             if vike_path is not None:
                 vike_lf = _scan_vike_volume_lf(vike_path, start_lit, end_lit)
                 if vike_lf is not None:
-                    parts.append(vike_lf.with_columns(pl.lit(1, dtype=pl.UInt8).alias("_src")))
+                    parts.append(vike_lf.with_columns(pl.lit(2, dtype=pl.UInt8).alias("_src")))
             if not parts:
                 cache[key] = np.full(grid_arr.size, np.nan, dtype=np.float64)
                 continue
@@ -1240,3 +1321,357 @@ def eligible_fills(
             chosen[alias] = usable
 
     return chosen, updated
+
+
+def audit_user_fills_pagination(
+    payload: Mapping[str, object],
+    *,
+    start_ms: int,
+    end_ms: int,
+    page_size: int = 2000,
+    max_pages: int = 12,
+    tail_gap_tolerance_ms: int = 7 * 86_400_000,
+) -> dict[str, object]:
+    """Audit Hyperliquid ``userFillsByTime`` output for truncation and tail-window gaps.
+
+    Hyperliquid Info caps ``userFillsByTime`` responses at 2,000 rows per request and can
+    return either 0 rows or only the most recent 2,000-fill tail for high-frequency traders.
+    Any flagged output is marked incomplete for screening and never usable for backtests.
+    """
+    fills_raw = payload.get("fills")
+    fills = (
+        fills_raw
+        if isinstance(fills_raw, Sequence) and not isinstance(fills_raw, (str, bytes))
+        else ()
+    )
+    pages_raw = payload.get("pages", 0)
+    pages = int(pages_raw) if isinstance(pages_raw, (int, float)) else 0
+    truncated_flag = bool(payload.get("truncated", False))
+
+    timestamps: list[int] = []
+    for row in fills:
+        if not isinstance(row, Mapping):
+            continue
+        t_val = row.get("t", row.get("time", row.get("ts")))
+        if isinstance(t_val, (int, float)) and not isinstance(t_val, bool):
+            timestamps.append(int(t_val))
+
+    n_fills = len(fills)
+    min_fill_ts = min(timestamps) if timestamps else None
+    max_fill_ts = max(timestamps) if timestamps else None
+
+    flags: list[str] = []
+    if truncated_flag or pages >= max_pages or n_fills >= max_pages * page_size:
+        flags.append("TRUNCATED_PAGE_CAP")
+    if n_fills == 0:
+        flags.append("UNVERIFIED_ZERO_FILLS")
+    elif (
+        n_fills >= page_size
+        and min_fill_ts is not None
+        and min_fill_ts > (start_ms + tail_gap_tolerance_ms)
+    ):
+        flags.append("TAIL_WINDOW_TRUNCATED")
+
+    return {
+        "n_fills": n_fills,
+        "pages": pages,
+        "min_fill_ts": min_fill_ts,
+        "max_fill_ts": max_fill_ts,
+        "start_ms": int(start_ms),
+        "end_ms": int(end_ms),
+        "flags": flags,
+        "screening_complete": len(flags) == 0,
+        "usable_for_backtest": False,
+    }
+
+
+@dataclass(frozen=True)
+class WalletMarkoutProfile:
+    """Post-fill multi-horizon markout and sub-5m churn profile for one trader."""
+
+    label: str
+    evaluated_fills: int
+    sub_5m_churn_frac: float
+    markout_60s_bps: float | None
+    leader_pre_cp_edge_bps: float | None
+    follower_post_cp_markout_bps: float | None
+    maker_rebate_frac: float | None
+    status: Literal[
+        "COPYABLE_DRIFT",
+        "REJECT_SUB5M_CHURN",
+        "REJECT_NEGATIVE_5M_MARKOUT",
+        "UNPROVEN_PRICES",
+    ]
+
+
+def _lookup_bar_open(ts_arr: np.ndarray, open_arr: np.ndarray, targets_ms: np.ndarray) -> np.ndarray:
+    if ts_arr.size == 0 or targets_ms.size == 0:
+        return np.full(targets_ms.size, np.nan, dtype=np.float64)
+    idx = np.searchsorted(ts_arr, targets_ms)
+    clipped = np.minimum(idx, ts_arr.size - 1)
+    matched = (idx < ts_arr.size) & (ts_arr[clipped] == targets_ms)
+    return np.where(matched, open_arr[clipped], np.nan)
+
+
+def compute_fill_latency_markouts(
+    label: str,
+    fills_by_coin: Mapping[str, pl.DataFrame],
+    prices: LazyPrices,
+    *,
+    split_ms: int | None = None,
+    post_horizon_ms: int = 900_000,
+    max_sub_5m_churn_frac: float = 0.75,
+    min_follower_post_cp_bps: float = 0.0,
+    min_evaluated_fills: int = 5,
+) -> WalletMarkoutProfile:
+    """Decompose fills into sub-5m churn, 60s/300s pre-checkpoint edge, and post-checkpoint drift.
+
+    Separates genuine >=5m directional drift from passive maker rebates and sub-5m scalping
+    that decays before the CWSA 5-minute checkpoint executes.
+    """
+    gross_sz_total = 0.0
+    net_5m_sz_total = 0.0
+    eval_fills = 0
+    total_w = 0.0
+    sum_w_60s = 0.0
+    sum_w_pre = 0.0
+    sum_w_post = 0.0
+    fee_vals: list[np.ndarray] = []
+
+    for coin in sorted(fills_by_coin):
+        if not cr.is_hl_perp_coin(coin):
+            continue
+        df = fills_by_coin[coin]
+        if split_ms is not None:
+            df = df.filter(pl.col("ts") < split_ms)
+        if df.is_empty():
+            continue
+
+        ts = df["ts"].to_numpy().astype(np.int64, copy=False)
+        sign = df["sign"].to_numpy().astype(np.float64, copy=False)
+        sz = np.abs(df["sz"].to_numpy().astype(np.float64, copy=False))
+        cp_next = ((ts // 300_000) + 1) * 300_000
+
+        gross_sz_total += float(np.sum(sz))
+        uniq_cp, inv = np.unique(cp_next, return_inverse=True)
+        bucket_net = np.bincount(inv, weights=sign * sz, minlength=uniq_cp.size)
+        net_5m_sz_total += float(np.sum(np.abs(bucket_net)))
+
+        if "fee" in df.columns:
+            fee_col = df["fee"].cast(pl.Float64, strict=False).to_numpy()
+            valid_fee = np.isfinite(fee_col)
+            if np.any(valid_fee):
+                fee_vals.append(fee_col[valid_fee])
+
+        bar_ts, bar_open, _bar_close = prices.load_1m_arrays(coin)
+        if bar_ts.size == 0:
+            continue
+        t_min = (ts // 60_000) * 60_000
+        open_0 = _lookup_bar_open(bar_ts, bar_open, t_min)
+        if "px" in df.columns:
+            px_raw = df["px"].cast(pl.Float64, strict=False).to_numpy()
+            p_0 = np.where(np.isfinite(px_raw) & (px_raw > 0.0), px_raw, open_0)
+        else:
+            p_0 = open_0
+        p_60s = _lookup_bar_open(bar_ts, bar_open, t_min + 60_000)
+        p_cp300 = _lookup_bar_open(bar_ts, bar_open, cp_next)
+        p_post = _lookup_bar_open(bar_ts, bar_open, cp_next + post_horizon_ms)
+
+        ok = (
+            np.isfinite(p_0)
+            & (p_0 > 0.0)
+            & np.isfinite(p_60s)
+            & np.isfinite(p_cp300)
+            & (p_cp300 > 0.0)
+            & np.isfinite(p_post)
+            & (sz > 0.0)
+        )
+        if split_ms is not None:
+            ok = (
+                ok
+                & ((t_min + 60_000) < split_ms)
+                & (cp_next < split_ms)
+                & ((cp_next + post_horizon_ms) < split_ms)
+            )
+        if not np.any(ok):
+            continue
+
+        w = sz[ok] * p_0[ok]
+        s_ok = sign[ok]
+        eval_fills += int(np.count_nonzero(ok))
+        total_w += float(np.sum(w))
+        sum_w_60s += float(np.sum(w * s_ok * (p_60s[ok] - p_0[ok]) / p_0[ok]))
+        sum_w_pre += float(np.sum(w * s_ok * (p_cp300[ok] - p_0[ok]) / p_0[ok]))
+        sum_w_post += float(np.sum(w * s_ok * (p_post[ok] - p_cp300[ok]) / p_cp300[ok]))
+
+    churn_frac = (
+        1.0 - net_5m_sz_total / max(gross_sz_total, 1e-12) if gross_sz_total > 1e-12 else 0.0
+    )
+    rebate_frac: float | None = None
+    if fee_vals:
+        all_fees = np.concatenate(fee_vals)
+        if all_fees.size > 0:
+            rebate_frac = round(float(np.mean(all_fees < 0.0)), 6)
+
+    if eval_fills < min_evaluated_fills or total_w <= 1e-12:
+        status: Literal[
+            "COPYABLE_DRIFT",
+            "REJECT_SUB5M_CHURN",
+            "REJECT_NEGATIVE_5M_MARKOUT",
+            "UNPROVEN_PRICES",
+        ] = (
+            "REJECT_SUB5M_CHURN"
+            if (gross_sz_total > 1e-12 and churn_frac > max_sub_5m_churn_frac)
+            else "UNPROVEN_PRICES"
+        )
+        return WalletMarkoutProfile(
+            label=label,
+            evaluated_fills=eval_fills,
+            sub_5m_churn_frac=round(churn_frac, 6),
+            markout_60s_bps=None,
+            leader_pre_cp_edge_bps=None,
+            follower_post_cp_markout_bps=None,
+            maker_rebate_frac=rebate_frac,
+            status=status,
+        )
+
+    m60 = (sum_w_60s / total_w) * 1e4
+    pre_edge = (sum_w_pre / total_w) * 1e4
+    post_cp = (sum_w_post / total_w) * 1e4
+
+    if churn_frac > max_sub_5m_churn_frac:
+        status = "REJECT_SUB5M_CHURN"
+    elif post_cp < min_follower_post_cp_bps:
+        status = "REJECT_NEGATIVE_5M_MARKOUT"
+    else:
+        status = "COPYABLE_DRIFT"
+
+    return WalletMarkoutProfile(
+        label=label,
+        evaluated_fills=eval_fills,
+        sub_5m_churn_frac=round(churn_frac, 6),
+        markout_60s_bps=round(m60, 4),
+        leader_pre_cp_edge_bps=round(pre_edge, 4),
+        follower_post_cp_markout_bps=round(post_cp, 4),
+        maker_rebate_frac=rebate_frac,
+        status=status,
+    )
+
+
+def discover_reservoir_pit_cohort(
+    archive_paths: Sequence[Path | str],
+    *,
+    train_start: int | datetime,
+    train_end: int | datetime,
+    registry_db: Path | str | None = None,
+) -> tuple[list[cr.WalletRecord], str, str]:
+    """Discover all Hyperliquid perp wallets active in Reservoir strictly before ``train_end``.
+
+    Never reads present-day ``exclusions`` or ``monitoring.configured`` from SQLite,
+    eliminating backward exclusion leakage while labeling unregistered wallets ``R#<hash8>``.
+    """
+    start_dt = to_utc_datetime(train_start)
+    end_dt = to_utc_datetime(train_end)
+    if end_dt <= start_dt:
+        raise ValueError("INVALID_UTC_WINDOW")
+
+    end_exclusive_day = (end_dt - timedelta(milliseconds=1)).date().isoformat()
+    start_day = start_dt.date().isoformat()
+    train_paths = []
+    for raw_p in archive_paths:
+        p_str = str(raw_p)
+        if "day=" in p_str:
+            day_str = p_str.split("day=")[-1][:10]
+            if not (start_day <= day_str <= end_exclusive_day):
+                continue
+        train_paths.append(p_str)
+    if not train_paths:
+        raise ValueError("EMPTY_TRAIN_ARCHIVE_PATHS")
+
+    perp_expr = (
+        pl.col("coin").is_not_null()
+        & (pl.col("coin").str.len_bytes() > 0)
+        & (~pl.col("coin").str.starts_with("@"))
+        & (~pl.col("coin").str.starts_with("#"))
+        & (~pl.col("coin").str.contains("/", literal=True))
+        & (~pl.col("coin").str.contains(":", literal=True))
+    )
+    start_lit = pl.lit(start_dt, dtype=pl.Datetime("us", "UTC"))
+    end_lit = pl.lit(end_dt, dtype=pl.Datetime("us", "UTC"))
+    addrs_df = (
+        pl.scan_parquet(
+            train_paths,
+            hive_partitioning=False,
+            extra_columns="ignore",
+            cast_options=pl.ScanCastOptions(datetime_cast="millisecond-upcast"),
+        )
+        .filter(
+            (pl.col("dex") == "hyperliquid")
+            & (pl.col("exchange_ts") >= start_lit)
+            & (pl.col("exchange_ts") < end_lit)
+            & perp_expr
+        )
+        .select(pl.col("wallet").str.to_lowercase().alias("wallet"))
+        .unique()
+        .sort("wallet")
+        .collect(engine="streaming")
+    )
+    active_addrs = [str(w) for w in addrs_df["wallet"].to_list() if w]
+
+    known_map: dict[str, tuple[int, str | None]] = {}
+    if registry_db is not None:
+        db_path = Path(registry_db).expanduser()
+        if db_path.exists():
+            con = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+            try:
+                wa_cols = {
+                    r[1] for r in con.execute("PRAGMA table_info(wallet_aliases)").fetchall()
+                }
+                alias_order = "wa.known_at DESC, rowid DESC" if "known_at" in wa_cols else "rowid DESC"
+                rows = con.execute(
+                    f"""
+                    SELECT w.wallet_id,
+                           lower(w.address) AS address,
+                           (
+                               SELECT wa.alias
+                               FROM wallet_aliases wa
+                               WHERE wa.wallet_id = w.wallet_id
+                               ORDER BY {alias_order}
+                               LIMIT 1
+                           ) AS alias
+                    FROM wallets w
+                    ORDER BY w.wallet_id
+                    """
+                ).fetchall()
+                for wid, addr, alias in rows:
+                    known_map[str(addr)] = (int(wid), str(alias) if alias is not None else None)
+            finally:
+                con.close()
+
+    records: list[cr.WalletRecord] = []
+    unregistered_idx = 0
+    for addr in active_addrs:
+        if addr in known_map:
+            wid, alias = known_map[addr]
+            records.append(
+                cr.WalletRecord(
+                    wallet_id=wid,
+                    address=addr,
+                    alias=alias,
+                    configured=False,
+                    excluded=False,
+                )
+            )
+        else:
+            unregistered_idx += 1
+            h8 = hashlib.sha256(addr.encode()).hexdigest()[:8]
+            records.append(
+                cr.WalletRecord(
+                    wallet_id=-unregistered_idx,
+                    address=addr,
+                    alias=f"R#{h8}",
+                    configured=False,
+                    excluded=False,
+                )
+            )
+    return records, cr.roster_digest(records), "EX_POST_RESERVOIR_ARCHIVE_ZERO_EXCLUSION_LEAKAGE"

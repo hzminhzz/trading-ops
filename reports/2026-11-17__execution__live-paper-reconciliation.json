@@ -1,0 +1,66 @@
+{
+  "dextrabot_pagination_audit": {
+    "flag_counts": {
+      "TAIL_WINDOW_TRUNCATED": 9,
+      "TRUNCATED_PAGE_CAP": 1,
+      "UNVERIFIED_ZERO_FILLS": 5
+    },
+    "incomplete_count": 15,
+    "screening_complete_count": 164,
+    "status": "COMPLETED",
+    "total_files": 179,
+    "usable_for_backtest_count": 0,
+    "window_utc": "2026-10-08T00:00Z..2026-11-08T00:00Z"
+  },
+  "generated_utc": "2026-11-17T19:42:17.292773+00:00",
+  "reconciliation": {
+    "cwsa_paper": [
+      {
+        "coverage_complete_frac": 0.994427,
+        "cwsa_pm03_fills_status": "BLOCKED_EVIDENCE:CWSA_PAPER_EVENTS_EMPTY_NO_SIGNED_MANDATE",
+        "db": "A/paper-events.sqlite3",
+        "pm03_events_count": 0,
+        "publish_lag_ms_p50": 100478.0,
+        "publish_lag_ms_p95": 4739026.0,
+        "wave_receipts_count": 1615
+      },
+      {
+        "coverage_complete_frac": 0.99257,
+        "cwsa_pm03_fills_status": "BLOCKED_EVIDENCE:CWSA_PAPER_EVENTS_EMPTY_NO_SIGNED_MANDATE",
+        "db": "B/paper-events.sqlite3",
+        "pm03_events_count": 0,
+        "publish_lag_ms_p50": 100786.0,
+        "publish_lag_ms_p95": 4739026.0,
+        "wave_receipts_count": 1615
+      },
+      {
+        "coverage_complete_frac": 0.99257,
+        "cwsa_pm03_fills_status": "BLOCKED_EVIDENCE:CWSA_PAPER_EVENTS_EMPTY_NO_SIGNED_MANDATE",
+        "db": "C/paper-events.sqlite3",
+        "pm03_events_count": 0,
+        "publish_lag_ms_p50": 85772.0,
+        "publish_lag_ms_p95": 4739026.0,
+        "wave_receipts_count": 1615
+      }
+    ],
+    "executor": {
+      "broker_fill_slippage_status": "BLOCKED_EVIDENCE:EXECUTOR_SQLITE_OMITS_FILL_PRICE_AND_FEE",
+      "dispatch_lag_ms_max": 286215.0,
+      "dispatch_lag_ms_p50": 241717.0,
+      "dispatch_lag_ms_p90": 286215.0,
+      "intents_filled": 54,
+      "intents_non_filled": 0,
+      "intents_total": 54,
+      "matched_1m_lag_intents": 46,
+      "mean_adverse_dispatch_lag_bps": -5.8987,
+      "p50_dispatch_lag_bps": -11.2109,
+      "p90_dispatch_lag_bps": 26.9926,
+      "status": "PARTIAL_TIMING_AND_LAG_DRIFT_VERIFIED",
+      "unmatched_1m_intents": 8,
+      "wave_lag_ms_max": 297006.0,
+      "wave_lag_ms_p50": 37916.0,
+      "wave_lag_ms_p90": 41739.8,
+      "waves_count": 864
+    }
+  }
+}

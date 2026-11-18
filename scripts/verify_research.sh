@@ -10,6 +10,7 @@ uv run --frozen --group dev ruff check \
     studies/study_data.py \
     studies/portfolio_risk_policy.py \
     studies/2026-11-16__cft__10k__canonical-full-universe-v4.py \
+    studies/2026-11-17__execution__live-paper-reconciliation.py \
     tests/test_pod_constructor.py \
     tests/test_canonical_replay.py \
     tests/test_study_data.py \
@@ -17,6 +18,7 @@ uv run --frozen --group dev ruff check \
     tests/test_ops_boundaries.py \
     tests/test_cross_repo_pins.py \
     tests/test_phase1_underwriting_and_sizing.py \
-    tests/test_phase2_cwsa_liquidity_and_containment.py
+    tests/test_phase2_cwsa_liquidity_and_containment.py \
+    tests/test_deep_underwriting_falsifiers.py
 
 uv run --frozen --group dev pytest -q
