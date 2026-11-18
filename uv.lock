@@ -190,7 +190,7 @@ wheels = [
 [[package]]
 name = "copytrade-pm"
 version = "0.1.0"
-source = { git = "https://github.com/hzminhzz/copytrade-pm.git?rev=1cccd2049e77d39035746ccf4400dbde9c284aca#1cccd2049e77d39035746ccf4400dbde9c284aca" }
+source = { git = "https://github.com/hzminhzz/copytrade-pm.git?rev=e70bcdd4a750ad62905b2d7c571a04ca073682b1#e70bcdd4a750ad62905b2d7c571a04ca073682b1" }
 dependencies = [
     { name = "cryptography" },
     { name = "pydantic" },
@@ -631,7 +631,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "copytrade-pm", extras = ["market"], git = "https://github.com/hzminhzz/copytrade-pm.git?rev=1cccd2049e77d39035746ccf4400dbde9c284aca" },
+    { name = "copytrade-pm", extras = ["market"], git = "https://github.com/hzminhzz/copytrade-pm.git?rev=e70bcdd4a750ad62905b2d7c571a04ca073682b1" },
     { name = "duckdb", specifier = ">=1.2" },
     { name = "requests", specifier = ">=2.32" },
 ]
