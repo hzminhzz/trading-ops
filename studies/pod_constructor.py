@@ -2271,37 +2271,97 @@ def _accumulate_symbol_unrl_at_resets(
     bar_seg_id: np.ndarray,
     reset_targets: Sequence[tuple[int, int]],
     pod_equity_usd: float,
+    *,
+    _reset_arrays: tuple[np.ndarray, np.ndarray] | None = None,
 ) -> None:
     """Trace netted cost basis across segment-isolated bars and add reset unrealized PnL."""
-    q_after = np.empty(nz_bars.size, dtype=np.float64)
-    entry_after = np.empty(nz_bars.size, dtype=np.float64)
-    cur_q = 0.0
-    cur_entry = 0.0
-    prev_seg_id = -2
-    for k in range(nz_bars.size):
-        cur_seg_id = int(nz_seg_id[k])
-        if cur_seg_id != prev_seg_id:
-            cur_q = 0.0
-            cur_entry = 0.0
-            prev_seg_id = cur_seg_id
-        new_q = float(q_nz[k])
-        cur_entry = _apply_fill_to_basis_scalar(cur_q, new_q, cur_entry, float(px_nz[k]))
-        cur_q = new_q
-        q_after[k] = cur_q
-        entry_after[k] = cur_entry
+    if nz_bars.size == 0 or not reset_targets:
+        return
+    if _reset_arrays is None:
+        di_arr = np.fromiter(
+            (di for di, _ in reset_targets), dtype=np.int64, count=len(reset_targets)
+        )
+        r_arr = np.fromiter(
+            (r for _, r in reset_targets), dtype=np.int64, count=len(reset_targets)
+        )
+    else:
+        di_arr, r_arr = _reset_arrays
 
-    for di, r in reset_targets:
-        r_seg = int(bar_seg_id[r])
-        if r_seg < 0:
+    r_seg = bar_seg_id[r_arr]
+    k_arr = np.searchsorted(nz_bars, r_arr, side="right") - 1
+    valid = (r_seg >= 0) & (k_arr >= 0)
+    if not np.any(valid):
+        return
+    di_v = di_arr[valid]
+    r_v = r_arr[valid]
+    k_v = k_arr[valid]
+    r_seg_v = r_seg[valid]
+    q_v = q_nz[k_v]
+    cl_v = close_s[r_v]
+    active = (nz_seg_id[k_v] == r_seg_v) & (np.abs(q_v) > 1e-12) & np.isfinite(cl_v)
+    if not np.any(active):
+        return
+    di_a = di_v[active]
+    k_a = k_v[active]
+    q_a = q_v[active]
+    cl_a = cl_v[active]
+
+    max_k = int(k_a.max()) + 1
+    q_sub = q_nz[:max_k]
+    px_sub = px_nz[:max_k]
+    seg_sub = nz_seg_id[:max_k]
+    seg_start = np.empty(max_k, dtype=bool)
+    seg_start[0] = True
+    if max_k > 1:
+        seg_start[1:] = seg_sub[1:] != seg_sub[:-1]
+    prev_q = np.empty(max_k, dtype=np.float64)
+    prev_q[0] = 0.0
+    if max_k > 1:
+        prev_q[1:] = np.where(seg_start[1:], 0.0, q_sub[:-1])
+    delta = q_sub - prev_q
+    abs_q = np.abs(q_sub)
+    abs_prev = np.abs(prev_q)
+    abs_delta = np.abs(delta)
+    is_flat = abs_q <= 1e-12
+    changed = abs_delta > 1e-12
+    is_hard_open = changed & (~is_flat) & ((abs_prev <= 1e-12) | (prev_q * q_sub < 0.0))
+    is_reset = seg_start | is_flat | is_hard_open
+    last_reset = np.maximum.accumulate(np.where(is_reset, np.arange(max_k, dtype=np.int64), 0))
+    is_inc = changed & (~is_flat) & (~is_hard_open) & (prev_q * delta > 0.0)
+
+    ep_starts = last_reset[k_a]
+    uniq_starts = np.unique(ep_starts)
+    entry_a = np.empty(k_a.size, dtype=np.float64)
+    for st in uniq_starts:
+        st_i = int(st)
+        m_ep = ep_starts == st_i
+        ks_ep = k_a[m_ep]
+        end_i = int(ks_ep.max())
+        init_e = 0.0 if is_flat[st_i] else (float(px_sub[st_i]) if is_hard_open[st_i] else 0.0)
+        if end_i == st_i:
+            entry_a[m_ep] = init_e
             continue
-        k = int(np.searchsorted(nz_bars, r, side="right")) - 1
-        if (
-            k >= 0
-            and int(nz_seg_id[k]) == r_seg
-            and abs(q_after[k]) > 1e-12
-            and np.isfinite(close_s[r])
-        ):
-            unrl[di] += float(q_after[k] * (float(close_s[r]) - entry_after[k]) / pod_equity_usd)
+        inc_rel = np.flatnonzero(is_inc[st_i + 1 : end_i + 1])
+        if inc_rel.size == 0:
+            entry_a[m_ep] = init_e
+            continue
+        inc_idx = inc_rel + (st_i + 1)
+        alpha = abs_prev[inc_idx] / abs_q[inc_idx]
+        beta = (abs_delta[inc_idx] / abs_q[inc_idx]) * px_sub[inc_idx]
+        log_p = np.cumsum(np.log(alpha))
+        if float(log_p[-1]) >= -500.0:
+            p_arr = np.exp(log_p)
+            e_inc = p_arr * (init_e + np.cumsum(beta / p_arr))
+        else:
+            ce = init_e
+            e_inc = np.empty(inc_idx.size, dtype=np.float64)
+            for i_inc in range(inc_idx.size):
+                ce = float(alpha[i_inc]) * ce + float(beta[i_inc])
+                e_inc[i_inc] = ce
+        pos_in_inc = np.searchsorted(inc_idx, ks_ep, side="right") - 1
+        entry_a[m_ep] = np.where(pos_in_inc >= 0, e_inc[np.maximum(pos_in_inc, 0)], init_e)
+
+    np.add.at(unrl, di_a, q_a * (cl_a - entry_a) / pod_equity_usd)
 
 
 def _compute_netted_unrealized_frac_at_resets(
@@ -2724,13 +2784,16 @@ def _eval_unrl_reset_cache(
     if not reset_targets or not sym_cache:
         return unrl
 
+    di_arr = np.fromiter((di for di, _ in reset_targets), dtype=np.int64, count=len(reset_targets))
+    r_arr = np.fromiter((r for _, r in reset_targets), dtype=np.int64, count=len(reset_targets))
+    reset_arrays = (di_arr, r_arr)
+
     for q_members_cand, px_cand, close_s, cand_bars, cand_seg_id, bar_seg_id in sym_cache:
         q_cand = weights @ q_members_cand
-        seg_reset = np.empty(q_cand.size, dtype=bool)
-        seg_reset[0] = True
+        prev_q_cand = np.empty_like(q_cand)
+        prev_q_cand[0] = 0.0
         if q_cand.size > 1:
-            seg_reset[1:] = cand_seg_id[1:] != cand_seg_id[:-1]
-        prev_q_cand = np.where(seg_reset, 0.0, np.roll(q_cand, 1))
+            prev_q_cand[1:] = np.where(cand_seg_id[1:] != cand_seg_id[:-1], 0.0, q_cand[:-1])
         keep = np.abs(q_cand - prev_q_cand) > 1e-12
         if not np.any(keep):
             continue
@@ -2744,6 +2807,7 @@ def _eval_unrl_reset_cache(
             bar_seg_id,
             reset_targets,
             pod_equity_usd,
+            _reset_arrays=reset_arrays,
         )
     return unrl
 
