@@ -195,7 +195,7 @@ source = { git = "https://github.com/hzminhzz/prop-production.git?subdirectory=p
 [[package]]
 name = "copytrade-pm"
 version = "0.1.0"
-source = { git = "https://github.com/hzminhzz/copytrade-pm.git?rev=5a673f03e6d5240d27c1e698806df288b301e148#5a673f03e6d5240d27c1e698806df288b301e148" }
+source = { git = "https://github.com/hzminhzz/copytrade-pm.git?rev=e1ec715016bbd9f2b84de0bae46bfa3b25324638#e1ec715016bbd9f2b84de0bae46bfa3b25324638" }
 dependencies = [
     { name = "copytrade-kernel" },
     { name = "cryptography" },
@@ -639,7 +639,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "copytrade-kernel", git = "https://github.com/hzminhzz/prop-production.git?subdirectory=packages%2Fcopytrade-kernel&rev=d0ad4c234f89049d91c88444d31a17286e3e684a" },
-    { name = "copytrade-pm", extras = ["market"], git = "https://github.com/hzminhzz/copytrade-pm.git?rev=5a673f03e6d5240d27c1e698806df288b301e148" },
+    { name = "copytrade-pm", extras = ["market"], git = "https://github.com/hzminhzz/copytrade-pm.git?rev=e1ec715016bbd9f2b84de0bae46bfa3b25324638" },
     { name = "duckdb", specifier = ">=1.2" },
     { name = "requests", specifier = ">=2.32" },
 ]
