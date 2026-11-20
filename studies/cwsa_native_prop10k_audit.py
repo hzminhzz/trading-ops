@@ -25,7 +25,10 @@ from copytrade_pm.pm_cwsa_chapter2_gate import _paper_facts, _source_facts
 from copytrade_pm.pm_cwsa_six_paper import ALL_14_WALLETS, PORTFOLIO_CONFIGS, load_registry_seals
 from copytrade_pm.pm_sqlite_readonly import connect_readonly
 
-REGISTRY = Path("/home/quant/.local/share/copytrade/registry/wallet_registry.sqlite")
+# Frozen historical registry archived in Phase D; read-only retrospective evidence.
+REGISTRY = Path(
+    "/home/quant/.local/share/copytrade/registry/archive/legacy_wallet_registry_20261119.sqlite"
+)
 SOURCE = Path(
     "/home/quant/.local/share/copytrade/prospective/"
     "cwsa-5m-source-chapter2-20261112/paper-events.sqlite3"

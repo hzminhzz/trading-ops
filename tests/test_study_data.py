@@ -327,46 +327,142 @@ def test_utc_coverage_fails_loudly_on_timezone_shortfall_and_naive_datetime(
         )
 
 
-def test_discover_fill_archive_dedups_overlap_and_flags_missing_days(tmp_path: Path) -> None:
+def _write_fact_day(store_root: Path, day: str, rows: int = 1) -> None:
+    """Write one synthetic day batch through the real FactStore writer."""
+    from decimal import Decimal
+
+    from copytrade_pm.facts import manifest as facts_manifest
+    from copytrade_pm.facts.schemas import column_names
+    from copytrade_pm.facts.store import FactStore, PreparedDay
+
+    store = FactStore(store_root, create=True)
+    con = store.connect()
+    stamp = datetime.fromisoformat(day).replace(tzinfo=UTC)
+    count = rows
+    frame = pl.DataFrame(
+        {
+            "wallet": ["0x" + "1" * 40] * count,
+            "coin": ["BTC"] * count,
+            "dex": ["hyperliquid"] * count,
+            "dex_raw": ["hyperliquid"] * count,
+            "provider": [None] * count,
+            "side": ["buy"] * count,
+            "size": pl.Series([Decimal(1)] * count, dtype=pl.Decimal(38, 12)),
+            "price": pl.Series([Decimal(100)] * count, dtype=pl.Decimal(38, 12)),
+            "fee": pl.Series([Decimal(0)] * count, dtype=pl.Decimal(38, 12)),
+            "fee_token": [None] * count,
+            "size_usd": pl.Series([Decimal(100)] * count, dtype=pl.Decimal(38, 12)),
+            "start_position": pl.Series([Decimal(0)] * count, dtype=pl.Decimal(38, 12)),
+            "closed_pnl": pl.Series([Decimal(0)] * count, dtype=pl.Decimal(38, 12)),
+            "trade_id": [f"t{index}" for index in range(count)],
+            "order_id": [None] * count,
+            "direction": [None] * count,
+            "is_liquidation": [None] * count,
+            "is_maker": [None] * count,
+            "crossed": [None] * count,
+            "exchange_ts": [stamp] * count,
+            "event_ts_ms": [int(stamp.timestamp() * 1000)] * count,
+            "source_ts": [None] * count,
+            "first_known_at_ms": [None] * count,
+            "known_at_basis": ["unrecorded"] * count,
+            "arrival_seq": list(range(count)),
+            "source_id": ["synthetic"] * count,
+            "source_rank": [0] * count,
+            "batch_sha16": [""] * count,
+        }
+    ).select(column_names("fills"))
+    write = store.write_day(PreparedDay("fills", day, frame, repair_stats=_repair_stats()))
+    facts_manifest.record_day(
+        con,
+        batch=facts_manifest.DayBatch(
+            kind="fills",
+            day=day,
+            batch_sha16=write.batch_sha16,
+            path=str(write.path),
+            rows=write.rows,
+            file_sha256=write.file_sha256,
+            inputs_fingerprint=f"synthetic:{day}",
+        ),
+        source_ids=("synthetic",),
+        bytes_count=write.bytes_count,
+        inputs=[
+            facts_manifest.InputRecord(
+                kind="fills",
+                day=day,
+                source_id="synthetic",
+                rel_path=f"day={day}/data.parquet",
+                input_sha256=write.file_sha256,
+                rows_read=write.rows,
+                rows_kept=write.rows,
+                rows_duplicate_within=0,
+                rows_duplicate_cross=0,
+                rows_conflicting_values=0,
+                rows_rejected=0,
+                rows_null_key=0,
+            )
+        ],
+        first_known_min_ms=None,
+        first_known_max_ms=None,
+        closed_at=datetime.now(tz=UTC).isoformat(),
+    )
+    store.close()
+
+
+def _repair_stats():
+    from copytrade_pm.facts.repair import RepairStats
+
+    return RepairStats()
+
+
+def test_discover_fact_partitions_reads_the_manifest_and_flags_missing_days(
+    tmp_path: Path,
+) -> None:
     import study_data as sd
 
-    full_dir = tmp_path / "reservoir-full-history-20261115" / "hyperliquid" / "fills"
-    mon_dir = tmp_path / "reservoir-monitored-plus-six-hyperliquid-20261116" / "fills"
+    _write_fact_day(tmp_path, "2026-05-01")
+    _write_fact_day(tmp_path, "2026-05-02", rows=2)
+    _write_fact_day(tmp_path, "2026-05-04")
 
-    for day, root in [
-        ("2026-05-01", full_dir),
-        ("2026-05-02", full_dir),
-        ("2026-05-02", mon_dir),  # duplicate day should prefer full_dir
-        ("2026-05-04", mon_dir),  # 2026-05-03 missing
-    ]:
-        p = root / f"day={day}" / "data.parquet"
-        p.parent.mkdir(parents=True, exist_ok=True)
-        _write_fill_parquet(
-            p,
-            [
-                {
-                    "wallet": "0xaaa",
-                    "exchange_ts": datetime.fromisoformat(f"{day}T00:05:00+00:00"),
-                    "coin": "BTC",
-                    "dex": "hyperliquid",
-                    "side": "buy",
-                    "size": 1.0,
-                    "start_position": 0.0,
-                    "trade_id": 1,
-                }
-            ],
-        )
-
-    paths, manifest = sd.discover_fill_archive(
+    paths, manifest = sd.discover_fact_partitions(
         datetime(2026, 5, 1, 0, 0, tzinfo=UTC),
         datetime(2026, 5, 5, 0, 0, tzinfo=UTC),
-        archive_root=tmp_path,
+        store_root=tmp_path,
     )
     assert len(paths) == 3
-    assert "reservoir-full-history-20261115" in paths[1]
-    assert manifest["duplicate_date_sources"] == ["2026-05-02"]
+    assert [Path(path).name for path in paths] == [
+        Path(meta["path"]).name for meta in manifest["files"]
+    ]
+    assert manifest["count_daily_files"] == 3
+    assert manifest["duplicate_date_sources"] == []
     assert manifest["missing_dates"] == ["2026-05-03"]
+    assert manifest["row_count"] == 4
     assert len(manifest["archive_sha256"]) == 64
+    assert all(meta["day"] == Path(meta["path"]).parent.name.split("=")[1] for meta in manifest["files"])
+
+
+def test_discover_fact_partitions_refuses_a_missing_partition_file(tmp_path: Path) -> None:
+    import study_data as sd
+
+    _write_fact_day(tmp_path, "2026-05-01")
+    paths, _ = sd.discover_fact_partitions(
+        datetime(2026, 5, 1, tzinfo=UTC), datetime(2026, 5, 2, tzinfo=UTC), store_root=tmp_path
+    )
+    Path(paths[0]).unlink()
+    with pytest.raises(ValueError, match="FACTS_PARTITION_FILE_MISSING"):
+        sd.discover_fact_partitions(
+            datetime(2026, 5, 1, tzinfo=UTC), datetime(2026, 5, 2, tzinfo=UTC), store_root=tmp_path
+        )
+
+
+def test_study_data_has_no_archive_glob_discovery() -> None:
+    """The retired path must not come back through a helper or an alias."""
+    import study_data as sd
+
+    source = (STUDIES_DIR / "study_data.py").read_text()
+    assert "discover_fill_archive" not in source
+    assert "import glob" not in source
+    assert not hasattr(sd, "discover_fill_archive")
+    assert hasattr(sd, "discover_fact_partitions")
 
 
 def test_cse_explain_plan_verifies_cache_projection_and_predicate_pushdown_without_duckdb(
@@ -685,34 +781,19 @@ def test_lazy_prices_vike_fallback_precedence_and_stale_180m_boundary(tmp_path: 
 def test_historical_train_eligibility_separated_from_live_deployability_with_sqlite_and_parquet(
     tmp_path: Path,
 ) -> None:
-    import sqlite3
-
     import numpy as np
     import study_data as sd
 
-    db_path = tmp_path / "registry.sqlite"
-    con = sqlite3.connect(db_path)
-    con.executescript(
-        """
-        CREATE TABLE wallets (wallet_id INTEGER PRIMARY KEY, address TEXT);
-        CREATE TABLE monitoring (wallet_id INTEGER PRIMARY KEY, configured INTEGER);
-        CREATE TABLE exclusions (wallet_id INTEGER PRIMARY KEY, reason TEXT);
-        CREATE TABLE wallet_aliases (wallet_id INTEGER, alias TEXT, known_at TEXT);
-        INSERT INTO wallets VALUES
-            (1, '0x111'),
-            (2, '0x222'),
-            (3, '0x333'),
-            (4, '0x444');
-        INSERT INTO monitoring VALUES (1, 1), (2, 1), (3, 1), (4, 1);
-        INSERT INTO wallet_aliases VALUES
-            (1, 'BOTH_OK', '2026-04-01'),
-            (2, 'HIST_OK_WITHDRAWN_DELISTED', '2026-04-01'),
-            (3, 'HIST_LOW_FILLS_HIGH_AV', '2026-04-01'),
-            (4, 'HIST_NO_PRICE', '2026-04-01');
-        """
+    # The wallet registry was archived in Phase D: studies take explicit records.
+    records = tuple(
+        cr.WalletRecord(wallet_id=index, address=address, alias=alias, configured=True, excluded=False)
+        for index, address, alias in (
+            (1, "0x111", "BOTH_OK"),
+            (2, "0x222", "HIST_OK_WITHDRAWN_DELISTED"),
+            (3, "0x333", "HIST_LOW_FILLS_HIGH_AV"),
+            (4, "0x444", "HIST_NO_PRICE"),
+        )
     )
-    con.commit()
-    con.close()
 
     start_dt = datetime(2026, 5, 1, 0, 0, tzinfo=UTC)
     split_dt = datetime(2026, 9, 1, 0, 0, tzinfo=UTC)
@@ -821,7 +902,6 @@ def test_historical_train_eligibility_separated_from_live_deployability_with_sql
             }
         ).with_columns(pl.col("timestamp").cast(pl.Datetime("us", "UTC"))).write_parquet(p)
 
-    records, _ = cr.load_registry_universe(db_path)
     ingestion = sd.ingest_fills(records, [fills_path], start=start_dt, end=end_dt, split=split_dt)
 
     av_map = {

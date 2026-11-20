@@ -18,16 +18,15 @@ Provides four reusable building blocks for ``trading-ops`` and ``portfolio-resea
 
 from __future__ import annotations
 
-import json
 import math
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from itertools import combinations, product
-from pathlib import Path
 from typing import Any, Literal
 
 import numpy as np
+from copytrade_kernel.rulebooks import ChallengeRulebookSpec, RulebookCatalog
 
 StyleSleeve = Literal[
     "intraday_tactical",
@@ -4283,45 +4282,15 @@ class PropContractSpec:
     funded_target_cap_usd: float | None = None
 
 
-def _extract_leading_number(
-    raw: object,
-    *,
-    clause_hint: str | None = None,
-) -> float | None:
+def _extract_leading_number(raw: object) -> float | None:
+    """Return the leading numeric token of a published rule string (no invented defaults)."""
     if isinstance(raw, bool):
         return None
     if isinstance(raw, (int, float)):
         return float(raw)
     if not isinstance(raw, str):
         return None
-
-    text = raw.strip()
-    if text.upper().startswith("AMBIGUOUS") and "(" in text and text.endswith(")"):
-        inner = text[text.index("(") + 1 : -1]
-        clauses = [c.strip() for c in inner.split(";") if c.strip()]
-        labeled = [(c.split(":", 1)[0].strip(), c.split(":", 1)[1].strip()) for c in clauses if ":" in c]
-        if labeled:
-            chosen_val = labeled[0][1]
-            if clause_hint:
-                hint_l = clause_hint.lower()
-                best_match: tuple[int, str] | None = None
-                for lbl, val in labeled:
-                    lbl_l = lbl.lower()
-                    if lbl_l in hint_l or hint_l in lbl_l:
-                        score = len(lbl_l)
-                        if best_match is None or score > best_match[0]:
-                            best_match = (score, val)
-                if best_match is not None:
-                    chosen_val = best_match[1]
-            text = chosen_val
-
-    text = re.sub(r"(?<=\d),(?=\d)", "", text)
-    text_l = text.lower()
-    if "(grow only)" in text_l and (clause_hint is None or "grow" not in clause_hint.lower()):
-        return None
-    if "100/0 default" in text_l:
-        return 80.0 if (clause_hint and "instant" in clause_hint.lower()) else 100.0
-
+    text = re.sub(r"(?<=\d),(?=\d)", "", raw.strip())
     token = ""
     for ch in text:
         if ch.isdigit() or ch == ".":
@@ -4336,6 +4305,33 @@ def _extract_leading_number(
         return None
 
 
+def _catalog_int(raw: object) -> int:
+    """Read a catalog integer that may be missing or explicitly ``UNKNOWN``/``AMBIGUOUS``."""
+    if isinstance(raw, bool) or raw is None:
+        return 0
+    if isinstance(raw, int):
+        return raw
+    if isinstance(raw, str) and raw.strip().isdigit():
+        return int(raw.strip())
+    return 0
+
+
+def _catalog_fraction(raw: object) -> float | None:
+    """Convert a published percentage or split ratio into a 0-1 fraction."""
+    value = _extract_leading_number(raw)
+    if value is None or value <= 0.0:
+        return None
+    return value / 100.0 if value > 1.0 else value
+
+
+def _daily_loss_basis(raw: object) -> Literal["balance", "equity"]:
+    return "equity" if str(raw or "").strip().upper().startswith("EQUITY") else "balance"
+
+
+def _is_eval_phase(spec: ChallengeRulebookSpec) -> bool:
+    return spec.phase.startswith("phase_")
+
+
 def load_prop_contract_spec(
     firm_slug: str,
     *,
@@ -4343,184 +4339,126 @@ def load_prop_contract_spec(
     challenge_fee_usd: float | None = None,
     min_eval_trading_days: int | None = None,
     funded_cycle_days: int = 30,
-    rules_json_path: str | Path | None = None,
     program_filter: str | None = None,
 ) -> PropContractSpec:
-    """Load a multi-phase prop contract from ``prop_firms_rules.json`` without inventing missing fees."""
-    candidates = (
-        [Path(rules_json_path)]
-        if rules_json_path is not None
-        else [
-            Path(__file__).resolve().parents[1] / "prop_firms_rules.json",
-            Path("prop_firms_rules.json"),
-        ]
-    )
-    resolved_json = next((p for p in candidates if p.is_file()), None)
-    firm_obj: dict | None = None
-    if resolved_json is not None:
-        raw_data = json.loads(resolved_json.read_text(encoding="utf-8"))
-        for entry in raw_data.get("firms", []):
-            if entry.get("firm_slug") == firm_slug:
-                firm_obj = entry
-                break
+    """Build a multi-phase contract from the canonical ``copytrade_kernel`` rulebook catalog.
 
-    if firm_obj is None:
-        if firm_slug == "crypto-fund-trader":
-            scale = account_usd / 5_000.0
-            m_days = 5 if min_eval_trading_days is None else int(min_eval_trading_days)
-            eff_funded_days = max(int(funded_cycle_days), 15)
-            p1 = PropPhaseSpec(
-                "phase_1", 400.0 * scale, 500.0 * scale, 250.0 * scale, "balance", m_days, None, 90
-            )
-            p2 = PropPhaseSpec(
-                "phase_2", 250.0 * scale, 500.0 * scale, 250.0 * scale, "balance", m_days, None, 90
-            )
-            funded = PropPhaseSpec(
-                "funded",
-                None,
-                500.0 * scale,
-                250.0 * scale,
-                "balance",
-                15,
-                None,
-                eff_funded_days,
-            )
-            return PropContractSpec(
-                firm_slug=firm_slug,
-                program_name="2-Phase",
-                account_usd=float(account_usd),
-                eval_phases=(p1, p2),
-                funded_phase=funded,
-                payout_split_pct=0.80,
-                challenge_fee_usd=challenge_fee_usd,
-                funded_cycle_days=eff_funded_days,
-            )
+    The kernel catalog is the single source of truth for published challenge terms; this
+    function only rescales those terms to ``account_usd``. It never invents a fee, profit
+    target, drawdown or payout split: an unrouted or unpriced contract keeps
+    ``challenge_fee_usd=None`` until a caller supplies a verified fee.
+    """
+    firm_specs = RulebookCatalog.list_specs(firm_slug=firm_slug)
+    if not firm_specs:
         raise FileNotFoundError(f"PROP_FIRM_NOT_FOUND:{firm_slug}")
 
-    fee_val = challenge_fee_usd
-    pricing = firm_obj.get("pricing_usd")
-    if fee_val is None and isinstance(pricing, Mapping):
-        key = str(int(account_usd))
-        val = pricing.get(key)
-        if isinstance(val, (int, float)):
-            fee_val = float(val)
-        elif isinstance(val, Mapping) and val:
-            first_num = next((float(v) for v in val.values() if isinstance(v, (int, float))), None)
-            fee_val = first_num
+    programs: dict[str, list[ChallengeRulebookSpec]] = {}
+    for firm_spec in firm_specs:
+        programs.setdefault(firm_spec.program, []).append(firm_spec)
 
-    eval_specs: list[PropPhaseSpec] = []
-    funded_spec: PropPhaseSpec | None = None
-    split_pct = 0.80
-    filt_lower = program_filter.strip().lower() if program_filter is not None else None
-    clause_hint = program_filter.strip() if program_filter is not None else None
-    stop_eval = False
-
-    for ph in firm_obj.get("phases", []):
-        ph_name = str(ph.get("phase", ""))
-        ph_lower = ph_name.lower()
-        is_funded = "funded" in ph_lower
-
-        if filt_lower is None:
-            if "phase_1" in ph_lower and eval_specs:
-                stop_eval = True
-            if stop_eval and not is_funded:
-                continue
-        else:
-            is_generic_funded = is_funded and (
-                ph_lower.strip() == "funded"
-                or "funded (all)" in ph_lower
-                or ("1-step" in filt_lower and "1-step" in ph_lower)
-            )
-            if not (filt_lower in ph_lower or is_generic_funded):
-                continue
-
-        base_acct_num = _extract_leading_number(ph.get("account_size_usd"), clause_hint=clause_hint)
-        base_acct = base_acct_num if base_acct_num is not None else 5_000.0
-        scale = float(account_usd) / base_acct
-        tgt_raw = _extract_leading_number(ph.get("profit_target_usd"), clause_hint=clause_hint)
-        tgt = tgt_raw * scale if tgt_raw is not None else None
-        dd_num = _extract_leading_number(
-            (ph.get("max_drawdown") or {}).get("amount_usd"),
-            clause_hint=clause_hint,
+    hint = program_filter.strip().lower() if program_filter is not None else None
+    if hint is not None:
+        selected = next((name for name in programs if hint in name.lower()), None)
+        if selected is None:
+            raise ValueError(f"NO_MATCHING_PROP_PHASES:{firm_slug}:{program_filter}")
+    else:
+        selected = next(
+            (name for name, items in programs.items() if any(_is_eval_phase(s) for s in items)),
+            next(iter(programs)),
         )
-        dd_raw = dd_num if dd_num is not None else (0.10 * base_acct)
-        dd_usd = dd_raw * scale
-        daily_obj = ph.get("daily_loss_limit") or {}
-        daily_num = _extract_leading_number(
-            daily_obj.get("amount_usd"),
-            clause_hint=clause_hint,
-        )
-        daily_raw = daily_num if daily_num is not None else (0.05 * base_acct)
-        daily_usd = daily_raw * scale
-        basis_str = str(daily_obj.get("basis", "BALANCE")).upper()
-        basis: Literal["balance", "equity"] = "equity" if basis_str == "EQUITY" else "balance"
 
-        raw_mtd = ph.get("min_trading_days")
-        if min_eval_trading_days is not None and not is_funded:
-            mtd = int(min_eval_trading_days)
-        elif isinstance(raw_mtd, int) and not isinstance(raw_mtd, bool):
-            mtd = raw_mtd
-        else:
-            mtd = 0
-
-        cons_obj = ph.get("consistency_rule") or {}
-        cons_pct: float | None = None
-        if cons_obj.get("exists"):
-            c_num = _extract_leading_number(
-                cons_obj.get("max_single_day_profit_pct"),
-                clause_hint=clause_hint,
-            )
-            if c_num is not None and c_num > 0.0:
-                cons_pct = c_num / 100.0 if c_num > 1.0 else c_num
-
-        ps_raw = _extract_leading_number(ph.get("payout_split_pct"), clause_hint=clause_hint)
-        if ps_raw is not None and ps_raw > 0.0:
-            split_pct = ps_raw / 100.0 if ps_raw > 1.0 else ps_raw
-
-        spec_item = PropPhaseSpec(
-            name=ph_name,
-            profit_target_usd=tgt,
-            max_static_dd_usd=dd_usd,
-            daily_loss_limit_usd=daily_usd,
-            daily_loss_basis=basis,
-            min_trading_days=mtd,
-            consistency_max_single_day_pct=cons_pct,
-            horizon_days=funded_cycle_days if is_funded else 90,
-        )
-        if is_funded:
-            funded_spec = spec_item
-        else:
-            eval_specs.append(spec_item)
-
-    if not eval_specs:
+    program_specs = programs[selected]
+    eval_raw = sorted(
+        (s for s in program_specs if _is_eval_phase(s)),
+        key=lambda s: int(s.phase.rsplit("_", 1)[-1]) if s.phase.rsplit("_", 1)[-1].isdigit() else 0,
+    )
+    if not eval_raw:
         raise ValueError(f"NO_MATCHING_PROP_PHASES:{firm_slug}:{program_filter}")
 
-    if funded_spec is None:
-        ref = eval_specs[-1]
-        funded_spec = PropPhaseSpec(
-            "funded",
-            None,
-            ref.max_static_dd_usd,
-            ref.daily_loss_limit_usd,
-            ref.daily_loss_basis,
-            0,
-            None,
-            funded_cycle_days,
+    funded_raw = next((s for s in program_specs if s.phase == "funded"), None)
+    if funded_raw is None:
+        funded_raw = next((s for s in firm_specs if s.phase == "funded"), None)
+
+    base = _extract_leading_number(eval_raw[0].initial)
+    if base is None or base <= 0.0:
+        raise ValueError(f"PROP_CONTRACT_INVALID_BASE:{firm_slug}:{selected}")
+    scale = float(account_usd) / base
+
+    def _phase_amounts(spec: ChallengeRulebookSpec) -> tuple[float, float]:
+        drawdown = _extract_leading_number(spec.trailing_loss)
+        daily = _extract_leading_number(spec.daily_loss)
+        if drawdown is None or daily is None:
+            raise ValueError(f"PROP_CONTRACT_INCOMPLETE:{spec.key}")
+        return drawdown * scale, daily * scale
+
+    eval_specs: list[PropPhaseSpec] = []
+    for spec in eval_raw:
+        target = _extract_leading_number(spec.target)
+        if target is None:
+            raise ValueError(f"PROP_CONTRACT_INCOMPLETE:{spec.key}")
+        drawdown_usd, daily_usd = _phase_amounts(spec)
+        eval_specs.append(
+            PropPhaseSpec(
+                name=spec.phase,
+                profit_target_usd=target * scale,
+                max_static_dd_usd=drawdown_usd,
+                daily_loss_limit_usd=daily_usd,
+                daily_loss_basis=_daily_loss_basis(spec.daily_basis),
+                min_trading_days=(
+                    int(min_eval_trading_days)
+                    if min_eval_trading_days is not None
+                    else _catalog_int(spec.min_trading_days)
+                ),
+                consistency_max_single_day_pct=_catalog_fraction(
+                    spec.consistency_max_single_day_pct
+                ),
+                horizon_days=90,
+            )
         )
 
-    eff_funded_days = max(int(funded_cycle_days), funded_spec.min_trading_days)
-    if eff_funded_days != funded_spec.horizon_days:
-        funded_spec = replace(funded_spec, horizon_days=eff_funded_days)
+    if funded_raw is not None:
+        drawdown_usd, daily_usd = _phase_amounts(funded_raw)
+        funded_mtd = _catalog_int(funded_raw.min_trading_days)
+        funded_days = max(int(funded_cycle_days), funded_mtd)
+        funded_spec = PropPhaseSpec(
+            name="funded",
+            profit_target_usd=None,
+            max_static_dd_usd=drawdown_usd,
+            daily_loss_limit_usd=daily_usd,
+            daily_loss_basis=_daily_loss_basis(funded_raw.daily_basis),
+            min_trading_days=funded_mtd,
+            consistency_max_single_day_pct=_catalog_fraction(
+                funded_raw.consistency_max_single_day_pct
+            ),
+            horizon_days=funded_days,
+        )
+        payout_split = _catalog_fraction(funded_raw.payout_split_pct)
+    else:
+        ref = eval_specs[-1]
+        funded_days = int(funded_cycle_days)
+        funded_spec = PropPhaseSpec(
+            name="funded",
+            profit_target_usd=None,
+            max_static_dd_usd=ref.max_static_dd_usd,
+            daily_loss_limit_usd=ref.daily_loss_limit_usd,
+            daily_loss_basis=ref.daily_loss_basis,
+            min_trading_days=0,
+            consistency_max_single_day_pct=None,
+            horizon_days=funded_days,
+        )
+        payout_split = None
 
     return PropContractSpec(
-        firm_slug=str(firm_obj.get("firm_slug", firm_slug)),
-        program_name=program_filter if program_filter is not None else str(firm_obj.get("program_name", "")),
+        firm_slug=firm_slug,
+        program_name=program_filter if program_filter is not None else selected,
         account_usd=float(account_usd),
         eval_phases=tuple(eval_specs),
         funded_phase=funded_spec,
-        payout_split_pct=split_pct,
-        challenge_fee_usd=fee_val,
-        funded_cycle_days=eff_funded_days,
+        payout_split_pct=payout_split if payout_split is not None else 0.80,
+        challenge_fee_usd=challenge_fee_usd,
+        funded_cycle_days=funded_days,
+        fee_refunded_on_first_payout=False,
+        funded_target_cap_usd=None,
     )
 
 

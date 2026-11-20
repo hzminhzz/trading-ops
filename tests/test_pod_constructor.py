@@ -1123,10 +1123,12 @@ def test_infeasible_risk_share_bounds_raise_instead_of_relaxing() -> None:
         )
 
 
-def test_migrated_study_callers_handle_unknown_tilt_and_distinct_dd() -> None:
-    import importlib.util
+def test_stage1_audit_keeps_unknown_tilt_and_distinct_drawdowns() -> None:
+    """The Stage-1 extractor owns these two invariants; no study wrapper is needed.
 
-    studies_dir = Path(__file__).resolve().parents[1] / "studies"
+    The dated study callers that used to prove this were removed with the Guardian
+    clone in Slice 4, so the assertion is made directly against the retained API.
+    """
     base = _synthetic_multi_regime_tensor(n_days=24)
     n_t, n_s, n_b = base.notional_frac.shape
     notional = np.zeros((n_t + 1, n_s, n_b), dtype=np.float64)
@@ -1159,26 +1161,11 @@ def test_migrated_study_callers_handle_unknown_tilt_and_distinct_dd() -> None:
     passed_ids, metrics, _ = pc.stage1_audit_traders(tensor, cfg)
     dist_mat, comps = pc.compute_crowding_distance_matrix(passed_ids, tensor, cfg)
 
-    v1_path = studies_dir / "2026-11-16__cft__10k__canonical-full-universe.py"
-    v1_spec = importlib.util.spec_from_file_location("cft_v1_caller", v1_path)
-    assert v1_spec and v1_spec.loader
-    v1_mod = importlib.util.module_from_spec(v1_spec)
-    v1_spec.loader.exec_module(v1_mod)
-    v1_cands, v1_audit = v1_mod.train_pods(tensor)
-    assert len(v1_cands) >= 1
-    assert "train_static_floor_dd_usd" in v1_cands[0]
-    unk_rej = next(r for r in v1_audit["3"]["rejected"] if r["alias"] == "ALL_WIN_UNKNOWN")
-    assert unk_rej["tilt"] is None
-    assert unk_rej["tilt_status"] == "UNKNOWN"
-
-    q3_path = studies_dir / "2026-11-17__cft__10k__sleeve-vs-upgma.py"
-    q3_spec = importlib.util.spec_from_file_location("cft_q3_caller", q3_path)
-    assert q3_spec and q3_spec.loader
-    q3_mod = importlib.util.module_from_spec(q3_spec)
-    q3_spec.loader.exec_module(q3_mod)
-    a_rows, _ = q3_mod.upgma_candidates(tensor, metrics, passed_ids, dist_mat, cfg)
-    b_rows, _ = q3_mod.sleeve_candidates(tensor, metrics, passed_ids, dist_mat, comps["psi_pos"], cfg)
-    c_rows, _ = q3_mod.baseline_candidates(tensor, metrics, passed_ids, cfg)
-    assert a_rows and c_rows
-    assert "train_static_floor_dd_usd" in a_rows[0]
-    assert isinstance(b_rows, list)
+    unknown = metrics[n_t]
+    assert unknown.tilt_multiplier is None
+    assert unknown.tilt_status == "UNKNOWN"
+    # Peak-to-trough and static-floor drawdowns are separate measurements.
+    assert unknown.standalone_peak_to_trough_dd >= 0.0
+    assert unknown.standalone_static_floor_dd >= 0.0
+    assert set(comps) >= {"psi_pos"}
+    assert dist_mat.shape == (len(passed_ids), len(passed_ids))

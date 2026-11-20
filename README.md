@@ -16,7 +16,7 @@ Private operations workspace for daily strategy analysis, wallet research, opera
 ```bash
 uv sync
 uv run pytest && uv run ruff check .
-uv run copytrade-pm cwsa chapter2 explain --portfolio A --inspection metadata
+uv run copytrade-pm capabilities list
 ```
 
 See [AGENTS.md](AGENTS.md) for strict safety boundaries and [runbooks/daily-ops.md](runbooks/daily-ops.md) for the daily checklist.

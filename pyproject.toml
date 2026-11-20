@@ -5,16 +5,24 @@ description = "Private daily trading operations, wallet research, and strategy a
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "copytrade-kernel",
     "copytrade-pm[market]",
     "duckdb>=1.2",
     "requests>=2.32",
 ]
 
 [tool.uv.sources]
-copytrade-pm = { git = "https://github.com/hzminhzz/copytrade-pm.git", rev = "e70bcdd4a750ad62905b2d7c571a04ca073682b1" }
+# Single rulebook/copy-mandate authority: prop-production hosts the stdlib kernel wheel.
+copytrade-kernel = { git = "https://github.com/hzminhzz/prop-production.git", subdirectory = "packages/copytrade-kernel", rev = "d0ad4c234f89049d91c88444d31a17286e3e684a" }
+copytrade-pm = { git = "https://github.com/hzminhzz/copytrade-pm.git", rev = "5a673f03e6d5240d27c1e698806df288b301e148" }
 
 [dependency-groups]
 dev = ["pytest>=8.3", "ruff>=0.8"]
 
 [tool.ruff]
 line-length = 100
+
+[tool.pytest.ini_options]
+# `src/` holds the kernel-backed research package; `studies/` keeps the dated
+# research scripts importable exactly as before.
+pythonpath = ["src", "studies"]

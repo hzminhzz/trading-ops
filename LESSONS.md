@@ -137,3 +137,93 @@ Single-pass `197`-day empirical ablation (`studies/2026-11-18__cft__10k__phase3-
 1. **Match raw-string regexes and strict input types across producer and consumer contracts.** `copytrade_pm.pm_source_contracts.NativeKey` used single `\s` while `prop_production.checkpoint_source.parse_vector` had double-escaped `\\s`, which rejected lowercase `s` coins like `sUSD`; simultaneously enforcing string `k`, duplicate `(account_id, mandate_id)`, live expiry, and pinned dex scope closed producer/consumer validation drift.
 2. **Interleave broker fills and funding chronologically across both v1 and checkpoint intents.** Replaying all fills before all funding events triggers false `FUNDING_POSITION_MISMATCH` HALTs when a funding settlement precedes a closing fill in the same `RECONCILE` snapshot, and skipping legacy v1 fills during `validate_attribution` breaks mixed-epoch replay.
 3. **Never let zero-fill halt flattens or missing execution summaries silently wedge.** Persist `order_executions` alongside idempotent `filled_quantity`, VWAP `avg_price`, and `exec_fee` updates on `order_intents`, verify terminal `Filled`/`Rejected` status against filled quantity, and append attempt suffixes when retrying zero-fill halt flattens.
+
+---
+
+## 2026-11-20 — Single Canonical Rulebook Source (Slice 1 Kernel Cutover)
+
+`studies/pod_constructor.load_prop_contract_spec` now reads the challenge catalog from
+`copytrade_kernel.rulebooks.RulebookCatalog` and only rescales it; `prop_firms_rules.json` and
+`scripts/check_rulebook_drift.py` are gone from this repo.
+
+1. **Never re-introduce a local challenge-term table or a drift checker.** The hand-written parser
+   (`AMBIGUOUS (...)` clause hints, `(Grow only)` guards, `100/0 default` special cases) was the
+   bug source, not the guard against bugs. Terms come from the kernel catalog; a drift script only
+   notices divergence after two copies already disagree.
+2. **Never mint a fee, target or drawdown to complete a contract.** `challenge_fee_usd` stays
+   `None` unless a caller supplies verified pricing, so `evaluate_multiphase_contract_ev` keeps
+   reporting `BREAK_EVEN_ONLY_FEE_UNVERIFIED` instead of a fabricated net EV. A missing catalog
+   amount raises `PROP_CONTRACT_INCOMPLETE:<key>`.
+3. **Know the catalog's coverage before deleting a table.** The kernel catalog carries six firms;
+   the retired JSON also held three `e8_markets_perp_*` slugs that no study consumed. E8 terms must
+   be added upstream with sources before any E8 research resumes — do not rebuild them here.
+4. **Rescale, do not re-derive.** Parity across 36 `(firm, program, account_size, min_days)` cases
+   held every numeric field identical to the old loader; only display labels changed (canonical
+   `phase_1`/`phase_2` names, selected-program `program_name`).
+
+---
+
+## 2026-11-20 — Fact-Store Discovery (Slice 2)
+
+`studies/study_data.discover_fill_archive` and its `glob` are gone. Studies read
+`facts.sqlite` through `discover_fact_partitions` / `copytrade_pm.facts`; the
+wallet store's writer is retired.
+
+1. **Never discover historical fills with a glob over named prefixes.** The old
+   globs named two of the four Reservoir prefixes, so `reservoir-roster-daily` and
+   `liquid12-discovery-20261117/fills_batch2` were invisible to every study, and
+   `wallet_store` was bypassed entirely. A manifest names what exists, records how
+   many rows each source contributed, and fails loudly when a partition file is
+   missing instead of shrinking the window.
+2. **A day that was read and empty is not a missing day.** The store closes such a
+   day as an explicit zero-row batch; `missing_dates` therefore means "we never had
+   this day", which is the only condition that should block a study.
+3. **Never assign a point-in-time clock to archive rows.** Reservoir shards record
+   no fetch time, so their `first_known_at_ms` is `NULL` and a `scan(as_of=…)`
+   cannot see them. A `PIT_STRICT_ASOF` run over such a store returns nothing —
+   that is correct behaviour, not an empty-data bug. Only the legacy wallet-store
+   catalog `fetched_at` is real evidence, and it is used verbatim.
+4. **Repair same-millisecond order once, at ingest.** `arrival_seq` from the store
+   is authoritative; do not re-sort by `trade_id` downstream (see the 2026-11-15
+   entry: `59,584 / 68,744` chain breaks) and do not re-derive order in a study.
+5. **`Decimal(38,12)` truncates below 1e-12.** The migration counts and reports
+   those cells; a study that needs sub-1e-12 prices would need a different scale,
+   not a silent `Float64` fallback.
+
+---
+
+## 2026-11-20 — Stage-1 Scoring and the Kernel Walk-Forward (Slice 4)
+
+`src/trading_ops/research/` now owns the research path: `score_universe` writes
+`RosterStore` scorecards, `run_kernel_backtest` reconciles daily and steps
+`copytrade_kernel.step_checkpoint` every five minutes. The Guardian/PM03 simulators
+(`studies/canonical_replay.py`'s `simulate_*`, `studies/portfolio_risk_policy.py`,
+the registry universe loaders) and the dated studies that drove them are deleted;
+see `docs/adr/0004-slice4-kernel-research-path.md`. Their `reports/` artifacts stay
+as historical evidence.
+
+1. **Measure real PIT venue participation and Euler marginal CDaR, never silent proxies.**
+   `score_universe` queries PIT `bars_1m` venue `quote_volume_usd` (`FACT_STORE_BARS_1M_VENUE_VOLUME`), excludes missing or `<= 0` venue volume via `VENUE_VOLUME_UNKNOWN` without cohort-share fallback, computes forward 5m markout against `bars_1m` `close` (`FACT_STORE_BARS_1M_CLOSE_5M`), and computes exact Euler additive marginal CDaR (`EULER_MARGINAL_CDAR_COHORT`, summing to `1.0` within `1e-9`), gating both before `[0, 1]` clamping.
+2. **Missing evidence is an exclusion, never a zero.** A wallet with no `equity`
+   row, no dated order, or no derivable 5m markout is returned in `excluded` and
+   receives no scorecard — a zero account value would have silently passed the
+   `$1k` floor gate in the wrong direction.
+3. **A daily reconcile cadence must be enforced by construction.** `BacktestConfig`
+   refuses any `reconcile_cadence_ms` other than `DAY_MS`, because the only bug it
+   guards is `evaluate_universe()` being called inside the 5m loop (57,600 times
+   in a 200-day window).
+4. **`NO_TRADE` from the kernel is a finding, not a fixture problem.** An audit
+   tape where buys outsize sells accrues a position large enough to breach
+   `GROSS_EXPOSURE_CAP`, and the kernel is right to refuse it. Fix the synthetic
+   tape or the research `k` cap; never widen the cap to make the test green.
+5. **`decision_sha` covers the decision, not the shell.** Checkpoint, input
+   `KernelState`, notionals, Q15 rejections, risk envelope, projection and net
+   intents are hashed; paper cost simulation, journal writes and broker dispatch
+   are not. Two policies that produce the same sized book therefore share a
+   digest — that is the intended identity, and why a "policy changed" negative
+   test must change the decision, not just a policy field.
+6. **Deleting a simulator is only safe when the capability has a replacement.** The
+   containment/lifecycle arms (`FREEZE_NEW_RISK`, `FLATTEN/RETIRE`, re-netting,
+   dual clocks) existed only in `portfolio_risk_policy`; the roster carries the Q12
+   latch and vetoes, not a containment simulator. The deletion is recorded with
+   that gap explicit — it must not be re-implemented as a second decision engine.

@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import glob
 import hashlib
 import itertools
 import json
-import os
 import re
 import sqlite3
 import urllib.parse
@@ -23,7 +21,7 @@ import canonical_replay as cr
 import numpy as np
 import polars as pl
 
-DEFAULT_ARCHIVE_ROOT = Path.home() / ".local/share/copytrade/research"
+DEFAULT_FACTS_ROOT = Path.home() / ".local/share/copytrade/facts"
 DEFAULT_STORE_ROOT = Path("/home/quant/dev/quant/ml4t-data/.data/store")
 DEFAULT_VIKE_ROOT = Path("/home/quant/dev/copytrade-pm/data/private/backtest_20261112/bars_vike")
 DEFAULT_MIN_TRAIN_FILLS = 15
@@ -42,63 +40,82 @@ def sha256_file(path: Path | str) -> str:
     return digest.hexdigest()
 
 
-def discover_fill_archive(
+def discover_fact_partitions(
     start: int | datetime,
     end: int | datetime,
     *,
-    archive_root: Path | str = DEFAULT_ARCHIVE_ROOT,
+    store_root: Path | str = DEFAULT_FACTS_ROOT,
+    kind: str = "fills",
 ) -> tuple[list[str], dict]:
-    """Discover deduplicated daily Reservoir Parquet files covering UTC ``[start, end)``."""
+    """Return the day-partitioned fact-store files covering UTC ``[start, end)``.
+
+    Reads the ``facts.sqlite`` manifest — never a filesystem glob. The manifest is
+    the same contract ``copytrade_pm.facts`` writes, so research and the store
+    cannot disagree about which day files exist, and a missing day is reported
+    rather than silently absent from a glob that matched nothing.
+
+    The returned manifest keeps the historical shape callers already consume
+    (``count_daily_files``, ``missing_dates``, ``files``, ``archive_sha256``).
+    ``duplicate_date_sources`` is always empty: the store holds exactly one
+    immutable batch per ``(kind, day)``, so a duplicate day is structurally
+    impossible rather than de-duplicated by preference order.
+    """
+    from copytrade_pm.facts import manifest as facts_manifest
+
     start_dt = to_utc_datetime(start)
     end_dt = to_utc_datetime(end)
     if end_dt <= start_dt:
         raise ValueError("INVALID_UTC_WINDOW")
 
-    root = Path(archive_root).expanduser()
     start_day = start_dt.date().isoformat()
     end_day = (end_dt - timedelta(milliseconds=1)).date().isoformat()
+    con = facts_manifest.connect(store_root)
+    try:
+        batches = facts_manifest.day_batches(
+            con, kind, start_day=start_day, end_day=end_day
+        )
+    finally:
+        con.close()
 
-    full_paths = sorted(glob.glob(str(root / "reservoir-full-history-*/hyperliquid/fills/day=*/data.parquet")))
-    mon_paths = sorted(
-        glob.glob(str(root / "reservoir-monitored-plus-six-hyperliquid-*/fills/day=*/data.parquet"))
-    )
+    paths: list[str] = []
+    files_meta: list[dict] = []
+    present: set[str] = set()
+    for batch in batches:
+        path = Path(batch.path)
+        if not path.is_file():
+            raise ValueError(f"FACTS_PARTITION_FILE_MISSING:{kind}:{batch.day}")
+        present.add(batch.day)
+        paths.append(str(path))
+        files_meta.append(
+            {
+                "day": batch.day,
+                "path": str(path),
+                "bytes": path.stat().st_size,
+                "sha256": batch.file_sha256,
+                "rows": batch.rows,
+                "batch_sha16": batch.batch_sha16,
+            }
+        )
 
-    by_day: dict[str, str] = {}
-    duplicates: list[str] = []
-    for path in full_paths + mon_paths:
-        day = path.split("day=")[-1][:10]
-        if not (start_day <= day <= end_day):
-            continue
-        if day in by_day:
-            duplicates.append(day)
-            continue
-        by_day[day] = path
-
-    paths = [by_day[day] for day in sorted(by_day)]
     required_days: list[str] = []
-    cur = start_dt.date()
+    cursor = start_dt.date()
     final_date = (end_dt - timedelta(milliseconds=1)).date()
-    while cur <= final_date:
-        required_days.append(cur.isoformat())
-        cur += timedelta(days=1)
-    missing = sorted(set(required_days) - set(by_day))
-
-    files_meta = [
-        {
-            "day": p.split("day=")[-1][:10],
-            "path": p,
-            "bytes": os.stat(p).st_size,
-            "sha256": sha256_file(p),
-        }
-        for p in paths
-    ]
-    archive_sha256 = hashlib.sha256("".join(x["sha256"] for x in files_meta).encode()).hexdigest()
+    while cursor <= final_date:
+        required_days.append(cursor.isoformat())
+        cursor += timedelta(days=1)
+    missing = sorted(set(required_days) - present)
+    archive_sha256 = hashlib.sha256(
+        "".join(str(meta["sha256"]) for meta in files_meta).encode()
+    ).hexdigest()
     manifest = {
+        "kind": kind,
+        "store_root": str(store_root),
         "count_daily_files": len(paths),
-        "duplicate_date_sources": sorted(duplicates),
+        "duplicate_date_sources": [],
         "missing_dates": missing,
         "files": files_meta,
         "archive_sha256": archive_sha256,
+        "row_count": sum(int(meta["rows"]) for meta in files_meta),
     }
     return paths, manifest
 

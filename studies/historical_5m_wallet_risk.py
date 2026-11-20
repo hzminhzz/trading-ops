@@ -46,7 +46,10 @@ DAILY_LOSS = D(300)
 RISK_USE = D("0.5")
 WALLET_COUNT = 3
 SOURCE_PREFIX = "hyperliquid/mainnet:perp:default/"
-REGISTRY = Path("/home/quant/.local/share/copytrade/registry/wallet_registry.sqlite")
+# Frozen historical registry archived in Phase D; read-only retrospective evidence.
+REGISTRY = Path(
+    "/home/quant/.local/share/copytrade/registry/archive/legacy_wallet_registry_20261119.sqlite"
+)
 STORE = Path("/home/quant/dev/copytrade-pm/data/private/wallet_store")
 BARS = Path("/home/quant/dev/quant/ml4t-data/.data/store")
 REPORT = Path("reports/historical-5m-k-risk-20260701-20261101.json")
