@@ -18,6 +18,7 @@ Provides four reusable building blocks for ``trading-ops`` and ``portfolio-resea
 
 from __future__ import annotations
 
+import importlib.util
 import math
 import re
 from collections.abc import Mapping, Sequence
@@ -4774,3 +4775,12 @@ def update_roster_episode_cusum(
         state.status = "OK"
         state.reasons = ()
     return state
+
+
+def _exec_file_callable(file_path: str, fn_name: str, *args: Any, **kwargs: Any) -> Any:
+    """Load a study script by path in a spawned worker and invoke a top-level callable."""
+    spec = importlib.util.spec_from_file_location("_spawn_study_mod", file_path)
+    assert spec is not None and spec.loader is not None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return getattr(mod, fn_name)(*args, **kwargs)

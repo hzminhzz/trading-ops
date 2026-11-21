@@ -1,0 +1,56 @@
+{
+  "schema": "trading_ops_research_proposal_v1",
+  "created_at": "2026-11-21T10:10:00Z",
+  "status": "PROPOSAL_UNAPPROVED_RETROSPECTIVE",
+  "approval_required": true,
+  "trading_authorized": false,
+  "roster_mutated": false,
+  "provenance": "RETROSPECTIVE_RESEARCH_ONLY",
+  "allow_undated": true,
+  "target_account_profile": {
+    "firm": "crypto-fund-trader",
+    "catalog_key": "crypto-fund-trader:two_phase:phase_1",
+    "account_usd": 10000,
+    "profit_target_usd": 800,
+    "daily_loss_limit_usd": 500,
+    "daily_basis": "BALANCE",
+    "max_static_dd_usd": 1000,
+    "trailing_basis": "STATIC",
+    "fee_status": "BREAK_EVEN_ONLY_FEE_UNVERIFIED"
+  },
+  "candidate": {
+    "source_study_script": "studies/2026-11-21__cft__10k__may-nov-disjoint-10pods.py",
+    "source_report_md": "reports/2026-11-21__cft__10k__may-nov-disjoint-10pods.md",
+    "source_results_json": "reports/2026-11-21__cft__10k__may-nov-disjoint-10pods__results.json",
+    "top_candidate_label": "MPOD-08_PERMISSIVE_OOS_RETROSPECTIVE",
+    "pod_id": "MPOD-08",
+    "selection_basis": "permissive_constituent:sep_nov_oos",
+    "aliases": [
+      "R#3e7de7f0",
+      "DEX-52",
+      "R#f2658c04"
+    ],
+    "seed_frozen_k": [
+      0.00675683,
+      0.01895115,
+      0.14881438
+    ],
+    "sep_nov_oos_net_pnl_usd": -10.2,
+    "first_decision_sha": "bb49a76d68e0e5b1708020ec47e0d6e66cf966aee5d41e8fed0ed11ba205897c",
+    "last_decision_sha": "caa4ad97756439a9d9364696a345e8e8f1d3b6de1e61a28587c53a344adfc3c5"
+  },
+  "unresolved_gates": [
+    {
+      "code": "STRICT_PIT_EMPTY",
+      "detail": "Retrospective FactStore returned 0 cards with allow_undated=False."
+    },
+    {
+      "code": "CFT_FEE_UNVERIFIED",
+      "detail": "crypto-fund-trader is absent from sim_inputs.json; fee remains unverified."
+    },
+    {
+      "code": "UPSTREAM_SEAL_AND_CWSA_PENDING",
+      "detail": "Prospective CWSA observation and copytrade-pm sealing require explicit approval."
+    }
+  ]
+}
