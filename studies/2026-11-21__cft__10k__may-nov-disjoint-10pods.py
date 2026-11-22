@@ -15,6 +15,7 @@ import argparse
 import hashlib
 import json
 import multiprocessing
+import os
 import re
 import shutil
 import sys
@@ -1024,6 +1025,16 @@ def _evaluate_pod_process(
     )
 
 
+def resolve_max_workers(max_workers: int, cpu_count: int | None = None) -> int:
+    """Resolve worker count; 0 reserves one CPU core for Jupyter responsiveness."""
+    if max_workers < 0:
+        raise ValueError("INVALID_MAX_WORKERS")
+    if max_workers == 0:
+        detected = cpu_count if cpu_count is not None else (os.cpu_count() or 2)
+        return max(1, detected - 1)
+    return max_workers
+
+
 def run_stage2_pods(
     pods: Sequence[Mapping[str, Any]],
     *,
@@ -1035,10 +1046,9 @@ def run_stage2_pods(
     anchor_days: Sequence[str] = DEFAULT_EQUITY_ANCHOR_DAYS,
 ) -> list[dict[str, Any]]:
     """Run isolated Stage-2 kernel backtests across selected pods."""
-    if max_workers < 1:
-        raise ValueError("INVALID_MAX_WORKERS")
+    resolved_workers = resolve_max_workers(max_workers)
     ordered = list(pods)
-    if max_workers == 1 or len(ordered) <= 1:
+    if resolved_workers == 1 or len(ordered) <= 1:
         results = [
             evaluate_single_pod(
                 pod,
@@ -1057,7 +1067,7 @@ def run_stage2_pods(
         plain_anchors = tuple(str(day) for day in anchor_days)
         mp_ctx = multiprocessing.get_context("spawn")
         with ProcessPoolExecutor(
-            max_workers=min(max_workers, len(ordered)),
+            max_workers=min(resolved_workers, len(ordered)),
             mp_context=mp_ctx,
         ) as pool:
             if _evaluate_pod_process.__module__ in ("__main__", "__mp_main__"):
@@ -1413,13 +1423,14 @@ def run_study(
     pods_filter: str | None = None,
 ) -> dict[str, Any]:
     """Execute the complete Phase-D study pipeline and emit sanitized artifacts."""
+    resolved_workers = resolve_max_workers(max_workers)
     inputs = load_private_inputs(inputs_json)
     selected_pods = _order_pods(inputs["pods_10"], pods_filter)
     rulebook = build_cft_rulebook(evidence_sha=inputs["seed_sha"])
 
     print(
         f"[study] starting {STUDY_STEM}: wallets={len(inputs['addresses'])}, "
-        f"pods={len(selected_pods)}, max_workers={max_workers}",
+        f"pods={len(selected_pods)}, max_workers={resolved_workers}",
         flush=True,
     )
     with FactStore(facts_store, create=False) as facts:
@@ -1436,7 +1447,7 @@ def run_study(
         alias_to_address=inputs["alias_to_address"],
         address_to_alias=inputs["address_to_alias"],
         rulebook=rulebook,
-        max_workers=max_workers,
+        max_workers=resolved_workers,
     )
     top_candidate = select_top_candidate(stage2_pods)
 

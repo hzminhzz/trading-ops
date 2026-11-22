@@ -9,6 +9,7 @@ import json
 import os
 import re
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tarfile
@@ -779,3 +780,424 @@ def test_detached_wrapper_and_incremental_poll_retries(
     monkeypatch.setattr(subprocess, "run", _remote_nonzero)
     with pytest.raises(RuntimeError, match="REMOTE_SCRIPT_FAILED:7"):
         runner._poll_remote_job(plan, poll_interval_sec=0.0, max_retries=1)
+
+
+def test_sync_facts_and_prune_staging(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    store_dir = tmp_path / "store"
+    store_dir.mkdir()
+    rclone_cfg = tmp_path / "rclone.conf"
+    rclone_cfg.write_text("[gdrive]\ntoken = SECRET_TOKEN\n", encoding="utf-8")
+
+    with pytest.raises(FileNotFoundError, match="FACTS_SQLITE_MISSING"):
+        runner.sync_facts(
+            src_store=store_dir,
+            rclone_remote="gdrive:quant-data-backup/facts",
+            rclone_config=rclone_cfg,
+            dry_run=True,
+        )
+
+    (store_dir / "facts.sqlite").write_bytes(b"sqlite")
+
+    with pytest.raises(ValueError, match="TRANSFERS_MUST_BE_POSITIVE"):
+        runner.sync_facts(
+            src_store=store_dir,
+            rclone_remote="gdrive:quant-data-backup/facts",
+            rclone_config=rclone_cfg,
+            transfers=0,
+            dry_run=True,
+        )
+
+    def _forbid_subprocess(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("subprocess.run must not be called during sync-facts --dry-run")
+
+    monkeypatch.setattr(subprocess, "run", _forbid_subprocess)
+
+    rc = runner.main(
+        [
+            "sync-facts",
+            "--src-store",
+            str(store_dir),
+            "--rclone-remote",
+            "gdrive:quant-data-backup/facts/",
+            "--rclone-config",
+            str(rclone_cfg),
+            "--transfers",
+            "8",
+            "--dry-run",
+        ]
+    )
+    assert rc == 0
+    dry_sync = json.loads(capsys.readouterr().out)
+    assert dry_sync["dry_run"] is True
+    assert dry_sync["rclone_remote"] == "gdrive:quant-data-backup/facts"
+    assert len(dry_sync["commands"]) == 2
+    assert "rclone sync --config" in dry_sync["commands"][0]
+    assert "--transfers 8 --checkers 8 --fast-list --exclude '*.sqlite*'" in dry_sync["commands"][0]
+    assert "rclone copyto --config" in dry_sync["commands"][1]
+    assert "facts.sqlite gdrive:quant-data-backup/facts/facts.sqlite" in dry_sync["commands"][1]
+
+    executed_cmds: list[list[str]] = []
+
+    def _fake_sync_run(cmd: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        executed_cmds.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0)
+
+    monkeypatch.setattr(subprocess, "run", _fake_sync_run)
+    live_sync = runner.sync_facts(
+        src_store=store_dir,
+        rclone_remote="gdrive:quant-data-backup/facts",
+        rclone_config=rclone_cfg,
+        transfers=16,
+        dry_run=False,
+    )
+    assert live_sync["dry_run"] is False
+    assert len(executed_cmds) == 2
+    assert executed_cmds[0][1] == "sync"
+    assert executed_cmds[1][1] == "copyto"
+
+    with pytest.raises(ValueError, match="KEEP_LATEST_MUST_BE_NON_NEGATIVE"):
+        runner.prune_staging(
+            rclone_remote="gdrive:quant-data-backup/colab-staging",
+            rclone_config=rclone_cfg,
+            keep_latest=-1,
+        )
+
+    lsf_output = (
+        "2026-11-19 08:00:00;old_bundle.tar.gz\n"
+        "2026-11-21 12:30:00;newest_bundle.tar.gz\n"
+        "2026-11-20 09:15:00;mid_bundle.tar.gz\n"
+    )
+    prune_cmds: list[list[str]] = []
+
+    def _fake_prune_run(cmd: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        prune_cmds.append(cmd)
+        if cmd[1] == "lsf":
+            return subprocess.CompletedProcess(cmd, 0, stdout=lsf_output, stderr="")
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", _fake_prune_run)
+    rc = runner.main(
+        [
+            "prune-staging",
+            "--rclone-remote",
+            "gdrive:quant-data-backup/colab-staging/",
+            "--rclone-config",
+            str(rclone_cfg),
+            "--keep-latest",
+            "1",
+            "--dry-run",
+        ]
+    )
+    assert rc == 0
+    dry_prune = json.loads(capsys.readouterr().out)
+    assert dry_prune["kept"] == [{"name": "newest_bundle.tar.gz", "timestamp": "2026-11-21 12:30:00"}]
+    assert [d["name"] for d in dry_prune["deleted"]] == ["mid_bundle.tar.gz", "old_bundle.tar.gz"]
+    assert len(prune_cmds) == 1
+    assert prune_cmds[0][1] == "lsf"
+
+    prune_cmds.clear()
+    live_prune = runner.prune_staging(
+        rclone_remote="gdrive:quant-data-backup/colab-staging",
+        rclone_config=rclone_cfg,
+        keep_latest=1,
+        dry_run=False,
+    )
+    assert [d["name"] for d in live_prune["deleted"]] == ["mid_bundle.tar.gz", "old_bundle.tar.gz"]
+    assert [cmd[1] for cmd in prune_cmds] == ["lsf", "deletefile", "deletefile"]
+    assert prune_cmds[1][-1] == "gdrive:quant-data-backup/colab-staging/mid_bundle.tar.gz"
+    assert prune_cmds[2][-1] == "gdrive:quant-data-backup/colab-staging/old_bundle.tar.gz"
+
+
+def test_facts_remote_and_venv_cache_plan_and_wrapper(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def _forbid_subprocess(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("subprocess.run must not be called during --dry-run")
+
+    monkeypatch.setattr(subprocess, "run", _forbid_subprocess)
+
+    facts_tar = tmp_path / "facts.tar.gz"
+    facts_tar.write_bytes(b"tar")
+    out_md = tmp_path / "report.md"
+    rclone_cfg = tmp_path / "rclone.conf"
+    rclone_cfg.write_text("[gdrive]\ntoken = SECRET_RCLONE_TOKEN\n", encoding="utf-8")
+
+    name_a = runner.venv_cache_filename()
+    name_b = runner.venv_cache_filename(list(reversed(runner.REMOTE_PIP_PACKAGES)), "3.14")
+    name_c = runner.venv_cache_filename([*runner.REMOTE_PIP_PACKAGES, "scipy"], "3.14")
+    assert re.fullmatch(r"py314_[0-9a-f]{12}\.tar\.gz", name_a)
+    assert name_a == name_b
+    assert name_a != name_c
+
+    with pytest.raises(ValueError, match="FACTS_SOURCE_REQUIRED"):
+        runner.build_colab_plan(
+            worktree=ROOT,
+            rel_script_path="scripts/colab_research_run.py",
+            downloads=[f"/content/report.md:{out_md}"],
+        )
+    with pytest.raises(ValueError, match="FACTS_SOURCE_MUTUALLY_EXCLUSIVE"):
+        runner.build_colab_plan(
+            worktree=ROOT,
+            rel_script_path="scripts/colab_research_run.py",
+            facts_tar=facts_tar,
+            facts_remote="gdrive:quant-data-backup/facts",
+            rclone_config=rclone_cfg,
+            downloads=[f"/content/report.md:{out_md}"],
+        )
+    with pytest.raises(ValueError, match="INVALID_DAY_RANGE"):
+        runner.build_colab_plan(
+            worktree=ROOT,
+            rel_script_path="scripts/colab_research_run.py",
+            facts_remote="gdrive:quant-data-backup/facts",
+            facts_start_day="2026-11-01",
+            facts_end_day="2026-05-01",
+            rclone_config=rclone_cfg,
+            downloads=[f"/content/report.md:{out_md}"],
+        )
+    with pytest.raises(SystemExit) as exc_neither:
+        runner.main(
+            [
+                "run",
+                "--worktree",
+                str(ROOT),
+                "--script",
+                "scripts/colab_research_run.py",
+                "--download",
+                f"/content/report.md:{out_md}",
+                "--dry-run",
+            ]
+        )
+    assert exc_neither.value.code == 2
+    with pytest.raises(SystemExit) as exc_both:
+        runner.main(
+            [
+                "run",
+                "--worktree",
+                str(ROOT),
+                "--script",
+                "scripts/colab_research_run.py",
+                "--facts-tar",
+                str(facts_tar),
+                "--facts-remote",
+                "gdrive:quant-data-backup/facts",
+                "--rclone-config",
+                str(rclone_cfg),
+                "--download",
+                f"/content/report.md:{out_md}",
+                "--dry-run",
+            ]
+        )
+    assert exc_both.value.code == 2
+    capsys.readouterr()
+
+    rc = runner.main(
+        [
+            "run",
+            "--worktree",
+            str(ROOT),
+            "--script",
+            "scripts/colab_research_run.py",
+            "--facts-remote",
+            "gdrive:quant-data-backup/facts/",
+            "--facts-start-day",
+            "2026-05-01",
+            "--facts-end-day",
+            "2026-05-03",
+            "--venv-cache-remote",
+            "gdrive:quant-data-backup/colab-cache/",
+            "--rclone-remote",
+            "gdrive:quant-data-backup/colab-staging/",
+            "--rclone-config",
+            str(rclone_cfg),
+            "--chunk-mb",
+            "1",
+            "--download",
+            f"/content/report.md:{out_md}",
+            "--session",
+            "cache-dry",
+            "--dry-run",
+        ]
+    )
+    assert rc == 0
+    raw_out = capsys.readouterr().out
+    assert "SECRET_RCLONE_TOKEN" not in raw_out
+    runner._assert_sanitized_text("cache_dry_out", raw_out)
+    plan_out = json.loads(raw_out)
+    assert plan_out["facts_tar_bytes"] == 0
+    assert plan_out["facts_remote"] == "gdrive:quant-data-backup/facts"
+    assert plan_out["facts_start_day"] == "2026-05-01"
+    assert plan_out["facts_end_day"] == "2026-05-03"
+    assert plan_out["venv_cache_remote"] == "gdrive:quant-data-backup/colab-cache"
+    assert plan_out["venv_cache_filename"] == name_a
+
+    conf_uploads = [cmd for cmd in plan_out["commands"] if "/content/.rclone.conf" in cmd]
+    assert len(conf_uploads) == 1
+    assert not any("/content/facts_slim.tar.gz" in cmd for cmd in plan_out["commands"])
+
+    wrapper_code = runner._render_remote_wrapper(
+        "scripts/colab_research_run.py",
+        ["--max-workers", "0"],
+        rclone_pulls=[("/content/code_bundle.tar.gz", "gdrive:stage/code.tar.gz", "a" * 64, 123)],
+        facts_remote="gdrive:quant-data-backup/facts",
+        facts_start_day="2026-05-01",
+        facts_end_day="2026-05-03",
+        venv_cache_remote="gdrive:quant-data-backup/colab-cache",
+    )
+    ast.parse(wrapper_code)
+    assert "SECRET_RCLONE_TOKEN" not in wrapper_code
+    assert "_pull_rclone_files(RCLONE_PULLS, unlink_config=False)" in wrapper_code
+    assert "_pull_facts_from_remote(" in wrapper_code
+    assert "_setup_venv_with_cache(" in wrapper_code
+    unlink_idx = wrapper_code.index('Path("/content/.rclone.conf").unlink(missing_ok=True)')
+    run_job_idx = wrapper_code.index('Path("/content/run_job.py").write_text')
+    setsid_idx = wrapper_code.index("setsid ")
+    assert wrapper_code.index("_pull_facts_from_remote(") < unlink_idx
+    assert wrapper_code.index("_setup_venv_with_cache(") < unlink_idx
+    assert unlink_idx < run_job_idx < setsid_idx
+
+    # Verify batches.path rewrite snippet only updates existing Parquet files
+    facts_root = tmp_path / "facts_slim"
+    bar_file = facts_root / "bars_1m" / "day=2026-05-01" / "abc123.parquet"
+    bar_file.parent.mkdir(parents=True)
+    bar_file.write_bytes(b"pq")
+    manifest = facts_root / "facts.sqlite"
+    with sqlite3.connect(manifest) as con:
+        con.execute("CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT)")
+        con.execute(
+            "CREATE TABLE batches(kind TEXT, day TEXT, batch_sha16 TEXT, path TEXT)"
+        )
+        con.execute("INSERT INTO meta(key, value) VALUES('store_root', '/old/root')")
+        con.execute(
+            "INSERT INTO batches(kind, day, batch_sha16, path) VALUES(?, ?, ?, ?)",
+            ("bars_1m", "2026-05-01", "abc123", "/old/root/bars_1m/day=2026-05-01/abc123.parquet"),
+        )
+        con.execute(
+            "INSERT INTO batches(kind, day, batch_sha16, path) VALUES(?, ?, ?, ?)",
+            ("bars_1m", "2026-04-30", "def456", "/old/root/bars_1m/day=2026-04-30/def456.parquet"),
+        )
+
+    assert '_rewrite_facts_manifest(Path("/content/facts_slim"))' in wrapper_code
+    runner._rewrite_facts_manifest(facts_root)
+    with sqlite3.connect(manifest) as con:
+        store_root_val = con.execute("SELECT value FROM meta WHERE key = 'store_root'").fetchone()[0]
+        batch_paths = dict(con.execute("SELECT day, path FROM batches").fetchall())
+    assert store_root_val == str(facts_root)
+    assert batch_paths["2026-05-01"] == str(bar_file)
+    assert batch_paths["2026-04-30"] == "/old/root/bars_1m/day=2026-04-30/def456.parquet"
+
+    monkeypatch.setattr(shutil, "which", lambda name: "/usr/bin/rclone" if name == "rclone" else None)
+    captured_filters: list[str] = []
+
+    def _fake_facts_pull(cmd: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        if cmd[1] == "lsd":
+            return subprocess.CompletedProcess(
+                cmd, 0, stdout="          -1 2026-05-01 00:00:00        -1 day=2026-05-01\n          -1 2026-05-02 00:00:00        -1 day=2026-05-02\n", stderr=""
+            )
+        assert cmd[:4] == ["/usr/bin/rclone", "copy", "--config", str(rclone_cfg)]
+        assert "--transfers" in cmd and "16" in cmd
+        assert "--fast-list" in cmd
+        ff_idx = cmd.index("--filter-from") + 1
+        captured_filters.append(Path(cmd[ff_idx]).read_text(encoding="utf-8"))
+        return subprocess.CompletedProcess(cmd, 0)
+
+    monkeypatch.setattr(subprocess, "run", _fake_facts_pull)
+    runner._pull_facts_from_remote(
+        "gdrive:quant-data-backup/facts",
+        tmp_path / "facts_dst",
+        config_path=rclone_cfg,
+        start_day="2026-05-01",
+        end_day="2026-05-03",
+    )
+    assert captured_filters[-1].splitlines() == [
+        "+ /facts.sqlite",
+        "+ /fills/**",
+        "+ /equity/**",
+        "+ /bars_1m/day=2026-05-01/**",
+        "+ /bars_1m/day=2026-05-02/**",
+        "+ /bars_1m/day=2026-05-03/**",
+        "- **",
+    ]
+    runner._pull_facts_from_remote(
+        "gdrive:quant-data-backup/facts",
+        tmp_path / "facts_dst_onesided",
+        config_path=rclone_cfg,
+        start_day="2026-05-02",
+        end_day=None,
+    )
+    assert captured_filters[-1].splitlines() == [
+        "+ /facts.sqlite",
+        "+ /fills/**",
+        "+ /equity/**",
+        "+ /bars_1m/day=2026-05-02/**",
+        "- **",
+    ]
+    runner._pull_facts_from_remote(
+        "gdrive:quant-data-backup/facts",
+        tmp_path / "facts_dst_all",
+        config_path=rclone_cfg,
+    )
+    assert captured_filters[-1].splitlines() == [
+        "+ /facts.sqlite",
+        "+ /fills/**",
+        "+ /equity/**",
+        "+ /bars_1m/**",
+        "- **",
+    ]
+
+    content_hit = tmp_path / "content_hit"
+    content_hit.mkdir()
+    hit_cmds: list[object] = []
+
+    def _fake_venv_hit(cmd: object, **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        hit_cmds.append(cmd)
+        if isinstance(cmd, list) and cmd[0] == "/usr/bin/rclone" and cmd[1] == "copyto":
+            Path(cmd[5]).write_bytes(b"tar")
+        return subprocess.CompletedProcess(cmd, 0)
+
+    monkeypatch.setattr(subprocess, "run", _fake_venv_hit)
+    assert runner._setup_venv_with_cache(
+        "gdrive:quant-data-backup/colab-cache",
+        name_a,
+        runner.REMOTE_PIP_PACKAGES,
+        config_path=rclone_cfg,
+        content_dir=content_hit,
+    )
+    assert len(hit_cmds) == 3
+    assert not (content_hit / "venv_cache.tar.gz").exists()
+
+    content_miss = tmp_path / "content_miss"
+    content_miss.mkdir()
+    miss_calls: list[object] = []
+
+    def _fake_venv_miss(cmd: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
+        miss_calls.append(cmd)
+        if isinstance(cmd, list) and cmd[0] == "/usr/bin/rclone" and "colab-cache" in cmd[4]:
+            raise subprocess.CalledProcessError(1, cmd)
+        if isinstance(cmd, list) and cmd[0] == "tar" and cmd[1] == "-czf":
+            Path(cmd[2]).write_bytes(b"packed")
+            return subprocess.CompletedProcess(cmd, 0)
+        if isinstance(cmd, list) and cmd[0] == "/usr/bin/rclone" and cmd[1] == "copyto" and len(cmd) == 6:
+            raise subprocess.CalledProcessError(1, cmd)
+        if isinstance(cmd, str):
+            assert kwargs.get("shell") is True
+            assert f"UV_PYTHON_INSTALL_DIR={content_miss / 'py314'}" in cmd
+            assert "uv python install 3.14" in cmd
+            return subprocess.CompletedProcess(cmd, 0)
+        return subprocess.CompletedProcess(cmd, 0)
+
+    monkeypatch.setattr(subprocess, "run", _fake_venv_miss)
+    assert not runner._setup_venv_with_cache(
+        "gdrive:quant-data-backup/colab-cache",
+        name_a,
+        runner.REMOTE_PIP_PACKAGES,
+        config_path=rclone_cfg,
+        content_dir=content_miss,
+    )
+    assert not (content_miss / "venv_cache.tar.gz").exists()
+    assert any(isinstance(c, str) and "uv pip install" in c for c in miss_calls)

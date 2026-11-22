@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -508,3 +509,58 @@ def test_run_stage2_pods_process_pool_spawn_parity(tmp_path: Path) -> None:
         ("2026-10-01", anchor_day_3),
     )
     assert direct["pod_id"] == "MPOD-01"
+
+
+def test_resolve_max_workers_reserves_one_core_and_validates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    study = _load_study_module()
+
+    assert study.build_parser().parse_args([]).max_workers == 4
+
+    assert study.resolve_max_workers(4) == 4
+    assert study.resolve_max_workers(0, cpu_count=1) == 1
+    assert study.resolve_max_workers(0, cpu_count=2) == 1
+    assert study.resolve_max_workers(0, cpu_count=8) == 7
+
+    monkeypatch.setattr(os, "cpu_count", lambda: 6)
+    assert study.resolve_max_workers(0) == 5
+
+    monkeypatch.setattr(os, "cpu_count", lambda: None)
+    assert study.resolve_max_workers(0) == 1
+
+    with pytest.raises(ValueError, match="INVALID_MAX_WORKERS"):
+        study.resolve_max_workers(-1)
+
+    bars_3d = 3 * 288
+    fills_a = wallet_round_trips(
+        WALLET_A, "BTC", start_ms=START, bars=bars_3d, base_price=20000.0, size=0.1
+    )
+    fills_b = wallet_round_trips(
+        WALLET_B, "ETH", start_ms=START, bars=bars_3d, base_price=2000.0, size=1.0
+    )
+    all_fills = fills_a + fills_b
+    src_root = tmp_path / "src_auto_workers"
+    src_store = build_store(
+        src_root,
+        fills=all_fills,
+        equity={WALLET_A: (Decimal(12000), 1), WALLET_B: (Decimal(9000), 1)},
+        bars_1m_rows=bars_1m_from_fills(all_fills),
+    )
+    src_store.close()
+    alias_to_address = {alias: addr for addr, alias in ALIAS_MAP.items()}
+    rulebook = study.build_cft_rulebook(evidence_sha="e" * 64)
+    pods = [{"pod_id": "MPOD-01", "aliases": ["R#aaa00001", "R#bbb00002"]}]
+
+    monkeypatch.setattr(os, "cpu_count", lambda: 2)
+    auto_res = study.run_stage2_pods(
+        pods,
+        src_store_path=src_root / "facts",
+        alias_to_address=alias_to_address,
+        address_to_alias=ALIAS_MAP,
+        rulebook=rulebook,
+        max_workers=0,
+        anchor_days=("2026-10-01",),
+    )
+    assert len(auto_res) == 1
+    assert auto_res[0]["pod_id"] == "MPOD-01"

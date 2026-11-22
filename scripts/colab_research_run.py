@@ -12,6 +12,7 @@ import os
 import re
 import shlex
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tarfile
@@ -23,7 +24,7 @@ import uuid
 import zipfile
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -618,11 +619,187 @@ def _ensure_rclone_installed(bin_path: Path = Path("/usr/local/bin/rclone")) -> 
     return str(bin_path)
 
 
+def _resolve_rclone_config(rclone_config: Path | None = None) -> Path:
+    cfg_candidate = (
+        rclone_config if rclone_config is not None else Path.home() / ".config/rclone/rclone.conf"
+    )
+    resolved = cfg_candidate.expanduser().resolve()
+    if not resolved.is_file():
+        raise FileNotFoundError(f"RCLONE_CONFIG_MISSING:{resolved}")
+    return resolved
+
+
+def _rclone_join(remote: str, name: str) -> str:
+    sep = "" if remote.endswith(":") else "/"
+    return f"{remote}{sep}{name.lstrip('/')}"
+
+
+def venv_cache_filename(
+    packages: Sequence[str] = REMOTE_PIP_PACKAGES,
+    python_version: str = "3.14",
+) -> str:
+    """Return deterministic cache archive name for a remote uv/Python environment."""
+    payload = json.dumps(
+        {
+            "format": "uv-content-py314-v1",
+            "python_version": python_version,
+            "packages": sorted(str(pkg).strip() for pkg in packages),
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    sha12 = hashlib.sha256(payload).hexdigest()[:12]
+    py_tag = python_version.replace(".", "")
+    return f"py{py_tag}_{sha12}.tar.gz"
+
+
+def sync_facts(
+    *,
+    src_store: Path,
+    rclone_remote: str,
+    rclone_config: Path | None = None,
+    transfers: int = 16,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    """Sync Parquet partitions first, then facts.sqlite, to an rclone remote."""
+    if transfers < 1:
+        raise ValueError(f"TRANSFERS_MUST_BE_POSITIVE:{transfers}")
+    src_store = src_store.resolve()
+    facts_sqlite = src_store / "facts.sqlite"
+    if not facts_sqlite.is_file():
+        raise FileNotFoundError(f"FACTS_SQLITE_MISSING:{facts_sqlite}")
+    normalized_remote = rclone_remote.strip().rstrip("/")
+    if not normalized_remote:
+        raise ValueError("RCLONE_REMOTE_REQUIRED")
+    resolved_cfg = _resolve_rclone_config(rclone_config)
+
+    commands = [
+        [
+            "rclone",
+            "sync",
+            "--config",
+            str(resolved_cfg),
+            "--transfers",
+            str(transfers),
+            "--checkers",
+            str(transfers),
+            "--fast-list",
+            "--exclude",
+            "*.sqlite*",
+            str(src_store),
+            normalized_remote,
+        ],
+        [
+            "rclone",
+            "copyto",
+            "--config",
+            str(resolved_cfg),
+            "--checksum",
+            str(facts_sqlite),
+            _rclone_join(normalized_remote, "facts.sqlite"),
+        ],
+    ]
+    if not dry_run:
+        for cmd in commands:
+            _run_cli(cmd, check=True)
+
+    summary = {
+        "dry_run": dry_run,
+        "src_store": str(src_store),
+        "rclone_remote": normalized_remote,
+        "commands": [shlex.join(cmd) for cmd in commands],
+    }
+    _assert_sanitized_text("sync_facts_summary", json.dumps(summary))
+    return summary
+
+
+def prune_staging(
+    *,
+    rclone_remote: str,
+    rclone_config: Path | None = None,
+    keep_latest: int = 1,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    """Keep the newest ``keep_latest`` files on staging remote and delete older ones."""
+    if keep_latest < 0:
+        raise ValueError(f"KEEP_LATEST_MUST_BE_NON_NEGATIVE:{keep_latest}")
+    normalized_remote = rclone_remote.strip().rstrip("/")
+    if not normalized_remote:
+        raise ValueError("RCLONE_REMOTE_REQUIRED")
+    resolved_cfg = _resolve_rclone_config(rclone_config)
+
+    list_cmd = [
+        "rclone",
+        "lsf",
+        "--config",
+        str(resolved_cfg),
+        "--files-only",
+        "--separator",
+        ";",
+        "--format",
+        "tp",
+        normalized_remote,
+    ]
+    proc = subprocess.run(
+        list_cmd,
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        check=True,
+        env=_unbuffered_env(),
+    )
+
+    entries: list[tuple[float, str, str]] = []
+    for raw_line in proc.stdout.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        ts_raw, sep, name_raw = line.partition(";")
+        name = name_raw.strip()
+        if not sep or not name:
+            raise ValueError(f"INVALID_RCLONE_LSF_LINE:{line}")
+        ts_clean = ts_raw.strip()
+        dt = datetime.fromisoformat(ts_clean)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=UTC)
+        entries.append((dt.timestamp(), ts_clean, name))
+
+    entries.sort(key=lambda item: (item[0], item[1], item[2]), reverse=True)
+    kept = entries[:keep_latest]
+    to_delete = entries[keep_latest:]
+    delete_cmds = [
+        [
+            "rclone",
+            "deletefile",
+            "--config",
+            str(resolved_cfg),
+            _rclone_join(normalized_remote, name),
+        ]
+        for _, _, name in to_delete
+    ]
+    if not dry_run:
+        for cmd in delete_cmds:
+            _run_cli(cmd, check=True)
+
+    summary = {
+        "dry_run": dry_run,
+        "rclone_remote": normalized_remote,
+        "keep_latest": keep_latest,
+        "total_files": len(entries),
+        "kept": [{"name": name, "timestamp": ts_clean} for _, ts_clean, name in kept],
+        "deleted": [{"name": name, "timestamp": ts_clean} for _, ts_clean, name in to_delete],
+        "commands": [shlex.join(cmd) for cmd in delete_cmds],
+    }
+    _assert_sanitized_text("prune_staging_summary", json.dumps(summary))
+    return summary
+
+
 def _pull_rclone_files(
     specs: Sequence[tuple[str, str, str, int]],
     *,
     config_path: Path = Path("/content/.rclone.conf"),
     root_override: Path | None = None,
+    unlink_config: bool = True,
 ) -> None:
     def _resolve(raw_path: str) -> Path:
         if root_override is None:
@@ -655,7 +832,195 @@ def _pull_rclone_files(
                     f"RCLONE_PULL_MISMATCH:{dest_raw}:bytes={actual_bytes}/{expected_bytes}:sha256={actual_sha256}/{expected_sha256}"
                 )
     finally:
-        resolved_config.unlink(missing_ok=True)
+        if unlink_config:
+            resolved_config.unlink(missing_ok=True)
+
+
+def _build_facts_filter_lines(
+    start_day: str | None = None,
+    end_day: str | None = None,
+    *,
+    available_bar_days: Sequence[str] | None = None,
+) -> list[str]:
+    lines = ["+ /facts.sqlite", "+ /fills/**", "+ /equity/**"]
+    if start_day is None and end_day is None:
+        lines.append("+ /bars_1m/**")
+    elif start_day is not None and end_day is not None:
+        cur = date.fromisoformat(start_day)
+        end = date.fromisoformat(end_day)
+        while cur <= end:
+            lines.append(f"+ /bars_1m/day={cur.isoformat()}/**")
+            cur += timedelta(days=1)
+    else:
+        for day_str in available_bar_days or ():
+            if start_day is not None and day_str < start_day:
+                continue
+            if end_day is not None and day_str > end_day:
+                continue
+            lines.append(f"+ /bars_1m/day={day_str}/**")
+    lines.append("- **")
+    return lines
+
+
+def _pull_facts_from_remote(
+    facts_remote: str,
+    dest_dir: Path,
+    *,
+    config_path: Path = Path("/content/.rclone.conf"),
+    start_day: str | None = None,
+    end_day: str | None = None,
+) -> None:
+    rclone_bin = _ensure_rclone_installed()
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    available_bar_days: list[str] | None = None
+    if (start_day is None) != (end_day is None):
+        sep = "" if facts_remote.endswith(":") else "/"
+        lsd = subprocess.run(
+            [rclone_bin, "lsd", "--config", str(config_path), f"{facts_remote}{sep}bars_1m"],
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        available_bar_days = []
+        if lsd.returncode == 0:
+            for line in lsd.stdout.splitlines():
+                token = line.strip().split()[-1] if line.strip() else ""
+                if token.startswith("day="):
+                    available_bar_days.append(token.removeprefix("day="))
+    filter_lines = _build_facts_filter_lines(
+        start_day, end_day, available_bar_days=available_bar_days
+    )
+    with tempfile.TemporaryDirectory(prefix="facts-filter-") as tmp_dir:
+        filter_file = Path(tmp_dir) / "filters.txt"
+        filter_file.write_text("\n".join(filter_lines) + "\n", encoding="utf-8")
+        subprocess.run(
+            [
+                rclone_bin,
+                "copy",
+                "--config",
+                str(config_path),
+                "--transfers",
+                "16",
+                "--checkers",
+                "16",
+                "--fast-list",
+                "--filter-from",
+                str(filter_file),
+                facts_remote,
+                str(dest_dir),
+            ],
+            stdin=subprocess.DEVNULL,
+            check=True,
+        )
+
+
+def _rewrite_facts_manifest(facts_root: Path) -> None:
+    manifest = facts_root / "facts.sqlite"
+    if not manifest.is_file():
+        return
+    with sqlite3.connect(manifest) as con:
+        con.execute(
+            "INSERT INTO meta(key, value) VALUES('store_root', ?) "
+            "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            (str(facts_root),),
+        )
+        rows = con.execute("SELECT batch_sha16, kind, day, path FROM batches").fetchall()
+        for batch_sha16, kind, day, old_path in rows:
+            day_dir = facts_root / kind / f"day={day}"
+            cand_sha = day_dir / f"{batch_sha16}.parquet"
+            cand_name = day_dir / Path(str(old_path)).name
+            new_path: str | None = None
+            if cand_sha.is_file():
+                new_path = str(cand_sha)
+            elif cand_name.is_file():
+                new_path = str(cand_name)
+            if new_path is not None:
+                con.execute(
+                    "UPDATE batches SET path = ? WHERE kind = ? AND day = ? AND batch_sha16 = ?",
+                    (new_path, kind, day, batch_sha16),
+                )
+
+
+def _setup_venv_with_cache(
+    venv_cache_remote: str,
+    cache_filename: str,
+    packages: Sequence[str],
+    *,
+    config_path: Path = Path("/content/.rclone.conf"),
+    content_dir: Path = Path("/content"),
+) -> bool:
+    rclone_bin = _ensure_rclone_installed()
+    sep = "" if venv_cache_remote.endswith(":") else "/"
+    remote_archive = f"{venv_cache_remote}{sep}{cache_filename}"
+    local_archive = content_dir / "venv_cache.tar.gz"
+    venv_python = content_dir / "venv" / "bin" / "python"
+
+    hit = False
+    try:
+        local_archive.unlink(missing_ok=True)
+        shutil.rmtree(content_dir / "venv", ignore_errors=True)
+        shutil.rmtree(content_dir / "py314", ignore_errors=True)
+        subprocess.run(
+            [rclone_bin, "copyto", "--config", str(config_path), remote_archive, str(local_archive)],
+            stdin=subprocess.DEVNULL,
+            check=True,
+        )
+        subprocess.run(
+            ["tar", "-xzf", str(local_archive), "-C", str(content_dir)],
+            stdin=subprocess.DEVNULL,
+            check=True,
+        )
+        subprocess.run(
+            [str(venv_python), "-c", "import polars, numpy, duckdb"],
+            stdin=subprocess.DEVNULL,
+            check=True,
+        )
+        hit = True
+        print(f"[colab-remote] venv cache hit: {cache_filename}", flush=True)
+    except (subprocess.CalledProcessError, OSError) as exc:
+        print(f"[colab-remote] venv cache miss ({cache_filename}): {exc}", flush=True)
+    finally:
+        local_archive.unlink(missing_ok=True)
+
+    if hit:
+        return True
+
+    shutil.rmtree(content_dir / "venv", ignore_errors=True)
+    shutil.rmtree(content_dir / "py314", ignore_errors=True)
+    pip_pkgs = " ".join(shlex.quote(pkg) for pkg in packages)
+    miss_script = "\n".join(
+        [
+            "set -euo pipefail",
+            'export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"',
+            "if ! command -v uv >/dev/null 2>&1; then",
+            "  curl -LsSf https://astral.sh/uv/install.sh | sh",
+            '  export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"',
+            "fi",
+            f"export UV_PYTHON_INSTALL_DIR={shlex.quote(str(content_dir / 'py314'))}",
+            "uv python install 3.14",
+            f"uv venv --python 3.14 {shlex.quote(str(content_dir / 'venv'))}",
+            f"uv pip install --python {shlex.quote(str(venv_python))} {pip_pkgs}",
+        ]
+    )
+    subprocess.run(miss_script, shell=True, executable="/bin/bash", check=True)
+    try:
+        subprocess.run(
+            ["tar", "-czf", str(local_archive), "-C", str(content_dir), "py314", "venv"],
+            stdin=subprocess.DEVNULL,
+            check=True,
+        )
+        subprocess.run(
+            [rclone_bin, "copyto", "--config", str(config_path), str(local_archive), remote_archive],
+            stdin=subprocess.DEVNULL,
+            check=True,
+        )
+        print(f"[colab-remote] venv cache uploaded: {cache_filename}", flush=True)
+    except (subprocess.CalledProcessError, OSError) as exc:
+        print(f"[colab-remote] WARNING: venv cache upload failed ({cache_filename}): {exc}", flush=True)
+    finally:
+        local_archive.unlink(missing_ok=True)
+    return False
 
 
 @dataclass(frozen=True, slots=True)
@@ -680,7 +1045,7 @@ class ColabPlan:
     config_path: Path
     worktree: Path
     rel_script_path: str
-    facts_tar: Path
+    facts_tar: Path | None
     inputs_json: Path | None
     extra_uploads: tuple[tuple[Path, str], ...]
     downloads: tuple[tuple[str, Path], ...]
@@ -691,6 +1056,10 @@ class ColabPlan:
     chunk_bytes: int = DEFAULT_UPLOAD_CHUNK_BYTES
     rclone_remote: str | None = None
     rclone_config: Path | None = None
+    facts_remote: str | None = None
+    facts_start_day: str | None = None
+    facts_end_day: str | None = None
+    venv_cache_remote: str | None = None
 
     def base_cmd(self) -> list[str]:
         return ["colab", "--auth=adc", "--config", str(self.config_path)]
@@ -712,8 +1081,9 @@ class ColabPlan:
     def raw_upload_pairs(self, code_tar: Path) -> list[tuple[Path, str]]:
         pairs: list[tuple[Path, str]] = [
             (code_tar, "/content/code_bundle.tar.gz"),
-            (self.facts_tar, "/content/facts_slim.tar.gz"),
         ]
+        if self.facts_tar is not None:
+            pairs.append((self.facts_tar, "/content/facts_slim.tar.gz"))
         if self.inputs_json is not None:
             pairs.append((self.inputs_json, "/content/private_inputs.json"))
         pairs.extend(self.extra_uploads)
@@ -731,8 +1101,9 @@ class ColabPlan:
                 if self.rclone_config is None:
                     raise ValueError("RCLONE_CONFIG_REQUIRED_WITH_REMOTE")
                 expected_sha256 = _file_sha256(local_path)
-                sep = "" if self.rclone_remote.endswith(":") else "/"
-                remote_src = f"{self.rclone_remote}{sep}{expected_sha256[:16]}_{local_path.name}"
+                remote_src = _rclone_join(
+                    self.rclone_remote, f"{expected_sha256[:16]}_{local_path.name}"
+                )
                 rclone_stage_cmds.append(
                     [
                         "rclone",
@@ -753,7 +1124,7 @@ class ColabPlan:
             upload_pairs.extend(parts)
             reassembly_specs.extend(specs)
 
-        if rclone_pulls:
+        if rclone_pulls or self.facts_remote is not None or self.venv_cache_remote is not None:
             if self.rclone_config is None:
                 raise ValueError("RCLONE_CONFIG_REQUIRED_WITH_REMOTE")
             upload_pairs.append((self.rclone_config, "/content/.rclone.conf"))
@@ -875,8 +1246,13 @@ def _render_remote_wrapper(
     *,
     reassembly_specs: Sequence[tuple[str, Sequence[str], str, int]] = (),
     rclone_pulls: Sequence[tuple[str, str, str, int]] = (),
+    facts_remote: str | None = None,
+    facts_start_day: str | None = None,
+    facts_end_day: str | None = None,
+    venv_cache_remote: str | None = None,
 ) -> str:
     pip_pkgs = " ".join(REMOTE_PIP_PACKAGES)
+    cache_filename = venv_cache_filename()
     normalized_specs = [
         (remote_path, list(part_paths), expected_sha256, expected_bytes)
         for remote_path, part_paths, expected_sha256, expected_bytes in reassembly_specs
@@ -887,27 +1263,57 @@ def _render_remote_wrapper(
     ]
     helper_srcs = "\n\n".join(
         inspect.getsource(fn).rstrip()
-        for fn in (_file_sha256, _reassemble_chunks, _ensure_rclone_installed, _pull_rclone_files)
+        for fn in (
+            _file_sha256,
+            _reassemble_chunks,
+            _ensure_rclone_installed,
+            _pull_rclone_files,
+            _build_facts_filter_lines,
+            _pull_facts_from_remote,
+            _rewrite_facts_manifest,
+            _setup_venv_with_cache,
+        )
     )
     detached_runner_src = _render_detached_runner(rel_script_path, script_args)
-    bash_setup = "\n".join(
+    pull_call = (
+        "_pull_rclone_files(RCLONE_PULLS, unlink_config=False)"
+        if (facts_remote is not None or venv_cache_remote is not None)
+        else "_pull_rclone_files(RCLONE_PULLS)"
+    )
+
+    bash_lines = [
+        "set -euo pipefail",
+        'export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"',
+    ]
+    if venv_cache_remote is None:
+        bash_lines.extend(
+            [
+                "if ! command -v uv >/dev/null 2>&1; then",
+                "  curl -LsSf https://astral.sh/uv/install.sh | sh",
+                '  export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"',
+                "fi",
+                "uv python install 3.14",
+                "rm -rf /content/venv",
+                "uv venv --python 3.14 /content/venv",
+                f"uv pip install --python /content/venv/bin/python {pip_pkgs}",
+            ]
+        )
+    bash_lines.extend(
         [
-            "set -euo pipefail",
-            'export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"',
-            "if ! command -v uv >/dev/null 2>&1; then",
-            "  curl -LsSf https://astral.sh/uv/install.sh | sh",
-            '  export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"',
-            "fi",
-            "uv python install 3.14",
-            "rm -rf /content/venv",
-            "uv venv --python 3.14 /content/venv",
-            f"uv pip install --python /content/venv/bin/python {pip_pkgs}",
-            "rm -rf /content/work /content/facts_slim",
-            "mkdir -p /content/work /content/facts_slim",
+            "rm -rf /content/work",
+            "mkdir -p /content/work",
             "tar -xzf /content/code_bundle.tar.gz -C /content/work",
-            "tar -xzf /content/facts_slim.tar.gz -C /content/facts_slim",
         ]
     )
+    if facts_remote is None:
+        bash_lines.extend(
+            [
+                "rm -rf /content/facts_slim",
+                "mkdir -p /content/facts_slim",
+                "tar -xzf /content/facts_slim.tar.gz -C /content/facts_slim",
+            ]
+        )
+    bash_setup = "\n".join(bash_lines)
     return f'''"""Remote Colab bootstrap wrapper generated by colab_research_run.py."""
 import hashlib
 import os
@@ -922,20 +1328,23 @@ import time
 import urllib.request
 import zipfile
 from collections.abc import Sequence
+from datetime import date, timedelta
 from pathlib import Path
 
 REASSEMBLY_SPECS = {normalized_specs!r}
 RCLONE_PULLS = {normalized_pulls!r}
+FACTS_REMOTE = {facts_remote!r}
+FACTS_START_DAY = {facts_start_day!r}
+FACTS_END_DAY = {facts_end_day!r}
+VENV_CACHE_REMOTE = {venv_cache_remote!r}
+VENV_CACHE_FILENAME = {cache_filename!r}
+REMOTE_PIP_PACKAGES = {REMOTE_PIP_PACKAGES!r}
 
 {helper_srcs}
 
 print("[colab-remote] bootstrap starting", flush=True)
 if REASSEMBLY_SPECS:
     _reassemble_chunks(REASSEMBLY_SPECS)
-
-if RCLONE_PULLS:
-    print("[colab-remote] pulling via rclone...", flush=True)
-    _pull_rclone_files(RCLONE_PULLS)
 
 stop_hb = threading.Event()
 start_ts = time.monotonic()
@@ -949,26 +1358,37 @@ hb_thread = threading.Thread(target=_heartbeat, daemon=True)
 hb_thread.start()
 
 try:
+    try:
+        if RCLONE_PULLS:
+            print("[colab-remote] pulling via rclone...", flush=True)
+            {pull_call}
+
+        if FACTS_REMOTE is not None:
+            print("[colab-remote] pulling FactStore via rclone...", flush=True)
+            shutil.rmtree("/content/facts_slim", ignore_errors=True)
+            _pull_facts_from_remote(
+                FACTS_REMOTE,
+                Path("/content/facts_slim"),
+                start_day=FACTS_START_DAY,
+                end_day=FACTS_END_DAY,
+            )
+
+        if VENV_CACHE_REMOTE is not None:
+            print("[colab-remote] setting up venv via cache...", flush=True)
+            _setup_venv_with_cache(
+                VENV_CACHE_REMOTE,
+                VENV_CACHE_FILENAME,
+                REMOTE_PIP_PACKAGES,
+            )
+    finally:
+        Path("/content/.rclone.conf").unlink(missing_ok=True)
+        Path("/content/venv_cache.tar.gz").unlink(missing_ok=True)
+
     BASH_SETUP = {bash_setup!r}
     print("[colab-remote] running BASH_SETUP...", flush=True)
     subprocess.run(BASH_SETUP, shell=True, executable="/bin/bash", check=True)
 
-    FACTS_ROOT = Path("/content/facts_slim")
-    MANIFEST = FACTS_ROOT / "facts.sqlite"
-    if MANIFEST.is_file():
-        with sqlite3.connect(MANIFEST) as con:
-            con.execute(
-                "INSERT INTO meta(key, value) VALUES('store_root', ?) "
-                "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-                (str(FACTS_ROOT),),
-            )
-            rows = con.execute("SELECT batch_sha16, kind, day FROM batches").fetchall()
-            for batch_sha16, kind, day in rows:
-                new_path = str(FACTS_ROOT / kind / f"day={{day}}" / f"{{batch_sha16}}.parquet")
-                con.execute(
-                    "UPDATE batches SET path = ? WHERE batch_sha16 = ?",
-                    (new_path, batch_sha16),
-                )
+    _rewrite_facts_manifest(Path("/content/facts_slim"))
 
     DETACHED_RUNNER_SRC = {detached_runner_src!r}
     Path("/content/run_job.py").write_text(DETACHED_RUNNER_SRC, encoding="utf-8")
@@ -1195,8 +1615,12 @@ def build_colab_plan(
     *,
     worktree: Path,
     rel_script_path: str,
-    facts_tar: Path,
     downloads: Sequence[str],
+    facts_tar: Path | None = None,
+    facts_remote: str | None = None,
+    facts_start_day: str | None = None,
+    facts_end_day: str | None = None,
+    venv_cache_remote: str | None = None,
     inputs_json: Path | None = None,
     extra_uploads: Sequence[str] = (),
     session: str | None = None,
@@ -1221,9 +1645,44 @@ def build_colab_plan(
     if not script_abs.is_file() or not script_abs.is_relative_to(worktree):
         raise FileNotFoundError(f"SCRIPT_MISSING:{script_abs}")
 
-    facts_tar = facts_tar.resolve()
-    if not facts_tar.is_file():
-        raise FileNotFoundError(f"FACTS_TAR_MISSING:{facts_tar}")
+    normalized_facts_remote = (
+        facts_remote.strip().rstrip("/")
+        if facts_remote is not None and facts_remote.strip()
+        else None
+    )
+    if facts_tar is None and normalized_facts_remote is None:
+        raise ValueError("FACTS_SOURCE_REQUIRED: provide --facts-tar or --facts-remote")
+    if facts_tar is not None and normalized_facts_remote is not None:
+        raise ValueError("FACTS_SOURCE_MUTUALLY_EXCLUSIVE: cannot use both --facts-tar and --facts-remote")
+
+    resolved_facts_tar: Path | None = None
+    if facts_tar is not None:
+        resolved_facts_tar = facts_tar.resolve()
+        if not resolved_facts_tar.is_file():
+            raise FileNotFoundError(f"FACTS_TAR_MISSING:{resolved_facts_tar}")
+
+    normalized_start_day = (
+        date.fromisoformat(facts_start_day.strip()).isoformat()
+        if facts_start_day is not None and facts_start_day.strip()
+        else None
+    )
+    normalized_end_day = (
+        date.fromisoformat(facts_end_day.strip()).isoformat()
+        if facts_end_day is not None and facts_end_day.strip()
+        else None
+    )
+    if (
+        normalized_start_day is not None
+        and normalized_end_day is not None
+        and normalized_start_day > normalized_end_day
+    ):
+        raise ValueError(f"INVALID_DAY_RANGE:{normalized_start_day}>{normalized_end_day}")
+
+    normalized_venv_cache_remote = (
+        venv_cache_remote.strip().rstrip("/")
+        if venv_cache_remote is not None and venv_cache_remote.strip()
+        else None
+    )
 
     resolved_inputs: Path | None = None
     if inputs_json is not None:
@@ -1237,13 +1696,12 @@ def build_colab_plan(
         else None
     )
     resolved_rclone_config: Path | None = None
-    if normalized_rclone_remote is not None:
-        cfg_candidate = (
-            rclone_config if rclone_config is not None else Path.home() / ".config/rclone/rclone.conf"
-        )
-        resolved_rclone_config = cfg_candidate.expanduser().resolve()
-        if not resolved_rclone_config.is_file():
-            raise FileNotFoundError(f"RCLONE_CONFIG_MISSING:{resolved_rclone_config}")
+    if (
+        normalized_rclone_remote is not None
+        or normalized_facts_remote is not None
+        or normalized_venv_cache_remote is not None
+    ):
+        resolved_rclone_config = _resolve_rclone_config(rclone_config)
 
     parsed_uploads: list[tuple[Path, str]] = []
     for spec in extra_uploads:
@@ -1273,7 +1731,7 @@ def build_colab_plan(
         config_path=Path(f"/tmp/colab-{session_name}.json"),
         worktree=worktree,
         rel_script_path=rel_path.as_posix(),
-        facts_tar=facts_tar,
+        facts_tar=resolved_facts_tar,
         inputs_json=resolved_inputs,
         extra_uploads=tuple(parsed_uploads),
         downloads=tuple(parsed_downloads),
@@ -1284,6 +1742,10 @@ def build_colab_plan(
         chunk_bytes=chunk_bytes,
         rclone_remote=normalized_rclone_remote,
         rclone_config=resolved_rclone_config,
+        facts_remote=normalized_facts_remote,
+        facts_start_day=normalized_start_day,
+        facts_end_day=normalized_end_day,
+        venv_cache_remote=normalized_venv_cache_remote,
     )
 
 
@@ -1301,6 +1763,10 @@ def run_colab(plan: ColabPlan, *, dry_run: bool = False) -> dict[str, Any]:
                 plan.script_args,
                 reassembly_specs=prepared.reassembly_specs,
                 rclone_pulls=prepared.rclone_pulls,
+                facts_remote=plan.facts_remote,
+                facts_start_day=plan.facts_start_day,
+                facts_end_day=plan.facts_end_day,
+                venv_cache_remote=plan.venv_cache_remote,
             ),
             encoding="utf-8",
         )
@@ -1314,7 +1780,12 @@ def run_colab(plan: ColabPlan, *, dry_run: bool = False) -> dict[str, Any]:
             "session": plan.session,
             "config_path": str(plan.config_path),
             "code_bundle": bundle_stats,
-            "facts_tar_bytes": plan.facts_tar.stat().st_size,
+            "facts_tar_bytes": plan.facts_tar.stat().st_size if plan.facts_tar is not None else 0,
+            "facts_remote": plan.facts_remote,
+            "facts_start_day": plan.facts_start_day,
+            "facts_end_day": plan.facts_end_day,
+            "venv_cache_remote": plan.venv_cache_remote,
+            "venv_cache_filename": venv_cache_filename() if plan.venv_cache_remote is not None else None,
             "chunk_bytes": plan.chunk_bytes,
             "upload_count": len(prepared.upload_pairs),
             "chunked_files": [
@@ -1406,10 +1877,27 @@ def build_parser() -> argparse.ArgumentParser:
     trim.add_argument("--out-tar", type=Path, default=None)
     trim.add_argument("--equity-anchor-days", default="")
 
+    sync_cmd = sub.add_parser("sync-facts", help="Sync FactStore Parquet and sqlite manifest to rclone remote")
+    sync_cmd.add_argument("--src-store", type=Path, required=True)
+    sync_cmd.add_argument("--rclone-remote", required=True)
+    sync_cmd.add_argument("--rclone-config", type=Path, default=None)
+    sync_cmd.add_argument("--transfers", type=int, default=16)
+    sync_cmd.add_argument("--dry-run", action="store_true", default=False)
+
+    prune_cmd = sub.add_parser("prune-staging", help="Delete older staging archives on an rclone remote")
+    prune_cmd.add_argument("--rclone-remote", required=True)
+    prune_cmd.add_argument("--rclone-config", type=Path, default=None)
+    prune_cmd.add_argument("--keep-latest", type=int, default=1)
+    prune_cmd.add_argument("--dry-run", action="store_true", default=False)
+
     run = sub.add_parser("run", help="Run a research script on a provisioned Colab VM")
     run.add_argument("--worktree", type=Path, required=True)
     run.add_argument("--script", required=True)
-    run.add_argument("--facts-tar", type=Path, required=True)
+    run.add_argument("--facts-tar", type=Path, default=None)
+    run.add_argument("--facts-remote", default=None)
+    run.add_argument("--facts-start-day", default=None)
+    run.add_argument("--facts-end-day", default=None)
+    run.add_argument("--venv-cache-remote", default=None)
     run.add_argument("--download", action="append", required=True)
     run.add_argument("--inputs-json", type=Path, default=None)
     run.add_argument("--extra-upload", action="append", default=[])
@@ -1449,13 +1937,46 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(json.dumps(summary, sort_keys=True))
         return 0
 
+    if args.command == "sync-facts":
+        if args.transfers < 1:
+            parser.error("--transfers must be >= 1")
+        summary = sync_facts(
+            src_store=args.src_store,
+            rclone_remote=args.rclone_remote,
+            rclone_config=args.rclone_config,
+            transfers=args.transfers,
+            dry_run=args.dry_run,
+        )
+        print(json.dumps(summary, indent=2, sort_keys=True))
+        return 0
+
+    if args.command == "prune-staging":
+        if args.keep_latest < 0:
+            parser.error("--keep-latest must be >= 0")
+        summary = prune_staging(
+            rclone_remote=args.rclone_remote,
+            rclone_config=args.rclone_config,
+            keep_latest=args.keep_latest,
+            dry_run=args.dry_run,
+        )
+        print(json.dumps(summary, indent=2, sort_keys=True))
+        return 0
+
     if args.command == "run":
         if args.chunk_mb < 1:
             parser.error("--chunk-mb must be >= 1")
+        has_facts_tar = args.facts_tar is not None
+        has_facts_remote = bool(args.facts_remote and args.facts_remote.strip())
+        if has_facts_tar == has_facts_remote:
+            parser.error("Specify exactly one of --facts-tar or --facts-remote")
         plan = build_colab_plan(
             worktree=args.worktree,
             rel_script_path=args.script,
             facts_tar=args.facts_tar,
+            facts_remote=args.facts_remote,
+            facts_start_day=args.facts_start_day,
+            facts_end_day=args.facts_end_day,
+            venv_cache_remote=args.venv_cache_remote,
             downloads=args.download,
             inputs_json=args.inputs_json,
             extra_uploads=args.extra_upload,
