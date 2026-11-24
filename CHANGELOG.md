@@ -2,6 +2,18 @@
 
 All notable changes to `trading-ops` are documented in this file.
 
+## [Colab Runner & Onboarding Overhaul] - 2026-11-24
+
+### Added
+- `scripts/colab_research_run.py` & `tests/test_colab_runner.py`: Google Colab research runner with `rclone` `FactStore` mirroring, remote venv caching, CPU-1 worker reserve, and sanitized artifact checks.
+- `studies/2026-11-21__cft__10k__may-nov-disjoint-10pods.py`, `reports/2026-11-21__cft__10k__may-nov-disjoint-10pods*`, `proposals/2026-11-21__cft__10k__may-nov-disjoint-10pods.json`, and `tests/test_may_nov_disjoint_10pods.py`: May–Nov 2026 disjoint 10-pod evaluation on the Phase-D kernel path.
+
+### Changed
+- Rewrote `AGENTS.md`, `README.md`, and `runbooks/daily-ops.md` for Phase-D onboarding (`FactStore`, `RosterStore`, `copytrade_kernel`, `src/trading_ops/research/`, and `scripts/colab_research_run.py`).
+
+### Removed
+- Cleaned legacy untracked pre-Phase-D studies, fee catalogs (`studies/fee_catalog.py`), and local rulebook caches (`prop_firms_rules.json`) from the working tree.
+
 ## [Phase D & E — Unified Kernel Research Path] - 2026-11-20
 
 ### Added
