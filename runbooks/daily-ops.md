@@ -9,13 +9,16 @@ All checks below are strictly read-only. They never mutate financial journals or
   systemctl --user status copytrade-cwsa-5m-source-chapter2.service copytrade-cwsa-5m-paper-chapter2.service copytrade-ops-center.service --no-pager
   curl -sf http://127.0.0.1:8888/api/health
   ```
-- Inspect scoped portfolio status (metadata first, then evidence if needed):
+- Inspect unified `FactStore` coverage, `RosterStore` seat books, and release status (read-only):
   ```bash
-  uv run copytrade-pm cwsa chapter2 explain --portfolio A --inspection metadata
-  uv run copytrade-pm cwsa chapter2 explain --portfolio A --inspection evidence \
-    --registry-db /home/quant/.local/share/copytrade/registry/wallet_registry.sqlite \
-    --source-db /home/quant/.local/share/copytrade/prospective/cwsa-5m-source-chapter2-20261112/paper-events.sqlite3 \
-    --paper-root /home/quant/.local/share/copytrade/prospective/cwsa-5m-paper-chapter2-20261112
+  uv run copytrade-pm facts coverage --root /home/quant/.local/share/copytrade/phase-d/facts
+  uv run copytrade-pm roster show --db /home/quant/.local/share/copytrade/roster.sqlite
+  uv run copytrade-pm release chapter2 explain --portfolio A --inspection metadata
+  ```
+- Inspect paper run and observer health:
+  ```bash
+  uv run copytrade-pm paper status
+  uv run copytrade-pm paper observer-health
   ```
 
 ## 2. Guardian / execution side (`prop-production`)
@@ -28,6 +31,6 @@ All checks below are strictly read-only. They never mutate financial journals or
 
 ## 3. Promoting allocation or risk changes
 
-1. Model and document the proposed wallets / `FIXED_K_NATIVE_QUANTITY` `k` / DD bounds in `studies/` and `proposals/`.
-2. Seal registry changes and sign mandates/releases in `/home/quant/dev/copytrade-pm` on an isolated branch.
-3. Verify compatibility pins and promote runtime releases in `/home/quant/dev/prop-production` only through its reviewed release workflow.
+1. Audit candidates and run kernel walk-forwards via `src/trading_ops/research/` (`score_universe`, `run_kernel_backtest`) or `scripts/colab_research_run.py`, recording findings in `studies/`, `reports/`, and `proposals/`.
+2. Stage roster updates and sign `portfolio_release_v2` mandates/releases offline in `/home/quant/dev/copytrade-pm` (`copytrade-pm release propose|sign|verify`) on an isolated branch.
+3. Verify compatibility pins (`prop-production:src/prop_production/compatibility.json`) and promote runtime releases in `/home/quant/dev/prop-production` only through its reviewed release workflow.
