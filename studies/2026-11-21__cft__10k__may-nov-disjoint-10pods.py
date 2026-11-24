@@ -50,6 +50,7 @@ from trading_ops.research import (
     MarketSpec,
     ScoreConfig,
     bench_from_scorecard,
+    lookup_tier_fee,
     run_kernel_backtest,
     score_universe,
 )
@@ -370,11 +371,7 @@ def load_multi_firm_catalog(
     *,
     account_usd: float = ACCOUNT_USD,
 ) -> list[dict[str, Any]]:
-    """Load canonical PropContractSpecs paired with verified sim_inputs.json fee tiers."""
-    sim_raw = json.loads(sim_inputs_path.read_text(encoding="utf-8"))
-    challenges = sim_raw.get("challenges", {})
-    tier_key = str(int(account_usd))
-
+    """Load canonical PropContractSpecs paired with verified fee schedule tiers."""
     vanta_3pct_program = RulebookCatalog.get("vanta-trading:classic_1step_3pct:phase_1").program
     firm_queries: tuple[tuple[str, str, str, str | None], ...] = (
         (
@@ -395,27 +392,13 @@ def load_multi_firm_catalog(
 
     rows: list[dict[str, Any]] = []
     for firm_slug, catalog_key, sim_key, program_filter in firm_queries:
-        sim_entry = challenges.get(sim_key)
-        fee_usd: float | None = None
-        refundable_on_pass = False
-        payout_frequency: str | None = None
-        verified_at: str | None = None
-        sim_notes: str | None = None
-        ev_status = "BREAK_EVEN_ONLY_FEE_UNVERIFIED"
-
-        if isinstance(sim_entry, dict):
-            tiers = sim_entry.get("tiers", {})
-            tier_val = tiers.get(tier_key) if isinstance(tiers, dict) else None
-            if isinstance(tier_val, (int, float)) and not isinstance(tier_val, bool):
-                fee_usd = float(tier_val)
-                ev_status = "SOURCED_SIM_INPUTS"
-            elif isinstance(tier_val, dict) and isinstance(tier_val.get("fee"), (int, float)):
-                fee_usd = float(tier_val["fee"])
-                ev_status = "SOURCED_SIM_INPUTS"
-            refundable_on_pass = bool(sim_entry.get("refundableOnPass", False))
-            payout_frequency = sim_entry.get("payoutFrequency")
-            verified_at = sim_entry.get("verified_at")
-            sim_notes = sim_entry.get("notes")
+        quote = lookup_tier_fee(sim_key, account_usd, path=sim_inputs_path)
+        fee_usd = quote.fee_usd if quote is not None else None
+        refundable_on_pass = quote.refundable_on_pass if quote is not None else False
+        payout_frequency = quote.payout_frequency if quote is not None else None
+        verified_at = quote.verified_at if quote is not None else None
+        sim_notes = quote.notes if quote is not None else None
+        ev_status = "SOURCED_SIM_INPUTS" if quote is not None else "BREAK_EVEN_ONLY_FEE_UNVERIFIED"
 
         spec = pc.load_prop_contract_spec(
             firm_slug,

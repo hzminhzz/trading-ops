@@ -85,6 +85,8 @@ def test_fee_schedule_keys_exist_in_rulebook_catalog() -> None:
         "daily_basis",
         "trailing_basis",
         "reset_time_hhmm",
+        "profitSplitPct",
+        "payout_split_pct",
     }
 
     for challenge_key, entry in challenges.items():
@@ -100,8 +102,10 @@ def test_fee_schedule_keys_exist_in_rulebook_catalog() -> None:
         )
 
 
-def test_fee_schedule_lookup_exact_tiers_only() -> None:
-    """Tier fee lookup never interpolates or scales linearly across account sizes."""
+def test_fee_schedule_lookup_exact_tiers_only(tmp_path: Path) -> None:
+    """Tier fee lookup never interpolates, returns None on non-finite, and keeps overrides."""
+    import json
+
     from trading_ops.research import lookup_tier_fee
 
     propr_10k = lookup_tier_fee("propr:classic_1step", 10_000)
@@ -120,3 +124,34 @@ def test_fee_schedule_lookup_exact_tiers_only() -> None:
 
     assert lookup_tier_fee("crypto-fund-trader:two_phase", 10_000) is None
     assert lookup_tier_fee("propr:classic_1step", 7_500) is None
+    assert lookup_tier_fee("propr:classic_1step", float("nan")) is None
+    assert lookup_tier_fee("propr:classic_1step", float("inf")) is None
+
+    custom_schedule = tmp_path / "fees.json"
+    custom_schedule.write_text(
+        json.dumps(
+            {
+                "version": 2,
+                "challenges": {
+                    "propr:classic_1step": {
+                        "verified_at": "2026-11-24",
+                        "source_urls": ["https://example.invalid/base"],
+                        "notes": "Base note",
+                        "tiers": {
+                            "10000": {
+                                "fee": 110,
+                                "source_urls": ["https://example.invalid/tier-10k"],
+                                "notes": "Tier 10k override",
+                            }
+                        },
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    override_quote = lookup_tier_fee("propr:classic_1step", 10_000, path=custom_schedule)
+    assert override_quote is not None
+    assert override_quote.fee_usd == pytest.approx(110.0)
+    assert override_quote.source_urls == ("https://example.invalid/tier-10k",)
+    assert override_quote.notes == "Tier 10k override"

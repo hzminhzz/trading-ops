@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -47,6 +48,8 @@ def lookup_tier_fee(
     """
     if isinstance(account_usd, bool):
         raise TypeError("ACCOUNT_USD_CANNOT_BE_BOOL")
+    if not math.isfinite(account_usd):
+        return None
     account_int = int(account_usd)
     if float(account_usd) != float(account_int) or account_int <= 0:
         return None
@@ -62,17 +65,22 @@ def lookup_tier_fee(
 
     raw_tier = tiers.get(str(account_int))
     fee_usd: float | None = None
+    tier_urls: Any = None
+    tier_notes: Any = None
     if isinstance(raw_tier, (int, float)) and not isinstance(raw_tier, bool):
         fee_usd = float(raw_tier)
     elif isinstance(raw_tier, dict):
         raw_fee = raw_tier.get("fee")
         if isinstance(raw_fee, (int, float)) and not isinstance(raw_fee, bool):
             fee_usd = float(raw_fee)
+        tier_urls = raw_tier.get("source_urls")
+        tier_notes = raw_tier.get("notes")
 
     if fee_usd is None:
         return None
 
-    urls = entry.get("source_urls") or ()
+    urls = tier_urls if tier_urls is not None else (entry.get("source_urls") or ())
+    notes = tier_notes if tier_notes is not None else entry.get("notes")
     return FeeQuote(
         challenge_key=challenge_key,
         account_usd=account_int,
@@ -81,5 +89,5 @@ def lookup_tier_fee(
         payout_frequency=entry.get("payoutFrequency"),
         verified_at=entry.get("verified_at"),
         source_urls=tuple(str(u) for u in urls),
-        notes=entry.get("notes"),
+        notes=notes,
     )

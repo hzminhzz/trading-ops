@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "_note": "Fee and payout facts the rulebook catalog does not carry. Prices are per tier because fees are not linear: a $5,000 price is never a $10,000 price. A tier is a bare number (provenance on the challenge) or an object when that size needs its own note or source. The exporter takes the tier equal to the catalog's base account; a study at another size reads its own tier or stays breakeven-only. Keys are challenge ids: `<firm_slug>:<program_slug>` with the phase dropped.",
+  "_note": "Commercial fee and payout facts that RulebookCatalog does not carry. Prices are per tier because fees are not linear: a $5,000 price is never a $10,000 price. A tier is a bare number (provenance on the challenge) or an object when that size needs its own note or source. Keys are challenge ids: `<firm_slug>:<program_slug>` with the phase dropped.",
   "_example": {
     "billing": "one-time",
     "resetFee": null,
@@ -209,8 +209,7 @@
         "25000": 303,
         "50000": 577,
         "100000": 1099
-      },
-      "profitSplitPct": 100
+      }
     },
     "vanta-trading:classic_1step_5pct": {
       "billing": "one-time",
@@ -231,8 +230,7 @@
         "25000": 358,
         "50000": 682,
         "100000": 1299
-      },
-      "profitSplitPct": 100
+      }
     }
   }
 }
