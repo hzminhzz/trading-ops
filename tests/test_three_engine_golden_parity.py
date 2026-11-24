@@ -15,8 +15,6 @@ Every active checkpoint (t1, t2) must agree byte-for-byte on ``decision_sha``
 
 from __future__ import annotations
 
-import json
-import os
 import sys
 from dataclasses import asdict, replace
 from datetime import UTC, datetime
@@ -27,25 +25,17 @@ from typing import Any
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from research_fixtures import (
+    DAY_MS,
+    GRID_MS,
+    WALLET_A,
+    build_store,
+    cwsa_sample,
+    resolve_prop_production_root,
+    wallet_round_trips,
+)
 
-
-def _resolve_prop_production_root() -> Path | None:
-    env_root = os.environ.get("PROP_PRODUCTION_ROOT")
-    candidates = (
-        [Path(env_root)]
-        if env_root
-        else [
-            Path("/home/quant/.devspace/worktrees/prop-production-phase-d"),
-            Path("/home/quant/dev/prop-production"),
-        ]
-    )
-    for root in candidates:
-        if (root / "src" / "prop_production" / "guardian.py").is_file():
-            return root
-    return None
-
-
-PROD = _resolve_prop_production_root()
+PROD = resolve_prop_production_root()
 if PROD is not None:
     for candidate in (PROD / "src", PROD / "tests"):
         if str(candidate) not in sys.path and candidate.is_dir():
@@ -84,7 +74,6 @@ from copytrade_pm.pm_checkpoint_journal import CwsaPolicy
 from copytrade_pm.pm_checkpoint_source import (
     CheckpointScope,
     SamplingLimits,
-    collect_checkpoint,
     export_checkpoint_packet,
 )
 from copytrade_pm.pm_forward_ccxt_market import parse_ccxt_book, parse_ccxt_market
@@ -94,7 +83,6 @@ from copytrade_pm.pm_mandate import SignedMandate
 from copytrade_pm.production_manifest import canonical as pm_canonical
 from copytrade_pm.production_manifest import sign as pm_sign
 from copytrade_pm.roster import SeatSpec
-from research_fixtures import DAY_MS, GRID_MS, WALLET_A, build_store, wallet_round_trips
 
 from trading_ops.research import (
     BacktestConfig,
@@ -214,41 +202,6 @@ def _ccxt_btc() -> dict[str, Any]:
             "szDecimals": 5,
         },
     }
-
-
-def _cwsa_sample(
-    journal: PaperJournal, scope: CheckpointScope, limits: SamplingLimits, boundary: int, qty: str
-):
-    def native(request: dict[str, Any]):
-        if request["type"] == "perpDexs":
-            body: Any = [None, {"name": "xyz"}]
-        else:
-            body = {
-                "time": boundary,
-                "assetPositions": []
-                if request.get("dex") == "xyz" or qty == "0"
-                else [
-                    {
-                        "position": {
-                            "coin": "BTC",
-                            "szi": qty,
-                            "positionValue": str(abs(Decimal(qty)) * BID),
-                        }
-                    }
-                ],
-            }
-        raw = json.dumps(body).encode()
-        return body, raw, sha256(raw).hexdigest()
-
-    return collect_checkpoint(
-        scope,
-        WALLET_A,
-        checkpoint_ms=boundary,
-        limits=limits,
-        evidence_root=journal.root,
-        info=native,
-        now_ms=lambda: boundary + 100,
-    )
 
 
 def _frame() -> CheckpointBatch:
@@ -619,7 +572,18 @@ def test_three_engines_end_to_end_golden_parity(tmp_path: Path, monkeypatch) -> 
         pm_journal.append_market_quote(row.payload())
 
     out_t0 = pm_journal.append_checkpoint_sample(
-        cwsa_policy.epoch, _cwsa_sample(pm_journal, cwsa_scope, cwsa_limits, T0, "0"), T0 + 101
+        cwsa_policy.epoch,
+        cwsa_sample(
+            evidence_root=pm_journal.root,
+            scope=cwsa_scope,
+            limits=cwsa_limits,
+            wallet=WALLET_A,
+            coin=MARKET,
+            mid=BID,
+            boundary=T0,
+            qty="0",
+        ),
+        T0 + 101,
     )
     pkt_t0 = pm_canonical(
         export_checkpoint_packet(
@@ -644,7 +608,18 @@ def test_three_engines_end_to_end_golden_parity(tmp_path: Path, monkeypatch) -> 
     )
 
     out_t1 = pm_journal.append_checkpoint_sample(
-        cwsa_policy.epoch, _cwsa_sample(pm_journal, cwsa_scope, cwsa_limits, T1, "3"), T1 + 101
+        cwsa_policy.epoch,
+        cwsa_sample(
+            evidence_root=pm_journal.root,
+            scope=cwsa_scope,
+            limits=cwsa_limits,
+            wallet=WALLET_A,
+            coin=MARKET,
+            mid=BID,
+            boundary=T1,
+            qty="3",
+        ),
+        T1 + 101,
     )
     pkt_t1 = pm_canonical(
         export_checkpoint_packet(
@@ -668,7 +643,18 @@ def test_three_engines_end_to_end_golden_parity(tmp_path: Path, monkeypatch) -> 
     assert res_t1["status"] == "COMMITTED_ONCE"
 
     out_t2 = pm_journal.append_checkpoint_sample(
-        cwsa_policy.epoch, _cwsa_sample(pm_journal, cwsa_scope, cwsa_limits, T2, "1"), T2 + 101
+        cwsa_policy.epoch,
+        cwsa_sample(
+            evidence_root=pm_journal.root,
+            scope=cwsa_scope,
+            limits=cwsa_limits,
+            wallet=WALLET_A,
+            coin=MARKET,
+            mid=BID,
+            boundary=T2,
+            qty="1",
+        ),
+        T2 + 101,
     )
     pkt_t2 = pm_canonical(
         export_checkpoint_packet(

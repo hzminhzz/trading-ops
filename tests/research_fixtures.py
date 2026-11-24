@@ -8,9 +8,13 @@ second store.
 
 from __future__ import annotations
 
+import json
+import os
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from hashlib import sha256
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 from copytrade_pm.facts import FactIngestor, FactStore
@@ -203,3 +207,64 @@ def build_store(
 def day_strings(start_ms: int, days: int) -> list[str]:
     start = datetime.fromtimestamp(start_ms / 1000, UTC)
     return [(start + timedelta(days=index)).date().isoformat() for index in range(days)]
+
+
+def resolve_prop_production_root() -> Path | None:
+    env_root = os.environ.get("PROP_PRODUCTION_ROOT")
+    candidates = (
+        [Path(env_root)]
+        if env_root
+        else [
+            Path("/home/quant/dev/prop-production"),
+            Path("/home/quant/.devspace/worktrees/prop-production-phase-d"),
+        ]
+    )
+    for root in candidates:
+        if (root / "src" / "prop_production" / "guardian.py").is_file():
+            return root
+    return None
+
+
+def cwsa_sample(
+    *,
+    evidence_root: Path,
+    scope: Any,
+    limits: Any,
+    wallet: str,
+    coin: str,
+    mid: Decimal,
+    boundary: int,
+    qty: str,
+) -> Any:
+    from copytrade_pm.pm_checkpoint_source import collect_checkpoint
+
+    def native(request: dict[str, Any]):
+        if request["type"] == "perpDexs":
+            body: Any = [None, {"name": "xyz"}]
+        else:
+            body = {
+                "time": boundary,
+                "assetPositions": []
+                if request.get("dex") == "xyz" or qty == "0"
+                else [
+                    {
+                        "position": {
+                            "coin": coin,
+                            "szi": qty,
+                            "positionValue": str(abs(Decimal(qty)) * mid),
+                        }
+                    }
+                ],
+            }
+        raw = json.dumps(body).encode()
+        return body, raw, sha256(raw).hexdigest()
+
+    return collect_checkpoint(
+        scope,
+        wallet,
+        checkpoint_ms=boundary,
+        limits=limits,
+        evidence_root=evidence_root,
+        info=native,
+        now_ms=lambda: boundary + 100,
+    )

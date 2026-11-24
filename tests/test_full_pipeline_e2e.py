@@ -12,13 +12,14 @@ Establishes ``ENGINEERING_VERIFIED`` behaviour only; never grants
 
 from __future__ import annotations
 
-import json
-import os
 import sqlite3
 import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
 from copy import deepcopy
+from dataclasses import dataclass
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_DOWN, Decimal
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
@@ -26,33 +27,24 @@ from typing import Any
 import polars as pl
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from research_fixtures import (
+    DAY_MS,
+    GRID_MS,
+    WALLET_A,
+    WALLET_B,
+    bars_1m_from_fills,
+    cwsa_sample,
+    equity_rows,
+    resolve_prop_production_root,
+    wallet_round_trips,
+)
 
-
-def _resolve_prop_production_root() -> Path | None:
-    env_root = os.environ.get("PROP_PRODUCTION_ROOT")
-    candidates = (
-        [Path(env_root)]
-        if env_root
-        else [
-            Path("/home/quant/dev/prop-production"),
-            Path("/home/quant/.devspace/worktrees/prop-production-phase-d"),
-        ]
-    )
-    for root in candidates:
-        if (root / "src" / "prop_production" / "guardian.py").is_file():
-            return root
-    return None
-
-
-PROD = _resolve_prop_production_root()
-if PROD is not None:
-    for candidate in (PROD / "src", PROD / "tests"):
-        if str(candidate) not in sys.path and candidate.is_dir():
-            sys.path.append(str(candidate))
-
-copytrade_kernel = pytest.importorskip("copytrade_kernel")
-pytest.importorskip("copytrade_pm.pm_checkpoint_source")
-pytest.importorskip("prop_production.checkpoint_kernel")
+PROD = resolve_prop_production_root()
+if PROD is None:
+    raise RuntimeError("prop-production sibling repo not found; set PROP_PRODUCTION_ROOT")
+for candidate in (PROD / "src", PROD / "tests"):
+    if str(candidate) not in sys.path and candidate.is_dir():
+        sys.path.append(str(candidate))
 
 from copytrade_kernel import KnownAtTs, Rulebook, RulebookCatalog
 from copytrade_kernel.clocks import DecisionMs
@@ -63,7 +55,6 @@ from copytrade_pm.pm_checkpoint_journal import CwsaPolicy
 from copytrade_pm.pm_checkpoint_source import (
     CheckpointScope,
     SamplingLimits,
-    collect_checkpoint,
     export_checkpoint_packet,
 )
 from copytrade_pm.pm_forward_journal import PaperJournal
@@ -78,15 +69,6 @@ from copytrade_pm.roster import (
     build_release_proposal,
     finalise_payload,
     reconcile_roster,
-)
-from research_fixtures import (
-    DAY_MS,
-    GRID_MS,
-    WALLET_A,
-    WALLET_B,
-    bars_1m_from_fills,
-    equity_rows,
-    wallet_round_trips,
 )
 
 from trading_ops.research import (
@@ -121,7 +103,35 @@ DEPTH = Decimal(200)
 BTC_LIQUIDITY = DEPTH * BTC_MID
 ETH_LIQUIDITY = DEPTH * ETH_MID
 INITIAL_RATE = Decimal("0.5")
+QTY_STEP = Decimal("0.00001")
 RESEARCH_COMMIT = "a" * 40
+
+
+@dataclass(frozen=True)
+class E2EReleaseFixture:
+    release: Any
+    final_payload: dict[str, Any]
+    signed_envelope: dict[str, Any]
+    authority_key: Ed25519PrivateKey
+    source_key: Ed25519PrivateKey
+    cwsa_policy: CwsaPolicy
+    cwsa_limits: SamplingLimits
+    scopes: dict[str, CheckpointScope]
+    g_rules: Any
+    g_policy: dict[str, Any]
+    g_markets: dict[str, Any]
+    owners_by_wallet: dict[str, str]
+    k_by_owner: dict[str, Decimal]
+    leader_positions: dict[int, dict[str, str]]
+
+
+@dataclass
+class GuardianStack:
+    floor: Any
+    journal: Any
+    broker: Any
+    receiver: Any
+    guardian: Any
 
 
 def _pit_fill_row(
@@ -135,35 +145,19 @@ def _pit_fill_row(
 ) -> dict[str, Any]:
     px = Decimal(str(round(price, 8)))
     sz = Decimal(str(round(size, 8)))
+    ts = datetime.fromtimestamp(at_ms / 1000, UTC)
     return {
         "wallet": wallet,
         "coin": coin,
-        "dex": "hyperliquid",
-        "dex_raw": "hyperliquid",
-        "provider": "synthetic",
         "side": side,
         "size": sz,
         "price": px,
-        "fee": Decimal(0),
-        "fee_token": "USDC",
         "size_usd": (sz * px).quantize(Decimal("0.00000001")),
-        "start_position": Decimal(0),
-        "closed_pnl": Decimal(0),
         "trade_id": str(trade_id),
         "order_id": str(trade_id),
-        "direction": "Open Long" if side == "buy" else "Close Long",
-        "is_liquidation": False,
-        "is_maker": False,
-        "crossed": True,
-        "exchange_ts": datetime.fromtimestamp(at_ms / 1000, UTC),
+        "exchange_ts": ts,
         "event_ts_ms": at_ms,
-        "source_ts": datetime.fromtimestamp(at_ms / 1000, UTC).isoformat(),
-        "first_known_at_ms": at_ms + 1_000,
-        "known_at_basis": "partition_fetch_clock",
-        "arrival_seq": trade_id,
-        "source_id": "synthetic-fills",
-        "source_rank": 1,
-        "batch_sha16": "",
+        "source_ts": ts.isoformat(),
     }
 
 
@@ -232,11 +226,9 @@ def _build_strict_pit_universe(root: Path) -> FactStore:
     tid = len(fills) + 1
     fills.extend(
         [
-            _pit_fill_row(WALLET_A, "BTC", T0, "buy", 0.125, 10000.0, tid),
-            _pit_fill_row(WALLET_A, "BTC", T0 + 1000, "sell", 0.125, 10000.0, tid + 1),
-            _pit_fill_row(WALLET_A, "BTC", T1, "buy", 2.0, 10000.0, tid + 2),
-            _pit_fill_row(WALLET_A, "BTC", T2, "sell", 1.0, 10000.0, tid + 3),
-            _pit_fill_row(WALLET_A, "BTC", T3, "sell", 1.0, 10000.0, tid + 4),
+            _pit_fill_row(WALLET_A, "BTC", T1, "buy", 2.0, 10000.0, tid),
+            _pit_fill_row(WALLET_A, "BTC", T2, "sell", 1.0, 10000.0, tid + 1),
+            _pit_fill_row(WALLET_A, "BTC", T3, "sell", 1.0, 10000.0, tid + 2),
         ]
     )
 
@@ -250,11 +242,9 @@ def _build_strict_pit_universe(root: Path) -> FactStore:
     tid = len(fills) + 1
     fills.extend(
         [
-            _pit_fill_row(WALLET_B, "ETH", T0, "buy", 0.5, 1000.0, tid),
-            _pit_fill_row(WALLET_B, "ETH", T0 + 1000, "sell", 0.5, 1000.0, tid + 1),
-            _pit_fill_row(WALLET_B, "ETH", T1, "buy", 4.0, 1000.0, tid + 2),
-            _pit_fill_row(WALLET_B, "ETH", T2, "sell", 2.0, 1000.0, tid + 3),
-            _pit_fill_row(WALLET_B, "ETH", T3, "sell", 2.0, 1000.0, tid + 4),
+            _pit_fill_row(WALLET_B, "ETH", T1, "buy", 4.0, 1000.0, tid),
+            _pit_fill_row(WALLET_B, "ETH", T2, "sell", 2.0, 1000.0, tid + 1),
+            _pit_fill_row(WALLET_B, "ETH", T3, "sell", 2.0, 1000.0, tid + 2),
         ]
     )
 
@@ -286,12 +276,13 @@ def _build_strict_pit_universe(root: Path) -> FactStore:
 
     store_root = root / "facts"
     ws_root = root / "wallet_store"
+    ws_root.mkdir(parents=True, exist_ok=True)
     by_wallet_day: dict[tuple[str, str], list[dict[str, Any]]] = {}
     for row in fills:
         day = row["exchange_ts"].date().isoformat()
         by_wallet_day.setdefault((row["wallet"], day), []).append(row)
 
-    con = sqlite3.connect(ws_root / "catalog.sqlite" if ws_root.exists() else (ws_root.mkdir(parents=True, exist_ok=True) or ws_root / "catalog.sqlite"))
+    con = sqlite3.connect(ws_root / "catalog.sqlite")
     con.execute(
         "CREATE TABLE partitions(kind TEXT, wallet TEXT, day TEXT, path TEXT, rows INTEGER, "
         "bytes INTEGER, sha256 TEXT, fetched_at TEXT, source TEXT, source_cmd TEXT)"
@@ -358,71 +349,66 @@ def _build_strict_pit_universe(root: Path) -> FactStore:
     return store
 
 
-def _cwsa_sample(
-    evidence_root: Path,
-    scope: CheckpointScope,
-    limits: SamplingLimits,
-    wallet: str,
-    coin: str,
-    mid: Decimal,
-    boundary: int,
-    qty: str,
-):
-    def native(request: dict[str, Any]):
-        if request["type"] == "perpDexs":
-            body: Any = [None, {"name": "xyz"}]
-        else:
-            body = {
-                "time": boundary,
-                "assetPositions": []
-                if request.get("dex") == "xyz" or qty == "0"
-                else [
-                    {
-                        "position": {
-                            "coin": coin,
-                            "szi": qty,
-                            "positionValue": str(abs(Decimal(qty)) * mid),
-                        }
-                    }
-                ],
-            }
-        raw = json.dumps(body).encode()
-        return body, raw, sha256(raw).hexdigest()
+def _fact_store_net_position(store: FactStore, wallet: str, coin: str, *, up_to_ms: int) -> str:
+    df = (
+        store.scan(
+            "fills",
+            wallets=[wallet],
+            coins=[coin],
+            as_of_ms=T3 + 2_000,
+            allow_unknown_known_at=False,
+        )
+        .frame.filter(pl.col("event_ts_ms") <= up_to_ms)
+        .select(["side", "size"])
+        .collect()
+    )
+    net = sum(
+        (Decimal(str(row["size"])) * (1 if row["side"] == "buy" else -1))
+        for row in df.iter_rows(named=True)
+    )
+    if net == 0:
+        return "0"
+    formatted = format(net.normalize(), "f")
+    return formatted.rstrip("0").rstrip(".") if "." in formatted else formatted
 
-    return collect_checkpoint(
-        scope,
-        wallet,
-        checkpoint_ms=boundary,
-        limits=limits,
-        evidence_root=evidence_root,
-        info=native,
-        now_ms=lambda: boundary + 100,
+
+def _market_spec(symbol: str, liquidity_notional: Decimal) -> dict[str, Any]:
+    return {
+        "symbol": symbol,
+        "instrument_type": "perp",
+        "verified": True,
+        "source_mode": "SYNTHETIC",
+        "valid_until_ms": 10**15,
+        "qty_step": "0.00001",
+        "price_tick": "0.00000001",
+        "min_qty": "0.00001",
+        "min_notional": "10",
+        "liquidity_notional": str(liquidity_notional),
+        "initial_rate": str(INITIAL_RATE),
+        "fee_rate": "0",
+        "funding_bound": "0",
+        "liquidation_rate": "0",
+        "tiers": [{"cap": str(liquidity_notional), "rate": str(INITIAL_RATE)}],
+        "source_instrument": f"hyperliquid/mainnet:perp:default/{symbol}",
+    }
+
+
+def _checkpoint_scope(wallet: str) -> CheckpointScope:
+    return CheckpointScope(
+        source_id=wallet,
+        account_sha=sha256(wallet.lower().encode()).hexdigest(),
+        generation=sha256(f"gen:{wallet}".encode()).hexdigest(),
+        selection_sha=sha256(f"sel:{wallet}".encode()).hexdigest(),
+        dexes=("default", "xyz"),
     )
 
 
-def _guardian_env_fixtures() -> tuple[Any, dict[str, Any], dict[str, Any]]:
+def _guardian_env_fixtures(rulebook_fields: dict[str, Any]) -> tuple[Any, dict[str, Any], dict[str, Any]]:
     from prop_production.finance import Rulebook as GuardianRulebook
 
     fee_quote = lookup_tier_fee("propr:classic_1step", 10_000)
     assert fee_quote is not None and fee_quote.fee_usd == pytest.approx(110.0)
-    spec = RulebookCatalog.get("propr:classic_1step:phase_1")
-    fields = spec.to_rulebook_fields(
-        account_binding=ACCOUNT_ID, scale=2, evidence_sha="d" * 64
-    )
-    g_rules = GuardianRulebook(
-        account_binding=fields["account_binding"],
-        status=fields["status"],
-        initial=fields["initial"],
-        target=fields["target"],
-        daily_loss=fields["daily_loss"],
-        trailing_loss=fields["trailing_loss"],
-        internal_daily_stop="250",
-        daily_basis=fields["daily_basis"],
-        trailing_basis=fields["trailing_basis"],
-        timezone="UTC",
-        valid_until_ms=10**15,
-        evidence_sha=fields["evidence_sha"],
-    )
+    g_rules = GuardianRulebook(**rulebook_fields)
     g_policy = {
         "schema": "risk_policy_v1",
         "source_mode": "SYNTHETIC",
@@ -441,48 +427,15 @@ def _guardian_env_fixtures() -> tuple[Any, dict[str, Any], dict[str, Any]]:
         },
     }
     g_markets = {
-        "BTC": {
-            "symbol": "BTC",
-            "instrument_type": "perp",
-            "verified": True,
-            "source_mode": "SYNTHETIC",
-            "valid_until_ms": 10**15,
-            "qty_step": "0.00001",
-            "price_tick": "0.00000001",
-            "min_qty": "0.00001",
-            "min_notional": "10",
-            "liquidity_notional": str(BTC_LIQUIDITY),
-            "initial_rate": str(INITIAL_RATE),
-            "fee_rate": "0",
-            "funding_bound": "0",
-            "liquidation_rate": "0",
-            "tiers": [{"cap": str(BTC_LIQUIDITY), "rate": str(INITIAL_RATE)}],
-            "source_instrument": "hyperliquid/mainnet:perp:default/BTC",
-        },
-        "ETH": {
-            "symbol": "ETH",
-            "instrument_type": "perp",
-            "verified": True,
-            "source_mode": "SYNTHETIC",
-            "valid_until_ms": 10**15,
-            "qty_step": "0.00001",
-            "price_tick": "0.00000001",
-            "min_qty": "0.00001",
-            "min_notional": "10",
-            "liquidity_notional": str(ETH_LIQUIDITY),
-            "initial_rate": str(INITIAL_RATE),
-            "fee_rate": "0",
-            "funding_bound": "0",
-            "liquidation_rate": "0",
-            "tiers": [{"cap": str(ETH_LIQUIDITY), "rate": str(INITIAL_RATE)}],
-            "source_instrument": "hyperliquid/mainnet:perp:default/ETH",
-        },
+        "BTC": _market_spec("BTC", BTC_LIQUIDITY),
+        "ETH": _market_spec("ETH", ETH_LIQUIDITY),
     }
     return g_rules, g_policy, g_markets
 
 
-def _stage_and_sign_e2e_release(tmp_path: Path):
-    """Run Stages 0-4 and return (verified_release, proposal, keys, scopes, cwsa_policy, env)."""
+def _stage_and_sign_e2e_release(tmp_path: Path) -> E2EReleaseFixture:
+    """Run Stages 0-4 and return a bundled ``E2EReleaseFixture``."""
+    from prop_production.copy_mandates import CopyMandate
     from prop_production.evidence import digest as prod_digest
     from prop_production.evidence import sign as prod_sign
     from prop_production.release import ReleaseVerifier
@@ -509,6 +462,10 @@ def _stage_and_sign_e2e_release(tmp_path: Path):
         publication_grace_ms=5000,
     )
     cwsa_policy = CwsaPolicy(limits=cwsa_limits, measurement_sha="c" * 64)
+    k_spec = RulebookCatalog.get("propr:classic_1step:phase_1")
+    rulebook_fields = k_spec.to_rulebook_fields(
+        account_binding=ACCOUNT_ID, scale=2, evidence_sha="d" * 64
+    )
 
     try:
         # Stage 1: strict PIT Stage-1 audit (allow_undated=False)
@@ -550,13 +507,8 @@ def _stage_and_sign_e2e_release(tmp_path: Path):
         finally:
             roster.close()
 
-        # Stage 3: Stage-2 kernel walk-forward
-        k_spec = RulebookCatalog.get("propr:classic_1step:phase_1")
-        bt_rulebook = Rulebook(
-            **k_spec.to_rulebook_fields(
-                account_binding=ACCOUNT_ID, scale=2, evidence_sha="d" * 64
-            )
-        )
+        # Stage 3: Stage-2 kernel walk-forward + derive leader checkpoint positions from FactStore
+        bt_rulebook = Rulebook(**rulebook_fields)
         bt_report = run_kernel_backtest(
             store,
             window=BacktestWindow(T0, T3 + GRID_MS),
@@ -573,26 +525,26 @@ def _stage_and_sign_e2e_release(tmp_path: Path):
         assert bt_report.challenge_pass_rate == Decimal(1)
         assert len(bt_report.decisions) >= 2
         assert bt_report.ending_state.owner_books
+
+        leader_positions = {
+            ts: {
+                WALLET_A: _fact_store_net_position(store, WALLET_A, "BTC", up_to_ms=ts),
+                WALLET_B: _fact_store_net_position(store, WALLET_B, "ETH", up_to_ms=ts),
+            }
+            for ts in (T0, T1, T2, T3)
+        }
+        assert leader_positions[T0] == {WALLET_A: "0", WALLET_B: "0"}
+        assert leader_positions[T1] == {WALLET_A: "2", WALLET_B: "4"}
+        assert leader_positions[T2] == {WALLET_A: "1", WALLET_B: "2"}
+        assert leader_positions[T3] == {WALLET_A: "0", WALLET_B: "0"}
     finally:
         store.close()
 
     # Stage 4: Build unsigned ReleaseProposal, sign offline, and verify via ReleaseVerifier
-    g_rules, g_policy, g_markets = _guardian_env_fixtures()
+    g_rules, g_policy, g_markets = _guardian_env_fixtures(rulebook_fields)
     risk_policy_sha = prod_digest({"policy": g_policy, "markets": g_markets})
-    scope_a = CheckpointScope(
-        source_id=WALLET_A,
-        account_sha=sha256(WALLET_A.lower().encode()).hexdigest(),
-        generation=sha256(f"gen:{WALLET_A}".encode()).hexdigest(),
-        selection_sha=sha256(f"sel:{WALLET_A}".encode()).hexdigest(),
-        dexes=("default", "xyz"),
-    )
-    scope_b = CheckpointScope(
-        source_id=WALLET_B,
-        account_sha=sha256(WALLET_B.lower().encode()).hexdigest(),
-        generation=sha256(f"gen:{WALLET_B}".encode()).hexdigest(),
-        selection_sha=sha256(f"sel:{WALLET_B}".encode()).hexdigest(),
-        dexes=("default", "xyz"),
-    )
+    scope_a = _checkpoint_scope(WALLET_A)
+    scope_b = _checkpoint_scope(WALLET_B)
     lease_markets = {
         lease.seat_id: (
             ("hyperliquid/mainnet:perp:default/BTC",)
@@ -638,26 +590,36 @@ def _stage_and_sign_e2e_release(tmp_path: Path):
         authority_key.public_key(), "approver", ACCOUNT_ID, risk_policy_sha, g_rules.sha
     ).verify(signed_envelope, now_ms=seal_ts)
 
-    return (
-        release,
-        final_payload,
-        signed_envelope,
-        book,
-        authority_key,
-        source_key,
-        cwsa_policy,
-        cwsa_limits,
-        {WALLET_A: scope_a, WALLET_B: scope_b},
-        g_rules,
-        g_policy,
-        g_markets,
+    mandates = [CopyMandate.parse(m) for m in final_payload["mandates"]]
+    owners_by_wallet = {m.data["source_id"]: m.owner for m in mandates}
+    k_by_owner = {m.owner: Decimal(m.data["k"]) for m in mandates}
+
+    return E2EReleaseFixture(
+        release=release,
+        final_payload=final_payload,
+        signed_envelope=signed_envelope,
+        authority_key=authority_key,
+        source_key=source_key,
+        cwsa_policy=cwsa_policy,
+        cwsa_limits=cwsa_limits,
+        scopes={WALLET_A: scope_a, WALLET_B: scope_b},
+        g_rules=g_rules,
+        g_policy=g_policy,
+        g_markets=g_markets,
+        owners_by_wallet=owners_by_wallet,
+        k_by_owner=k_by_owner,
+        leader_positions=leader_positions,
     )
 
 
-def test_full_pipeline_mock_wallets_to_signed_release_and_guardian_execution(
-    tmp_path: Path,
-) -> None:
-    """Mock 4-wallet strict-PIT FactStore -> Roster -> Backtest -> Signed Release -> Guardian."""
+@contextmanager
+def _open_guardian_stack(
+    g_root: Path,
+    fx: E2EReleaseFixture,
+    *,
+    initialize: bool,
+    fill_on_submit: bool = False,
+) -> Iterator[GuardianStack]:
     from prop_production.checkpoint_receiver import CheckpointSourceReceiver
     from prop_production.copy_mandates import CopyMandate
     from prop_production.evidence import sign as prod_sign
@@ -666,338 +628,312 @@ def test_full_pipeline_mock_wallets_to_signed_release_and_guardian_execution(
     from prop_production.judge.broker import FakeBroker
     from prop_production.release import ReleaseFloor
 
-    (
-        release,
-        final_payload,
-        _,
-        _,
-        authority_key,
-        source_key,
-        cwsa_policy,
-        cwsa_limits,
-        scopes,
-        g_rules,
-        g_policy,
-        g_markets,
-    ) = _stage_and_sign_e2e_release(tmp_path)
-
-    assert release.payload["schema"] == "portfolio_release_v2"
-    assert len(release.payload["mandates"]) == 2
-
-    # Stage 5: Guardian + CheckpointSourceReceiver V3 + Journal + FakeBroker
-    src_journal = PaperJournal(tmp_path / "cwsa_source")
-    src_journal.register_checkpoint_source(
-        scopes[WALLET_A], cwsa_policy, first_checkpoint_ms=T0, at_ms=T0 - 1
-    )
-    src_journal.register_checkpoint_source(
-        scopes[WALLET_B], cwsa_policy, first_checkpoint_ms=T0, at_ms=T0 - 1
-    )
-    limits = cwsa_limits
-
-    g_root = tmp_path / "guardian"
-    g_root.mkdir(mode=0o700)
-    floor = ReleaseFloor(g_root / "floor.sqlite3", initialize=True)
-    floor.accept(release)
-    g_journal = Journal(g_root / "guardian.sqlite3", ACCOUNT_ID, initialize=True)
+    if initialize:
+        g_root.mkdir(mode=0o700, exist_ok=True)
+    floor = ReleaseFloor(g_root / "floor.sqlite3", initialize=initialize)
+    journal = Journal(g_root / "guardian.sqlite3", ACCOUNT_ID, initialize=initialize)
     broker = FakeBroker(g_root / "broker.sqlite3")
-    broker.fill_on_submit = False
+    broker.fill_on_submit = fill_on_submit
     receiver = CheckpointSourceReceiver(
         g_root / "source.sqlite3",
-        release=release,
-        source_key=source_key.public_key(),
+        release=fx.release,
+        source_key=fx.source_key.public_key(),
         wire_version=3,
     )
-
-    owners_by_wallet = {
-        m["source_id"]: CopyMandate.parse(m).owner for m in final_payload["mandates"]
-    }
     try:
+        if initialize:
+            floor.accept(fx.release)
         guardian = Guardian(
-            g_journal,
-            release,
+            journal,
+            fx.release,
             floor,
-            source_key.public_key(),
-            g_rules,
-            g_policy,
-            g_markets,
+            fx.source_key.public_key(),
+            fx.g_rules,
+            fx.g_policy,
+            fx.g_markets,
             broker,
-            mandate_key=authority_key.public_key(),
+            mandate_key=fx.authority_key.public_key(),
         )
-        for m_body in final_payload["mandates"]:
-            mandate = CopyMandate.parse(m_body)
-            guardian.activate_copy_mandate(
-                prod_sign(mandate.data, authority_key, "copy-mandate-v1"),
-                now_ms=final_payload["created_at_ms"],
-            )
-
-        def emit_pair(boundary: int, qty_a: str, qty_b: str, after_cursor: int) -> tuple[bytes, dict[str, str]]:
-            out_a = src_journal.append_checkpoint_sample(
-                cwsa_policy.epoch,
-                _cwsa_sample(src_journal.root, scopes[WALLET_A], limits, WALLET_A, "BTC", BTC_MID, boundary, qty_a),
-                boundary + 101,
-            )
-            out_b = src_journal.append_checkpoint_sample(
-                cwsa_policy.epoch,
-                _cwsa_sample(src_journal.root, scopes[WALLET_B], limits, WALLET_B, "ETH", ETH_MID, boundary, qty_b),
-                boundary + 101,
-            )
-            pkt_a = pm_canonical(
-                export_checkpoint_packet(
-                    src_journal.path,
-                    scopes[WALLET_A],
-                    cwsa_policy,
-                    signer=source_key,
-                    after_cursor=after_cursor,
-                    issued_ms=boundary + 102,
+        if initialize:
+            for m_body in fx.final_payload["mandates"]:
+                mandate = CopyMandate.parse(m_body)
+                guardian.activate_copy_mandate(
+                    prod_sign(mandate.data, fx.authority_key, "copy-mandate-v1"),
+                    now_ms=fx.final_payload["created_at_ms"],
                 )
-            )
-            pkt_b = pm_canonical(
-                export_checkpoint_packet(
-                    src_journal.path,
-                    scopes[WALLET_B],
-                    cwsa_policy,
-                    signer=source_key,
-                    after_cursor=after_cursor,
-                    issued_ms=boundary + 102,
-                )
-            )
-            return (pkt_a, pkt_b), {
-                owners_by_wallet[WALLET_A]: out_a.outcome_id,
-                owners_by_wallet[WALLET_B]: out_b.outcome_id,
-            }
-
-        # T0: Baseline 0
-        (pkt_a0, pkt_b0), _ = emit_pair(T0, "0", "0", after_cursor=0)
-        receiver.ingest(pkt_a0, now_ms=T0 + 102)
-        receiver.ingest(pkt_b0, now_ms=T0 + 102)
-        for owner in owners_by_wallet.values():
-            guardian.baseline_copy_mandate(owner, receiver, now_ms=T0 + 102)
-
-        def run_wave(boundary: int, qty_a: str, qty_b: str, cursor: int, btc_px: Decimal, eth_px: Decimal) -> int:
-            (pa, pb), reqs = emit_pair(boundary, qty_a, qty_b, after_cursor=cursor)
-            wave_ms = boundary + 102
-            receiver.ingest(pa, now_ms=wave_ms)
-            receiver.ingest(pb, now_ms=wave_ms)
-            guardian.reconcile(wave_ms)
-            quotes = {
-                "BTC": {"bid": str(BTC_BID), "ask": str(BTC_ASK), "known_at_ms": wave_ms},
-                "ETH": {"bid": str(ETH_BID), "ask": str(ETH_ASK), "known_at_ms": wave_ms},
-            }
-            decision = guardian.process_checkpoint(
-                receiver, reqs, quotes=quotes, now_ms=DecisionMs(wave_ms)
-            )
-            assert decision["status"] == "REVIEWABLE", decision.get("reasons") or decision
-            intent_ids = guardian.reserve_checkpoint(
-                decision["decision_id"], receiver=receiver, now_ms=wave_ms + 1
-            )
-            assert len(intent_ids) == 2
-            snap_before = g_journal.snapshot()
-            for idx, iid in enumerate(intent_ids):
-                guardian.dispatch(iid, wave_ms + 2 + idx)
-                mkt = snap_before["intents"][iid]["market"]
-                fill_px = btc_px if mkt == "BTC" else eth_px
-                broker.fill(iid, "1", str(fill_px))
-            guardian.reconcile(wave_ms + 5)
-            return len(intent_ids)
-
-        # T1: open (+2 BTC, +4 ETH) -> T2: partial reduce (+1 BTC, +2 ETH) -> T3: close (0, 0)
-        assert run_wave(T1, "2", "4", cursor=2, btc_px=BTC_ASK, eth_px=ETH_ASK) == 2
-        mid_snap = g_journal.snapshot()
-        mid_open = [
-            (owner, mkt, qty)
-            for owner, book_pos in mid_snap["pod_positions"].items()
-            for mkt, qty in book_pos.items()
-            if Decimal(qty) > 0
-        ]
-        assert len(mid_open) == 2, mid_snap["pod_positions"]
-
-        assert run_wave(T2, "1", "2", cursor=3, btc_px=BTC_BID, eth_px=ETH_BID) == 2
-        assert run_wave(T3, "0", "0", cursor=4, btc_px=BTC_BID, eth_px=ETH_BID) == 2
+        yield GuardianStack(
+            floor=floor,
+            journal=journal,
+            broker=broker,
+            receiver=receiver,
+            guardian=guardian,
+        )
     finally:
         receiver.close()
-        g_journal.close()
+        journal.close()
         broker.close()
         floor.close()
 
-    reopened = Journal(g_root / "guardian.sqlite3", ACCOUNT_ID, initialize=False)
-    try:
-        final_snap = reopened.snapshot()
-    finally:
-        reopened.close()
 
-    assert final_snap["halts"] == []
-    assert final_snap["runtime"]["state"] == "DISARMED"
-    assert len(final_snap["intents"]) == 6
-    open_positions = [
-        (owner, mkt, qty)
-        for owner, pos_map in final_snap["pod_positions"].items()
-        for mkt, qty in pos_map.items()
-        if Decimal(qty) != 0
-    ]
-    assert open_positions == []
+def _emit_checkpoint(
+    src_journal: PaperJournal,
+    fx: E2EReleaseFixture,
+    wallet: str,
+    coin: str,
+    mid: Decimal,
+    boundary: int,
+    qty: str,
+    *,
+    after_cursor: int,
+) -> tuple[bytes, str]:
+    scope = fx.scopes[wallet]
+    out = src_journal.append_checkpoint_sample(
+        fx.cwsa_policy.epoch,
+        cwsa_sample(
+            evidence_root=src_journal.root,
+            scope=scope,
+            limits=fx.cwsa_limits,
+            wallet=wallet,
+            coin=coin,
+            mid=mid,
+            boundary=boundary,
+            qty=qty,
+        ),
+        boundary + 101,
+    )
+    pkt = pm_canonical(
+        export_checkpoint_packet(
+            src_journal.path,
+            scope,
+            fx.cwsa_policy,
+            signer=fx.source_key,
+            after_cursor=after_cursor,
+            issued_ms=boundary + 102,
+        )
+    )
+    return pkt, out.outcome_id
+
+
+def _emit_pair(
+    src_journal: PaperJournal,
+    fx: E2EReleaseFixture,
+    boundary: int,
+    qty_by_wallet: dict[str, str],
+    *,
+    after_cursor: int,
+) -> tuple[tuple[bytes, bytes], dict[str, str]]:
+    pkt_a, out_a = _emit_checkpoint(
+        src_journal,
+        fx,
+        WALLET_A,
+        "BTC",
+        BTC_MID,
+        boundary,
+        qty_by_wallet[WALLET_A],
+        after_cursor=after_cursor,
+    )
+    pkt_b, out_b = _emit_checkpoint(
+        src_journal,
+        fx,
+        WALLET_B,
+        "ETH",
+        ETH_MID,
+        boundary,
+        qty_by_wallet[WALLET_B],
+        after_cursor=after_cursor,
+    )
+    return (pkt_a, pkt_b), {
+        fx.owners_by_wallet[WALLET_A]: out_a,
+        fx.owners_by_wallet[WALLET_B]: out_b,
+    }
+
+
+def _run_wave(
+    stack: GuardianStack,
+    src_journal: PaperJournal,
+    fx: E2EReleaseFixture,
+    boundary: int,
+    *,
+    cursor: int,
+    btc_px: Decimal,
+    eth_px: Decimal,
+) -> int:
+    (pa, pb), reqs = _emit_pair(
+        src_journal,
+        fx,
+        boundary,
+        fx.leader_positions[boundary],
+        after_cursor=cursor,
+    )
+    wave_ms = boundary + 102
+    stack.receiver.ingest(pa, now_ms=wave_ms)
+    stack.receiver.ingest(pb, now_ms=wave_ms)
+    stack.guardian.reconcile(wave_ms)
+    quotes = {
+        "BTC": {"bid": str(BTC_BID), "ask": str(BTC_ASK), "known_at_ms": wave_ms},
+        "ETH": {"bid": str(ETH_BID), "ask": str(ETH_ASK), "known_at_ms": wave_ms},
+    }
+    decision = stack.guardian.process_checkpoint(
+        stack.receiver, reqs, quotes=quotes, now_ms=DecisionMs(wave_ms)
+    )
+    assert decision["status"] == "REVIEWABLE", decision.get("reasons") or decision
+    intent_ids = stack.guardian.reserve_checkpoint(
+        decision["decision_id"], receiver=stack.receiver, now_ms=wave_ms + 1
+    )
+    assert len(intent_ids) == 2
+    snap_before = stack.journal.snapshot()
+    for idx, iid in enumerate(intent_ids):
+        stack.guardian.dispatch(iid, wave_ms + 2 + idx)
+        mkt = snap_before["intents"][iid]["market"]
+        fill_px = btc_px if mkt == "BTC" else eth_px
+        stack.broker.fill(iid, "1", str(fill_px))
+    stack.guardian.reconcile(wave_ms + 5)
+    return len(intent_ids)
+
+
+def _scaled_qty(k: Decimal, leader_qty: str, *, mid: Decimal, ask: Decimal) -> Decimal:
+    return (k * Decimal(leader_qty) * mid / ask).quantize(QTY_STEP, rounding=ROUND_DOWN)
+
+
+def test_full_pipeline_mock_wallets_to_signed_release_and_guardian_execution(
+    tmp_path: Path,
+) -> None:
+    """Mock 4-wallet strict-PIT FactStore -> Roster -> Backtest -> Signed Release -> Guardian."""
+    fx = _stage_and_sign_e2e_release(tmp_path)
+    assert fx.release.payload["schema"] == "portfolio_release_v2"
+    assert len(fx.release.payload["mandates"]) == 2
+
+    owner_a = fx.owners_by_wallet[WALLET_A]
+    owner_b = fx.owners_by_wallet[WALLET_B]
+    exp_t1_btc = _scaled_qty(
+        fx.k_by_owner[owner_a], fx.leader_positions[T1][WALLET_A], mid=BTC_MID, ask=BTC_ASK
+    )
+    exp_t1_eth = _scaled_qty(
+        fx.k_by_owner[owner_b], fx.leader_positions[T1][WALLET_B], mid=ETH_MID, ask=ETH_ASK
+    )
+    exp_t2_btc = _scaled_qty(
+        fx.k_by_owner[owner_a], fx.leader_positions[T2][WALLET_A], mid=BTC_MID, ask=BTC_ASK
+    )
+    exp_t2_eth = _scaled_qty(
+        fx.k_by_owner[owner_b], fx.leader_positions[T2][WALLET_B], mid=ETH_MID, ask=ETH_ASK
+    )
+
+    src_journal = PaperJournal(tmp_path / "cwsa_source")
+    src_journal.register_checkpoint_source(
+        fx.scopes[WALLET_A], fx.cwsa_policy, first_checkpoint_ms=T0, at_ms=T0 - 1
+    )
+    src_journal.register_checkpoint_source(
+        fx.scopes[WALLET_B], fx.cwsa_policy, first_checkpoint_ms=T0, at_ms=T0 - 1
+    )
+
+    g_root = tmp_path / "guardian"
+
+    # Lifecycle phase 1: T0 baseline + T1 open on initial Guardian stack
+    with _open_guardian_stack(g_root, fx, initialize=True, fill_on_submit=False) as stack1:
+        (pkt_a0, pkt_b0), _ = _emit_pair(src_journal, fx, T0, fx.leader_positions[T0], after_cursor=0)
+        stack1.receiver.ingest(pkt_a0, now_ms=T0 + 102)
+        stack1.receiver.ingest(pkt_b0, now_ms=T0 + 102)
+        for owner in fx.owners_by_wallet.values():
+            stack1.guardian.baseline_copy_mandate(owner, stack1.receiver, now_ms=T0 + 102)
+
+        assert _run_wave(stack1, src_journal, fx, T1, cursor=2, btc_px=BTC_ASK, eth_px=ETH_ASK) == 2
+        snap_t1 = stack1.journal.snapshot()
+        assert Decimal(snap_t1["pod_positions"][owner_a]["BTC"]) == exp_t1_btc
+        assert Decimal(snap_t1["pod_positions"][owner_b]["ETH"]) == exp_t1_eth
+        broker_pos_t1 = {p.market: p.quantity for p in stack1.broker.observe(T1 + 108).positions}
+        assert broker_pos_t1 == {"BTC": exp_t1_btc, "ETH": exp_t1_eth}
+
+    # Lifecycle phase 2: Full Guardian restart while carrying live T1 positions -> T2 reduce -> T3 close
+    with _open_guardian_stack(g_root, fx, initialize=False, fill_on_submit=False) as stack2:
+        assert _run_wave(stack2, src_journal, fx, T2, cursor=3, btc_px=BTC_BID, eth_px=ETH_BID) == 2
+        snap_t2 = stack2.journal.snapshot()
+        assert Decimal(snap_t2["pod_positions"][owner_a]["BTC"]) == exp_t2_btc
+        assert Decimal(snap_t2["pod_positions"][owner_b]["ETH"]) == exp_t2_eth
+        broker_pos_t2 = {p.market: p.quantity for p in stack2.broker.observe(T2 + 108).positions}
+        assert broker_pos_t2 == {"BTC": exp_t2_btc, "ETH": exp_t2_eth}
+
+        assert _run_wave(stack2, src_journal, fx, T3, cursor=4, btc_px=BTC_BID, eth_px=ETH_BID) == 2
+        snap_t3 = stack2.journal.snapshot()
+        assert snap_t3["halts"] == []
+        assert snap_t3["runtime"]["state"] == "DISARMED"
+        assert stack2.broker.observe(T3 + 108).positions == ()
+
+        intents = list(snap_t3["intents"].values())
+        assert len(intents) == 6
+        assert all(i["status"] == "FILLED" for i in intents)
+        buys = [i for i in intents if Decimal(i["quantity"]) > 0]
+        sells = [i for i in intents if Decimal(i["quantity"]) < 0]
+        assert len(buys) == 2 and {i["market"] for i in buys} == {"BTC", "ETH"}
+        assert len(sells) == 4
+        assert [i for i in sells if i["market"] == "BTC"] and len([i for i in sells if i["market"] == "BTC"]) == 2
+        assert [i for i in sells if i["market"] == "ETH"] and len([i for i in sells if i["market"] == "ETH"]) == 2
+
+        open_positions = [
+            (owner, mkt, qty)
+            for owner, pos_map in snap_t3["pod_positions"].items()
+            for mkt, qty in pos_map.items()
+            if Decimal(qty) != 0
+        ]
+        assert open_positions == []
 
 
 def test_full_pipeline_fail_closed_on_tampered_release_and_halt_persistence(
     tmp_path: Path,
 ) -> None:
     """Tampered signed release rejects fail-closed; Guardian HALT persists across restart."""
-    from prop_production.checkpoint_receiver import CheckpointSourceReceiver
-    from prop_production.copy_mandates import CopyMandate
-    from prop_production.evidence import sign as prod_sign
-    from prop_production.guardian import Guardian
-    from prop_production.journal import Journal
-    from prop_production.judge.broker import FakeBroker
-    from prop_production.release import ReleaseFloor, ReleaseVerifier
+    from prop_production.release import ReleaseVerifier
 
-    (
-        release,
-        final_payload,
-        signed_envelope,
-        _,
-        authority_key,
-        source_key,
-        cwsa_policy,
-        cwsa_limits,
-        scopes,
-        g_rules,
-        g_policy,
-        g_markets,
-    ) = _stage_and_sign_e2e_release(tmp_path)
+    fx = _stage_and_sign_e2e_release(tmp_path)
 
     # 1. Tamper with member k in signed envelope -> ReleaseVerifier must fail closed
-    tampered = deepcopy(signed_envelope)
+    tampered = deepcopy(fx.signed_envelope)
     tampered["payload"]["members"][0]["k"] = "9.99"
     with pytest.raises(ValueError):
         ReleaseVerifier(
-            authority_key.public_key(),
+            fx.authority_key.public_key(),
             "approver",
             ACCOUNT_ID,
-            release.payload["risk_policy_sha"],
-            g_rules.sha,
+            fx.release.payload["risk_policy_sha"],
+            fx.g_rules.sha,
         ).verify(tampered, now_ms=T0 - 10)
 
-    # 2. Trigger HALT via broker reconciliation uncertainty, restart Guardian, verify NO_TRADE
+    # 2. Trigger HALT via broker reconciliation uncertainty, restart Guardian, verify PERSISTENT_HALT
     src_journal = PaperJournal(tmp_path / "cwsa_source")
     src_journal.register_checkpoint_source(
-        scopes[WALLET_A], cwsa_policy, first_checkpoint_ms=T0, at_ms=T0 - 1
+        fx.scopes[WALLET_A], fx.cwsa_policy, first_checkpoint_ms=T0, at_ms=T0 - 1
     )
-    limits = cwsa_limits
 
     g_root = tmp_path / "guardian_halt"
-    g_root.mkdir(mode=0o700)
-    floor = ReleaseFloor(g_root / "floor.sqlite3", initialize=True)
-    floor.accept(release)
-    g_journal = Journal(g_root / "guardian.sqlite3", ACCOUNT_ID, initialize=True)
-    broker = FakeBroker(g_root / "broker.sqlite3")
-    receiver = CheckpointSourceReceiver(
-        g_root / "source.sqlite3",
-        release=release,
-        source_key=source_key.public_key(),
-        wire_version=3,
-    )
-    owners_by_wallet = {
-        m["source_id"]: CopyMandate.parse(m).owner for m in final_payload["mandates"]
-    }
-    try:
-        guardian = Guardian(
-            g_journal,
-            release,
-            floor,
-            source_key.public_key(),
-            g_rules,
-            g_policy,
-            g_markets,
-            broker,
-            mandate_key=authority_key.public_key(),
+    with _open_guardian_stack(g_root, fx, initialize=True) as stack1:
+        pkt_a0, _ = _emit_checkpoint(
+            src_journal, fx, WALLET_A, "BTC", BTC_MID, T0, fx.leader_positions[T0][WALLET_A], after_cursor=0
         )
-        for m_body in final_payload["mandates"]:
-            mandate = CopyMandate.parse(m_body)
-            guardian.activate_copy_mandate(
-                prod_sign(mandate.data, authority_key, "copy-mandate-v1"),
-                now_ms=final_payload["created_at_ms"],
-            )
+        stack1.receiver.ingest(pkt_a0, now_ms=T0 + 102)
+        stack1.guardian.baseline_copy_mandate(
+            fx.owners_by_wallet[WALLET_A], stack1.receiver, now_ms=T0 + 102
+        )
+        stack1.broker.history_complete = False
+        stack1.guardian.reconcile(T0 + 105)
+        assert "RECONCILIATION_UNCERTAIN" in stack1.journal.snapshot()["halts"]
 
-        src_journal.append_checkpoint_sample(
-            cwsa_policy.epoch,
-            _cwsa_sample(src_journal.root, scopes[WALLET_A], limits, WALLET_A, "BTC", BTC_MID, T0, "0"),
-            T0 + 101,
+    # Reopen persisted Journal/Floor/Broker in fresh Guardian -> must remain HALTED & block open
+    with _open_guardian_stack(g_root, fx, initialize=False) as stack2:
+        pkt_a1, out_a1 = _emit_checkpoint(
+            src_journal, fx, WALLET_A, "BTC", BTC_MID, T1, fx.leader_positions[T1][WALLET_A], after_cursor=2
         )
-        pkt_a0 = pm_canonical(
-            export_checkpoint_packet(
-                src_journal.path,
-                scopes[WALLET_A],
-                cwsa_policy,
-                signer=source_key,
-                after_cursor=0,
-                issued_ms=T0 + 102,
-            )
-        )
-        receiver.ingest(pkt_a0, now_ms=T0 + 102)
-        guardian.baseline_copy_mandate(owners_by_wallet[WALLET_A], receiver, now_ms=T0 + 102)
-
-        # Force reconciliation HALT
-        broker.history_complete = False
-        guardian.reconcile(T0 + 105)
-        assert "RECONCILIATION_UNCERTAIN" in g_journal.snapshot()["halts"]
-    finally:
-        receiver.close()
-        g_journal.close()
-        broker.close()
-        floor.close()
-
-    # Reopen persisted Journal/Floor/Broker in fresh Guardian -> must remain HALTED & refuse open
-    floor2 = ReleaseFloor(g_root / "floor.sqlite3", initialize=False)
-    g_journal2 = Journal(g_root / "guardian.sqlite3", ACCOUNT_ID, initialize=False)
-    broker2 = FakeBroker(g_root / "broker.sqlite3")
-    receiver2 = CheckpointSourceReceiver(
-        g_root / "source.sqlite3",
-        release=release,
-        source_key=source_key.public_key(),
-        wire_version=3,
-    )
-    try:
-        guardian2 = Guardian(
-            g_journal2,
-            release,
-            floor2,
-            source_key.public_key(),
-            g_rules,
-            g_policy,
-            g_markets,
-            broker2,
-            mandate_key=authority_key.public_key(),
-        )
-        out_a1 = src_journal.append_checkpoint_sample(
-            cwsa_policy.epoch,
-            _cwsa_sample(src_journal.root, scopes[WALLET_A], limits, WALLET_A, "BTC", BTC_MID, T1, "2"),
-            T1 + 101,
-        )
-        pkt_a1 = pm_canonical(
-            export_checkpoint_packet(
-                src_journal.path,
-                scopes[WALLET_A],
-                cwsa_policy,
-                signer=source_key,
-                after_cursor=2,
-                issued_ms=T1 + 102,
-            )
-        )
-        receiver2.ingest(pkt_a1, now_ms=T1 + 102)
+        stack2.receiver.ingest(pkt_a1, now_ms=T1 + 102)
         quotes = {
             "BTC": {"bid": str(BTC_BID), "ask": str(BTC_ASK), "known_at_ms": T1 + 102},
             "ETH": {"bid": str(ETH_BID), "ask": str(ETH_ASK), "known_at_ms": T1 + 102},
         }
-        decision = guardian2.process_checkpoint(
-            receiver2,
-            {owners_by_wallet[WALLET_A]: out_a1.outcome_id},
+        decision = stack2.guardian.process_checkpoint(
+            stack2.receiver,
+            {fx.owners_by_wallet[WALLET_A]: out_a1},
             quotes=quotes,
             now_ms=DecisionMs(T1 + 102),
         )
         assert decision["status"] in {"MISSED", "PRE_DISPATCH_BLOCKED"}, decision
-        assert "RECONCILIATION_UNCERTAIN" in g_journal2.snapshot()["halts"]
-        assert g_journal2.snapshot()["intents"] == {}
-    finally:
-        receiver2.close()
-        g_journal2.close()
-        broker2.close()
-        floor2.close()
+        assert "PERSISTENT_HALT" in decision["reasons"], decision
+        assert "RECONCILIATION_UNCERTAIN" in stack2.journal.snapshot()["halts"]
+        assert stack2.journal.snapshot()["intents"] == {}
+        assert stack2.broker.observe(T1 + 105).positions == ()
