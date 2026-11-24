@@ -20,6 +20,7 @@ uv run --frozen --group dev ruff check \
     tests/test_score_universe.py \
     tests/test_kernel_backtest.py \
     tests/test_three_engine_golden_parity.py \
+    tests/test_full_pipeline_e2e.py \
     tests/test_slice4_boundaries.py \
     tests/test_colab_runner.py \
     tests/test_may_nov_disjoint_10pods.py
