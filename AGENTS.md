@@ -19,9 +19,9 @@ Read-only daily trading operations, wallet evaluation, and prop-challenge resear
 | Branch | Read / run |
 |---|---|
 | Stage-1 audit (`score_universe`), Stage-2 walk-forward (`run_kernel_backtest`), 3-engine `decision_sha` (`src/trading_ops/research/`) | [ADR 0004](docs/adr/0004-slice4-kernel-research-path.md) |
-| Prop-firm rulebooks (`copytrade_kernel.RulebookCatalog`) | [ADR 0002](docs/adr/0002-single-canonical-rulebook-source.md) |
+| Prop-firm rulebooks & commercial fees (`copytrade_kernel.RulebookCatalog`, `lookup_tier_fee`) | [ADR 0002](docs/adr/0002-single-canonical-rulebook-source.md), `src/trading_ops/research/fee_schedule.py`, `src/trading_ops/research/prop_firm_fees.json` |
 | Fact discovery (`discover_fact_partitions` over `FactStore` manifests) | [ADR 0003](docs/adr/0003-fact-store-discovery.md) |
 | Google Colab execution (`rclone` FactStore mirror, venv cache) | `scripts/colab_research_run.py` (`--help` for flags) |
 | Daily read-only monitoring & upstream promotion checklist | [runbooks/daily-ops.md](runbooks/daily-ops.md) |
-| Verification (`Python >=3.14` via `uv run --frozen --group dev`) | `bash scripts/verify_research.sh` (must pass all tests & ruff) |
+| Verification (`Python >=3.14` via `uv run --frozen --group dev`) | `bash scripts/verify_research.sh` (includes synthetic full-pipeline E2E [`tests/test_full_pipeline_e2e.py`](tests/test_full_pipeline_e2e.py); establishes `ENGINEERING_VERIFIED` only) |
 | GitHub issues, triage labels, domain glossary/ADRs | [issue-tracker.md](docs/agents/issue-tracker.md), [triage-labels.md](docs/agents/triage-labels.md), [domain.md](docs/agents/domain.md) |
