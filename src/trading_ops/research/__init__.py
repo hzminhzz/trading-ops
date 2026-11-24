@@ -17,6 +17,7 @@ Public surface (two deep operations plus the golden identity)::
 * :mod:`trading_ops.research.scoring` — vectorized Stage-1 ``float64`` audit.
 * :mod:`trading_ops.research.backtest` — Stage-2 daily reconcile + 5m kernel walk.
 * :mod:`trading_ops.research.golden` — the cross-engine ``decision_sha``.
+* :mod:`trading_ops.research.fee_schedule` — commercial per-tier challenge fee lookup.
 """
 
 from __future__ import annotations
@@ -28,6 +29,12 @@ from .backtest import (
     BacktestWindow,
     MarketSpec,
     run_kernel_backtest,
+)
+from .fee_schedule import (
+    DEFAULT_FEE_SCHEDULE_PATH,
+    FeeQuote,
+    load_fee_schedule,
+    lookup_tier_fee,
 )
 from .golden import (
     DECISION_SHA_SCHEMA,
@@ -54,10 +61,12 @@ __all__ = [
     "BARS_PER_DAY",
     "DAY_MS",
     "DECISION_SHA_SCHEMA",
+    "DEFAULT_FEE_SCHEDULE_PATH",
     "GRID_MS",
     "BacktestConfig",
     "BacktestReport",
     "BacktestWindow",
+    "FeeQuote",
     "GoldenStep",
     "MarketSpec",
     "ScoreAuditRow",
@@ -69,6 +78,8 @@ __all__ = [
     "decision_sha",
     "ending_state_rows",
     "golden_step",
+    "load_fee_schedule",
+    "lookup_tier_fee",
     "net_intent_rows",
     "run_kernel_backtest",
     "score_universe",

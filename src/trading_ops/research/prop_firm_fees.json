@@ -1,0 +1,238 @@
+{
+  "version": 2,
+  "_note": "Fee and payout facts the rulebook catalog does not carry. Prices are per tier because fees are not linear: a $5,000 price is never a $10,000 price. A tier is a bare number (provenance on the challenge) or an object when that size needs its own note or source. The exporter takes the tier equal to the catalog's base account; a study at another size reads its own tier or stays breakeven-only. Keys are challenge ids: `<firm_slug>:<program_slug>` with the phase dropped.",
+  "_example": {
+    "billing": "one-time",
+    "resetFee": null,
+    "activationFee": 0,
+    "refundableOnPass": false,
+    "payoutFrequency": "monthly",
+    "firstPayoutMinDays": 0,
+    "verified_at": "YYYY-MM-DD",
+    "source_urls": [
+      "https://..."
+    ],
+    "tiers": {
+      "5000": 0,
+      "10000": 0
+    }
+  },
+  "challenges": {
+    "propr:turbo_1step": {
+      "billing": "one-time",
+      "resetFee": null,
+      "activationFee": 0,
+      "refundableOnPass": false,
+      "payoutFrequency": "on-demand",
+      "firstPayoutMinDays": 0,
+      "verified_at": "2026-11-19",
+      "notes": "Turbo 1-Step fee table: 9% target, 3% daily, 3% static drawdown. USDC rewards on demand, $20 minimum, 80% split.",
+      "source_urls": [
+        "https://propr.xyz/rules"
+      ],
+      "tiers": {
+        "5000": 25,
+        "10000": 50,
+        "25000": 125,
+        "50000": 245,
+        "100000": 450,
+        "200000": 899
+      }
+    },
+    "propr:pro_1step": {
+      "billing": "one-time",
+      "resetFee": null,
+      "activationFee": 0,
+      "refundableOnPass": false,
+      "payoutFrequency": "on-demand",
+      "firstPayoutMinDays": 0,
+      "verified_at": "2026-11-19",
+      "notes": "Pro 1-Step fee table: 12% target, 3% daily, 5% static drawdown. 80% split.",
+      "source_urls": [
+        "https://propr.xyz/rules"
+      ],
+      "tiers": {
+        "5000": 45,
+        "10000": 85,
+        "25000": 185,
+        "50000": 355,
+        "100000": 699,
+        "200000": 1399
+      }
+    },
+    "propr:classic_2step": {
+      "billing": "one-time",
+      "resetFee": null,
+      "activationFee": 0,
+      "refundableOnPass": false,
+      "payoutFrequency": "on-demand",
+      "firstPayoutMinDays": 0,
+      "verified_at": "2026-11-19",
+      "notes": "Classic 2-Step fee table: 5%/10% targets, 5% daily, 8% trailing drawdown that stops at the starting balance.",
+      "source_urls": [
+        "https://propr.xyz/rules"
+      ],
+      "tiers": {
+        "5000": 50,
+        "10000": 100,
+        "25000": 250,
+        "50000": 450,
+        "100000": 749,
+        "200000": 1499
+      }
+    },
+    "propr:classic_1step": {
+      "billing": "one-time",
+      "resetFee": null,
+      "activationFee": 0,
+      "refundableOnPass": false,
+      "payoutFrequency": "on-demand",
+      "firstPayoutMinDays": 0,
+      "verified_at": "2026-11-19",
+      "notes": "Classic 1-Step fee table: 10% target, 3% daily, 6% static drawdown. 80% split.",
+      "source_urls": [
+        "https://propr.xyz/rules"
+      ],
+      "tiers": {
+        "5000": 60,
+        "10000": 110,
+        "25000": 275,
+        "50000": 495,
+        "100000": 999,
+        "200000": 1998
+      }
+    },
+    "hypernova:1step_tight": {
+      "billing": "one-time",
+      "resetFee": null,
+      "activationFee": 0,
+      "refundableOnPass": false,
+      "payoutFrequency": "on-demand",
+      "firstPayoutMinDays": 0,
+      "verified_at": "2026-11-19",
+      "notes": "Tight risk schedule: 9% target, 3% daily, 3% drawdown. Payouts on demand once flat; the new-trader delay is unspecified, so 0 days.",
+      "source_urls": [
+        "https://hypernova.xyz/docs/rulebook",
+        "https://hypernova.xyz/docs/starting-an-assessment"
+      ],
+      "tiers": {
+        "5000": 25,
+        "10000": 50,
+        "25000": 120,
+        "50000": 200,
+        "100000": 400,
+        "200000": 800
+      }
+    },
+    "hypernova:1step_low": {
+      "billing": "one-time",
+      "resetFee": null,
+      "activationFee": 0,
+      "refundableOnPass": false,
+      "payoutFrequency": "on-demand",
+      "firstPayoutMinDays": 0,
+      "verified_at": "2026-11-19",
+      "notes": "Low risk schedule: 10% target, 3% daily, 6% drawdown. Standard 80/20 split; the 90/10 add-on (+15% of fee) is not priced in.",
+      "source_urls": [
+        "https://hypernova.xyz/docs/rulebook",
+        "https://hypernova.xyz/docs/starting-an-assessment"
+      ],
+      "tiers": {
+        "5000": 60,
+        "10000": 115,
+        "25000": 280,
+        "50000": 495,
+        "100000": 999,
+        "200000": 1950
+      }
+    },
+    "hypernova:1step_medium": {
+      "billing": "one-time",
+      "resetFee": null,
+      "activationFee": 0,
+      "refundableOnPass": false,
+      "payoutFrequency": "on-demand",
+      "firstPayoutMinDays": 0,
+      "verified_at": "2026-11-19",
+      "notes": "Medium risk schedule: 10% target, 4% daily, 7% drawdown. Standard 80/20 split.",
+      "source_urls": [
+        "https://hypernova.xyz/docs/rulebook",
+        "https://hypernova.xyz/docs/starting-an-assessment"
+      ],
+      "tiers": {
+        "5000": 80,
+        "10000": 150,
+        "25000": 365,
+        "50000": 675,
+        "100000": 1350,
+        "200000": 2700
+      }
+    },
+    "hyrotrader:two_step": {
+      "billing": "one-time",
+      "resetFee": null,
+      "activationFee": 0,
+      "refundableOnPass": true,
+      "payoutFrequency": "on-demand",
+      "firstPayoutMinDays": 0,
+      "verified_at": "2026-11-19",
+      "notes": "Two-Step fee is a refundable deposit returned with the FIRST PAYOUT, not on passing, so refundableOnPass is an approximation that pulls the refund earlier. A payout covers at most 5% of the starting balance; excess profit is cancelled.",
+      "source_urls": [
+        "https://hyrotrader.com/blog/how-much-does-a-funded-account-cost",
+        "https://www.hyrotrader.com/trading-rules/"
+      ],
+      "tiers": {
+        "5000": 59,
+        "10000": 119,
+        "25000": 249,
+        "50000": 379,
+        "100000": 579,
+        "200000": 969
+      }
+    },
+    "vanta-trading:classic_1step_3pct": {
+      "billing": "one-time",
+      "resetFee": null,
+      "activationFee": 0,
+      "refundableOnPass": false,
+      "payoutFrequency": "on-demand",
+      "firstPayoutMinDays": 0,
+      "verified_at": "2026-11-19",
+      "notes": "Fee grid at the default 100/0 split, 3% daily loss limit. Lower splits are priced lower (60/40 ... 100/0); this row is the default.",
+      "source_urls": [
+        "https://www.vantatrading.io/rules",
+        "https://www.vantatrading.io/pricing"
+      ],
+      "tiers": {
+        "5000": 67,
+        "10000": 127,
+        "25000": 303,
+        "50000": 577,
+        "100000": 1099
+      },
+      "profitSplitPct": 100
+    },
+    "vanta-trading:classic_1step_5pct": {
+      "billing": "one-time",
+      "resetFee": null,
+      "activationFee": 0,
+      "refundableOnPass": false,
+      "payoutFrequency": "on-demand",
+      "firstPayoutMinDays": 0,
+      "verified_at": "2026-11-19",
+      "notes": "Fee grid at the default 100/0 split, 5% daily loss limit; the 5% table costs more than the 3% one.",
+      "source_urls": [
+        "https://www.vantatrading.io/rules",
+        "https://www.vantatrading.io/pricing"
+      ],
+      "tiers": {
+        "5000": 79,
+        "10000": 150,
+        "25000": 358,
+        "50000": 682,
+        "100000": 1299
+      },
+      "profitSplitPct": 100
+    }
+  }
+}

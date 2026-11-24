@@ -11,7 +11,7 @@ All checks below are strictly read-only. They never mutate financial journals or
   ```
 - Inspect unified `FactStore` coverage, `RosterStore` seat books, and release status (read-only):
   ```bash
-  uv run copytrade-pm facts coverage --root /home/quant/.local/share/copytrade/phase-d/facts
+  uv run copytrade-pm facts coverage --store /home/quant/.local/share/copytrade/facts --kinds fills,bars_1m
   uv run copytrade-pm roster show --db /home/quant/.local/share/copytrade/roster.sqlite
   uv run copytrade-pm release chapter2 explain --portfolio A --inspection metadata
   ```

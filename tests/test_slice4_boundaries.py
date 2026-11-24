@@ -37,6 +37,7 @@ ALLOWED_STDLIB_PREFIXES = {
     "hashlib",
     "json",
     "math",
+    "pathlib",
     "typing",
 }
 

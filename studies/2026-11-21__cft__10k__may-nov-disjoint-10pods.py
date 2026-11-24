@@ -43,6 +43,7 @@ for _extra_path in (ROOT / "src", ROOT / "studies"):
 import pod_constructor as pc
 
 from trading_ops.research import (
+    DEFAULT_FEE_SCHEDULE_PATH,
     BacktestConfig,
     BacktestReport,
     BacktestWindow,
@@ -1485,7 +1486,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--sim-inputs",
         type=Path,
-        default=Path("/home/quant/dev/prop-production/sim_inputs.json"),
+        default=DEFAULT_FEE_SCHEDULE_PATH,
     )
     parser.add_argument("--out-dir", type=Path, default=ROOT)
     parser.add_argument("--max-workers", type=int, default=4)

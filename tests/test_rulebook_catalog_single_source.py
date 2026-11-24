@@ -67,3 +67,56 @@ def test_fee_is_only_ever_caller_supplied() -> None:
     )
     assert priced.challenge_fee_usd == pytest.approx(120.0)
     assert pc.load_prop_contract_spec("crypto-fund-trader").challenge_fee_usd is None
+
+
+def test_fee_schedule_keys_exist_in_rulebook_catalog() -> None:
+    """Fee schedule owns commercial pricing only and every key resolves in RulebookCatalog."""
+    from trading_ops.research import DEFAULT_FEE_SCHEDULE_PATH, load_fee_schedule
+
+    schedule = load_fee_schedule(DEFAULT_FEE_SCHEDULE_PATH)
+    challenges = schedule["challenges"]
+    assert challenges
+
+    catalog_prefixes = {":".join(k.split(":")[:2]) for k in RulebookCatalog.list_keys()}
+    forbidden_rule_keys = {
+        "target",
+        "daily_loss",
+        "trailing_loss",
+        "daily_basis",
+        "trailing_basis",
+        "reset_time_hhmm",
+    }
+
+    for challenge_key, entry in challenges.items():
+        assert challenge_key in catalog_prefixes, f"Unknown challenge key {challenge_key!r}"
+        assert isinstance(entry, dict)
+        assert entry.get("verified_at"), f"Missing verified_at for {challenge_key}"
+        assert entry.get("source_urls"), f"Missing source_urls for {challenge_key}"
+        assert isinstance(entry.get("tiers"), dict) and entry["tiers"], (
+            f"Missing tiers for {challenge_key}"
+        )
+        assert not (forbidden_rule_keys & set(entry.keys())), (
+            f"Risk rule keys leaked into fee schedule for {challenge_key}"
+        )
+
+
+def test_fee_schedule_lookup_exact_tiers_only() -> None:
+    """Tier fee lookup never interpolates or scales linearly across account sizes."""
+    from trading_ops.research import lookup_tier_fee
+
+    propr_10k = lookup_tier_fee("propr:classic_1step", 10_000)
+    assert propr_10k is not None
+    assert propr_10k.fee_usd == pytest.approx(110.0)
+    assert propr_10k.refundable_on_pass is False
+
+    propr_5k = lookup_tier_fee("propr:classic_1step", 5_000)
+    assert propr_5k is not None
+    assert propr_5k.fee_usd == pytest.approx(60.0)
+
+    hyro_10k = lookup_tier_fee("hyrotrader:two_step", 10_000)
+    assert hyro_10k is not None
+    assert hyro_10k.fee_usd == pytest.approx(119.0)
+    assert hyro_10k.refundable_on_pass is True
+
+    assert lookup_tier_fee("crypto-fund-trader:two_phase", 10_000) is None
+    assert lookup_tier_fee("propr:classic_1step", 7_500) is None
