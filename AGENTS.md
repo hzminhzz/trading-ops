@@ -12,13 +12,13 @@ Read-only daily trading operations, wallet evaluation, and prop-challenge resear
 - **Read-only research only:** Real orders, challenge execution, and Guardian authority belong strictly to `/home/quant/dev/prop-production` + `/home/quant/dev/trading-connector`.
 - **Single sources of truth:** Consume facts from `copytrade_pm.facts` (`FactStore`), seats from `copytrade_pm.roster` (`RosterStore`), and rulebooks/accounting/5m decisions from pinned `copytrade_kernel` (`prop-production:packages/copytrade-kernel`). Draft proposals in `proposals/` and promote them upstream to `/home/quant/dev/copytrade-pm` and `/home/quant/dev/prop-production`.
 - **No private state in Git:** Keep `.env`, keys, raw broker responses, wallet PII / raw `0x` addresses, and SQLite/Parquet datasets outside Git (runtime stores live in `/home/quant/.local/share/copytrade/`).
-- **PIT provenance & sizing:** Reservoir shards carry `first_known_at_ms = NULL`; any run opting into `allow_undated=True` MUST label outputs `RETROSPECTIVE_RESEARCH_ONLY`. Calibrate/freeze `k` strictly pre-evaluation and leave missing `bars_1m` evidence excluded rather than inventing proxies.
+- **PIT provenance & sizing:** Reservoir shards carry `first_known_at_ms = NULL`; any run opting into `allow_undated=True` MUST label outputs `RETROSPECTIVE_RESEARCH_ONLY`. Calibrate/freeze `k` strictly pre-evaluation, fail closed above `max_missing_volume_frac` on `bars_1m` (`VENUE_VOLUME_UNKNOWN`), and record any tolerated sparse `bars_1m` gaps explicitly in `notes` rather than inventing zero/proxy values.
 
 ## Context pointers
 
 | Branch | Read / run |
 |---|---|
-| Stage-1 audit (`score_universe`), Stage-2 walk-forward (`run_kernel_backtest`), 3-engine `decision_sha` (`src/trading_ops/research/`) | [ADR 0004](docs/adr/0004-slice4-kernel-research-path.md) |
+| Stage-1 audit (`score_universe`), Stage-2 walk-forward (`run_kernel_backtest`), 3-engine `decision_sha` (`src/trading_ops/research/`) | [ADR 0004](docs/adr/0004-slice4-kernel-research-path.md), [ADR 0005](docs/adr/0005-follower-execution-stream-stage1.md) |
 | Prop-firm rulebooks & commercial fees (`copytrade_kernel.RulebookCatalog`, `lookup_tier_fee`) | [ADR 0002](docs/adr/0002-single-canonical-rulebook-source.md), `src/trading_ops/research/fee_schedule.py`, `src/trading_ops/research/prop_firm_fees.json` |
 | Fact discovery (`discover_fact_partitions` over `FactStore` manifests) | [ADR 0003](docs/adr/0003-fact-store-discovery.md) |
 | Google Colab execution (`rclone` FactStore mirror, venv cache) | `scripts/colab_research_run.py` (`--help` for flags) |

@@ -23,15 +23,23 @@ Discipline encoded here:
 * **The roster owns thresholds, this module owns measurements.** A gate is
   emitted only for a measured quantity compared with a ``ScoreConfig`` value.
 
-The participation and 5m markout fields are measured against PIT ``bars_1m``
-venue bars (``quote_volume_usd`` and ``close``), and CDaR shares use exact Euler
-additive marginal CDaR decomposition over ``suggested_k``-scaled cohort returns.
+The default Stage-1 pipeline scores each wallet on its 5m bar-aligned
+:class:`FollowerExecutionStream` (amending ADR 0004 §1 per ADR 0005): strips
+non-``MarketSpec`` symbols, nets fills into ``GRID_MS`` rebalances with exact
+coin inventory, evaluates ``suggested_k``-scaled participation against PIT
+``bars_1m`` venue volume (auditing any tolerated gaps below
+``max_missing_volume_frac`` in ``UniverseScorecard.notes`` and excluding above
+it via ``VENUE_VOLUME_UNKNOWN``), and scores follower trajectory edge alongside
+Euler marginal CDaR. Upstream ``WalletScorecard`` / ``ScoreAuditRow`` boundary
+field names (``p95_participation_1m``, ``markout_5m_bps``, ``markout_fills``)
+are preserved for ``RosterStore`` compatibility while ``UniverseScorecard.basis``
+and ``ScoreConfig.data`` pin the active measurement mode.
 """
 
 from __future__ import annotations
 
 import math
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import ROUND_DOWN, Decimal
@@ -46,6 +54,7 @@ from copytrade_pm.roster import GateFailure, WalletScorecard, digest
 __all__ = [
     "BARS_PER_DAY",
     "GRID_MS",
+    "FollowerExecutionStream",
     "ScoreAuditRow",
     "ScoreConfig",
     "ScoreExclusion",
@@ -56,7 +65,36 @@ __all__ = [
 GRID_MS = 300_000
 BARS_PER_DAY = 288
 _MICRO = Decimal("0.000001")
-PARTICIPATION_BASIS = "FACT_STORE_BARS_1M_VENUE_VOLUME"
+_NON_MARKET_SYMBOL_RE = r"[/:\s]"
+PARTICIPATION_BASIS = "FACT_STORE_BARS_5M_FOLLOWER_K_SCALED"
+LEGACY_PARTICIPATION_BASIS = "FACT_STORE_BARS_1M_VENUE_VOLUME"
+EXPECTANCY_BASIS_BY_MODE: dict[str, str] = {
+    "trajectory": "FOLLOWER_BAR_TRAJECTORY_EDGE",
+    "bar_markout": "FOLLOWER_BAR_5M_MARKOUT",
+    "raw_markout": "FACT_STORE_BARS_1M_CLOSE_5M",
+}
+
+
+@dataclass(frozen=True, slots=True)
+class FollowerExecutionStream:
+    """Bar-aligned copy-follower execution stream on the 5m checkpoint grid."""
+
+    panel: pl.DataFrame
+    rebalances: pl.DataFrame
+
+    def filter_wallets(self, wallets: Sequence[str] | pl.DataFrame) -> FollowerExecutionStream:
+        """Restrict both bar panel and rebalance stream to ``wallets``."""
+        if isinstance(wallets, pl.DataFrame):
+            selected = wallets.select("wallet")
+            return FollowerExecutionStream(
+                panel=self.panel.join(selected, on="wallet", how="inner"),
+                rebalances=self.rebalances.join(selected, on="wallet", how="inner"),
+            )
+        allowed = list(wallets)
+        return FollowerExecutionStream(
+            panel=self.panel.filter(pl.col("wallet").is_in(allowed)),
+            rebalances=self.rebalances.filter(pl.col("wallet").is_in(allowed)),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,6 +113,11 @@ class ScoreConfig:
     cdar_alpha: float = 0.95
     max_fixed_k: Decimal = Decimal(10)
     min_markout_fills: int = 20
+    exclude_non_market_symbols: bool = True
+    net_orders_by_bar: bool = True
+    participation_scale_by_k: bool = True
+    max_missing_volume_frac: Decimal = Decimal("0.02")
+    expectancy_mode: str = "trajectory"
 
     def __post_init__(self) -> None:
         for name in (
@@ -95,6 +138,18 @@ class ScoreConfig:
             value = getattr(self, name)
             if not isinstance(value, Decimal) or not Decimal(0) < value <= Decimal(1):
                 raise ValueError(f"INVALID_SCORE_CONFIG:{name}")
+        for flag in (
+            "exclude_non_market_symbols",
+            "net_orders_by_bar",
+            "participation_scale_by_k",
+        ):
+            if type(getattr(self, flag)) is not bool:
+                raise ValueError(f"INVALID_SCORE_CONFIG:{flag}")
+        frac = self.max_missing_volume_frac
+        if not isinstance(frac, Decimal) or not frac.is_finite() or not Decimal(0) <= frac <= Decimal(1):
+            raise ValueError("INVALID_SCORE_CONFIG:max_missing_volume_frac")
+        if self.expectancy_mode not in EXPECTANCY_BASIS_BY_MODE:
+            raise ValueError("INVALID_SCORE_CONFIG:expectancy_mode")
         if not 0.5 <= self.cdar_alpha < 1:
             raise ValueError("INVALID_SCORE_CONFIG:cdar_alpha")
         if self.active_days_window_days < 1 or self.cluster_count < 1:
@@ -116,6 +171,11 @@ class ScoreConfig:
             "cdar_alpha": self.cdar_alpha,
             "max_fixed_k": str(self.max_fixed_k),
             "min_markout_fills": self.min_markout_fills,
+            "exclude_non_market_symbols": self.exclude_non_market_symbols,
+            "net_orders_by_bar": self.net_orders_by_bar,
+            "participation_scale_by_k": self.participation_scale_by_k,
+            "max_missing_volume_frac": str(self.max_missing_volume_frac),
+            "expectancy_mode": self.expectancy_mode,
         }
 
 
@@ -163,6 +223,20 @@ class ScoreAuditRow:
         }
 
 
+def _basis_for(config: ScoreConfig, *, undated: bool) -> dict[str, str]:
+    participation = (
+        PARTICIPATION_BASIS
+        if config.net_orders_by_bar and config.participation_scale_by_k
+        else LEGACY_PARTICIPATION_BASIS
+    )
+    return {
+        "participation": participation,
+        "cdar_share": "EULER_MARGINAL_CDAR_COHORT",
+        "markout": EXPECTANCY_BASIS_BY_MODE[config.expectancy_mode],
+        "pit": "RETROSPECTIVE_UNDATED" if undated else "STRICT_KNOWN_AT",
+    }
+
+
 @dataclass(frozen=True, slots=True)
 class UniverseScorecard:
     """One Stage-1 audit: roster-ready cards plus the evidence behind them."""
@@ -186,16 +260,7 @@ class UniverseScorecard:
 
     def __post_init__(self) -> None:
         if not self.basis:
-            object.__setattr__(
-                self,
-                "basis",
-                {
-                    "participation": PARTICIPATION_BASIS,
-                    "cdar_share": "EULER_MARGINAL_CDAR_COHORT",
-                    "markout": "FACT_STORE_BARS_1M_CLOSE_5M",
-                    "pit": "RETROSPECTIVE_UNDATED" if self.undated else "STRICT_KNOWN_AT",
-                },
-            )
+            object.__setattr__(self, "basis", _basis_for(self.config, undated=self.undated))
 
     @property
     def by_wallet(self) -> dict[str, WalletScorecard]:
@@ -258,32 +323,60 @@ def _signed_side(column: str) -> pl.Expr:
     )
 
 
-def _bars(orders: pl.DataFrame, *, pod_equity: float) -> pl.DataFrame:
-    """One row per ``(wallet, coin, bar)``: signed notional, delta and unit return."""
-    ordered = orders.sort(["wallet", "coin", "event_ts_ms", "arrival_seq"])
-    return (
+def _build_follower_stream(orders: pl.DataFrame, *, pod_equity: float) -> FollowerExecutionStream:
+    """Build the 5m bar-netted follower execution panel and nonzero rebalances."""
+    ordered = orders.sort(["wallet", "coin_norm", "event_ts_ms", "arrival_seq"])
+    bar_panel = (
         ordered.with_columns(
-            pl.col("signed_usd").cum_sum().over(["wallet", "coin"]).alias("position_usd"),
-            pl.col("price").shift(1).over(["wallet", "coin"]).alias("_prior_price"),
-            pl.col("signed_usd").cum_sum().shift(1).over(["wallet", "coin"]).alias("_prior_usd"),
+            (pl.col("side_sign") * pl.col("abs_usd") / pl.col("price")).alias("signed_qty"),
+        )
+        .group_by(["wallet", "coin_norm", "bar_ms"])
+        .agg(
+            pl.col("coin").last().alias("coin"),
+            pl.col("day").last().alias("day"),
+            pl.col("signed_qty").sum().alias("delta_qty"),
+            pl.col("signed_usd").sum().alias("delta_usd"),
+            pl.col("price").last().alias("bar_price"),
+            pl.len().alias("fills_in_bar"),
+        )
+        .sort(["wallet", "coin_norm", "bar_ms"])
+        .with_columns(
+            pl.col("delta_qty").cum_sum().over(["wallet", "coin_norm"]).alias("position_qty"),
         )
         .with_columns(
-            (pl.col("_prior_usd").fill_null(0.0) * (pl.col("price") / pl.col("_prior_price") - 1.0))
+            pl.col("position_qty")
+            .shift(1)
+            .over(["wallet", "coin_norm"])
+            .fill_null(0.0)
+            .alias("prior_qty"),
+            pl.col("bar_price").shift(1).over(["wallet", "coin_norm"]).alias("_prior_price"),
+        )
+        .with_columns(
+            (pl.col("prior_qty") * (pl.col("bar_price") - pl.col("_prior_price")))
             .fill_null(0.0)
             .fill_nan(0.0)
-            .alias("pnl_usd")
-        )
-        .group_by(["wallet", "coin", "bar_ms"])
-        .agg(
-            pl.col("signed_usd").sum().alias("delta_usd"),
-            pl.col("position_usd").last().alias("position_usd"),
-            pl.col("pnl_usd").sum().alias("pnl_usd"),
+            .alias("pnl_usd"),
+            pl.col("delta_usd").abs().alias("abs_delta_usd"),
+            (pl.col("position_qty") * pl.col("bar_price")).alias("position_usd"),
+            pl.when(pl.col("delta_usd") > 0.0)
+            .then(pl.lit(1.0))
+            .when(pl.col("delta_usd") < 0.0)
+            .then(pl.lit(-1.0))
+            .otherwise(pl.lit(0.0))
+            .alias("side_sign"),
         )
         .with_columns(
             (pl.col("position_usd") / pod_equity).alias("notional_frac"),
             (pl.col("pnl_usd") / pod_equity).alias("net_ret_frac"),
         )
+        .drop("_prior_price")
     )
+    rebalances = bar_panel.filter(pl.col("abs_delta_usd") > 0.0).with_columns(
+        pl.col("bar_ms").alias("event_ts_ms"),
+        pl.col("bar_price").alias("price"),
+        pl.col("abs_delta_usd").alias("abs_usd"),
+    )
+    return FollowerExecutionStream(panel=bar_panel, rebalances=rebalances)
 
 
 def _euler_marginal_cdar_shares(
@@ -402,73 +495,190 @@ def _slice(facts: FactStore, kind: str, **kwargs: Any) -> FactSlice:
     return facts.scan(kind, **kwargs)
 
 
-def _participation(
-    orders: pl.DataFrame, bars: pl.DataFrame
-) -> tuple[dict[str, tuple[float, float]], list[ScoreExclusion]]:
-    """Per-wallet uncapped p95/max share of PIT ``bars_1m`` venue quote volume."""
-    per_minute = (
-        orders.with_columns(
-            (pl.col("event_ts_ms") // 60_000 * 60_000).alias("minute_ms"),
+def _q10_order_stats(
+    stream: FollowerExecutionStream, raw_orders: pl.DataFrame, *, net_by_bar: bool
+) -> pl.DataFrame:
+    """Compute per-wallet 10th-percentile order size on follower rebalances or raw fills."""
+    if not net_by_bar:
+        return raw_orders.group_by("wallet").agg(
+            pl.col("abs_usd").quantile(0.10, interpolation="nearest").alias("q10_order_usd"),
+            pl.len().alias("orders"),
         )
-        .group_by(["wallet", "coin_norm", "minute_ms"])
+    all_wallets = raw_orders.group_by("wallet").agg(pl.len().alias("raw_fills"))
+    rebalance_q10 = stream.rebalances.group_by("wallet").agg(
+        pl.col("abs_usd").quantile(0.10, interpolation="nearest").alias("q10_order_usd"),
+        pl.len().alias("rebalances"),
+    )
+    return all_wallets.join(rebalance_q10, on="wallet", how="left").select(
+        pl.col("wallet"),
+        pl.col("q10_order_usd").fill_null(0.0).alias("q10_order_usd"),
+        pl.coalesce(pl.col("rebalances"), pl.col("raw_fills")).cast(pl.Int64).alias("orders"),
+    )
+
+
+def _venue_volume_panel(
+    orders: pl.DataFrame,
+    bars: pl.DataFrame,
+    *,
+    bucket_ms: int,
+    max_missing_frac: float,
+) -> tuple[pl.DataFrame, list[ScoreExclusion], list[str]]:
+    """Join demand to PIT venue quote volume; audit gaps and exclude above cap."""
+    demand = (
+        orders.with_columns(
+            (pl.col("event_ts_ms") // bucket_ms * bucket_ms).alias("venue_bucket_ms"),
+        )
+        .group_by(["wallet", "coin_norm", "venue_bucket_ms"])
         .agg(pl.col("abs_usd").sum().alias("wallet_usd"))
     )
     if bars.height > 0:
         venue = (
             bars.with_columns(
                 pl.col("coin").str.strip_chars().str.to_uppercase().alias("coin_norm"),
-                pl.col("event_ts_ms").cast(pl.Int64).alias("minute_ms"),
+                (pl.col("event_ts_ms").cast(pl.Int64) // bucket_ms * bucket_ms).alias(
+                    "venue_bucket_ms"
+                ),
                 pl.col("quote_volume_usd").cast(pl.Float64).alias("quote_volume_usd"),
             )
-            .group_by(["coin_norm", "minute_ms"])
+            .filter(pl.col("quote_volume_usd").is_finite() & (pl.col("quote_volume_usd") > 0.0))
+            .group_by(["coin_norm", "venue_bucket_ms"])
             .agg(pl.col("quote_volume_usd").sum().alias("quote_volume_usd"))
         )
-        joined = per_minute.join(venue, on=["coin_norm", "minute_ms"], how="left")
+        joined = demand.join(venue, on=["coin_norm", "venue_bucket_ms"], how="left")
     else:
-        joined = per_minute.with_columns(pl.lit(None, dtype=pl.Float64).alias("quote_volume_usd"))
+        joined = demand.with_columns(pl.lit(None, dtype=pl.Float64).alias("quote_volume_usd"))
 
-    missing_df = (
-        joined.filter(
-            pl.col("quote_volume_usd").is_null()
-            | ~pl.col("quote_volume_usd").is_finite()
-            | (pl.col("quote_volume_usd") <= 0.0)
+    is_missing = (
+        pl.col("quote_volume_usd").is_null()
+        | ~pl.col("quote_volume_usd").is_finite()
+        | (pl.col("quote_volume_usd") <= 0.0)
+    )
+    coverage = joined.group_by("wallet").agg(
+        pl.len().alias("total"),
+        is_missing.cast(pl.Int64).sum().alias("missing"),
+    )
+    exclusions: list[ScoreExclusion] = []
+    volume_notes: list[str] = []
+    for row in coverage.iter_rows(named=True):
+        missing = int(row["missing"])
+        total = int(row["total"])
+        if missing <= 0:
+            continue
+        if (total - missing) == 0 or (float(missing) / float(total)) > max_missing_frac:
+            exclusions.append(
+                ScoreExclusion(wallet=row["wallet"], reason="VENUE_VOLUME_UNKNOWN", observed=missing)
+            )
+        else:
+            volume_notes.append(f"TOLERATED_MISSING_VOLUME_BARS:{row['wallet']}:{missing}/{total}")
+    excluded_wallets = {row.wallet for row in exclusions}
+    valid = joined.filter(~pl.col("wallet").is_in(list(excluded_wallets)) & ~is_missing)
+    return valid, exclusions, volume_notes
+
+
+def _participation_shares(
+    valid_volume: pl.DataFrame, *, scale_by_wallet: dict[str, float]
+) -> dict[str, tuple[float, float]]:
+    """Per-wallet follower-scaled p95/max share of PIT venue quote volume."""
+    if valid_volume.height == 0:
+        return {}
+    scale_df = pl.DataFrame(
+        {
+            "wallet": list(scale_by_wallet.keys()),
+            "k_scale": [float(v) for v in scale_by_wallet.values()],
+        },
+        schema={"wallet": pl.String, "k_scale": pl.Float64},
+    )
+    agg = (
+        valid_volume.join(scale_df, on="wallet", how="left")
+        .with_columns(
+            (
+                (pl.col("wallet_usd") / pl.col("quote_volume_usd"))
+                * pl.col("k_scale").fill_null(1.0)
+            ).alias("follower_share")
         )
         .group_by("wallet")
-        .agg(pl.len().alias("missing"))
-    )
-    exclusions = [
-        ScoreExclusion(
-            wallet=row["wallet"],
-            reason="VENUE_VOLUME_UNKNOWN",
-            observed=int(row["missing"]),
+        .agg(
+            pl.col("follower_share").quantile(0.95, interpolation="nearest").alias("p95_share"),
+            pl.col("follower_share").max().alias("max_share"),
         )
-        for row in missing_df.iter_rows(named=True)
-    ]
-    excluded_wallets = {row.wallet for row in exclusions}
-    valid = joined.filter(~pl.col("wallet").is_in(list(excluded_wallets))).with_columns(
-        (pl.col("wallet_usd") / pl.col("quote_volume_usd")).alias("raw_share")
     )
-    if valid.height == 0:
-        return {}, exclusions
-    agg = valid.group_by("wallet").agg(
-        pl.col("raw_share").quantile(0.95, interpolation="nearest").alias("raw_p95"),
-        pl.col("raw_share").max().alias("raw_worst"),
+    return {
+        row["wallet"]: (float(row["p95_share"]), float(row["max_share"]))
+        for row in agg.iter_rows(named=True)
+    }
+
+
+def _trajectory_expectancy(panel: pl.DataFrame, bars: pl.DataFrame) -> pl.DataFrame:
+    """Follower bar-trajectory PnL per dollar of rebalanced notional (bps)."""
+    empty_schema = {"wallet": pl.String, "expectancy_bps": pl.Float64, "observations": pl.UInt32}
+    if panel.height == 0:
+        return pl.DataFrame(schema=empty_schema)
+    tail_pnl = (
+        panel.sort(["wallet", "coin_norm", "bar_ms"])
+        .group_by(["wallet", "coin_norm"])
+        .agg(
+            pl.col("bar_ms").last().alias("last_bar_ms"),
+            pl.col("position_qty").last().alias("last_qty"),
+            pl.col("bar_price").last().alias("last_price"),
+        )
+    )
+    if bars.height > 0:
+        latest_closes = (
+            bars.with_columns(
+                pl.col("coin").str.strip_chars().str.to_uppercase().alias("coin_norm"),
+                pl.col("event_ts_ms").cast(pl.Int64).alias("close_ts_ms"),
+                pl.col("close").cast(pl.Float64).alias("latest_close"),
+            )
+            .filter(pl.col("latest_close").is_finite() & (pl.col("latest_close") > 0.0))
+            .sort(["coin_norm", "close_ts_ms", "venue"])
+            .group_by("coin_norm")
+            .agg(
+                pl.col("close_ts_ms").last(),
+                pl.col("latest_close").last(),
+            )
+        )
+        tail_pnl = (
+            tail_pnl.join(latest_closes, on="coin_norm", how="left")
+            .with_columns(
+                pl.when(
+                    pl.col("latest_close").is_not_null()
+                    & (pl.col("close_ts_ms") > pl.col("last_bar_ms"))
+                    & (pl.col("last_qty").abs() > 1e-12)
+                )
+                .then(pl.col("last_qty") * (pl.col("latest_close") - pl.col("last_price")))
+                .otherwise(0.0)
+                .alias("tail_pnl_usd")
+            )
+            .group_by("wallet")
+            .agg(pl.col("tail_pnl_usd").sum().alias("tail_pnl_usd"))
+        )
+    else:
+        tail_pnl = tail_pnl.group_by("wallet").agg(pl.lit(0.0).alias("tail_pnl_usd"))
+
+    base = panel.group_by("wallet").agg(
+        pl.col("pnl_usd").sum().alias("realized_mtm_pnl_usd"),
+        pl.col("abs_delta_usd").sum().alias("turnover_usd"),
+        (pl.col("prior_qty").abs() > 1e-12).cast(pl.UInt32).sum().alias("observations"),
     )
     return (
-        {
-            row["wallet"]: (float(row["raw_p95"]), float(row["raw_worst"]))
-            for row in agg.iter_rows(named=True)
-        },
-        exclusions,
+        base.join(tail_pnl, on="wallet", how="left")
+        .filter(pl.col("turnover_usd") > 0.0)
+        .with_columns(
+            (
+                (pl.col("realized_mtm_pnl_usd") + pl.col("tail_pnl_usd").fill_null(0.0))
+                / pl.col("turnover_usd")
+                * 10_000.0
+            ).alias("expectancy_bps")
+        )
+        .select("wallet", "expectancy_bps", "observations")
     )
 
 
 def _markout(orders: pl.DataFrame, bars: pl.DataFrame) -> pl.DataFrame:
     """5m markout in bps against PIT ``bars_1m`` close prices."""
+    empty_schema = {"wallet": pl.String, "expectancy_bps": pl.Float64, "observations": pl.UInt32}
     if bars.height == 0 or orders.height == 0:
-        return pl.DataFrame(
-            schema={"wallet": pl.String, "markout_bps": pl.Float64, "fills": pl.UInt32}
-        )
+        return pl.DataFrame(schema=empty_schema)
     closes = (
         bars.with_columns(
             pl.col("coin").str.strip_chars().str.to_uppercase().alias("coin_norm"),
@@ -482,9 +692,7 @@ def _markout(orders: pl.DataFrame, bars: pl.DataFrame) -> pl.DataFrame:
         .sort(["coin_norm", "event_ts_ms"])
     )
     if closes.height == 0:
-        return pl.DataFrame(
-            schema={"wallet": pl.String, "markout_bps": pl.Float64, "fills": pl.UInt32}
-        )
+        return pl.DataFrame(schema=empty_schema)
     with_horizon = orders.with_columns(
         (pl.col("event_ts_ms") + GRID_MS).alias("target_ts_ms")
     ).sort(["coin_norm", "target_ts_ms"])
@@ -498,16 +706,31 @@ def _markout(orders: pl.DataFrame, bars: pl.DataFrame) -> pl.DataFrame:
     ).with_columns(
         (
             pl.col("side_sign") * (pl.col("future_price") / pl.col("price") - 1.0) * 10_000.0
-        ).alias("markout_bps")
+        ).alias("expectancy_bps")
     )
     return (
-        joined.drop_nulls("markout_bps")
+        joined.drop_nulls("expectancy_bps")
         .group_by("wallet")
         .agg(
-            pl.col("markout_bps").mean().alias("markout_bps"),
-            pl.len().alias("fills"),
+            pl.col("expectancy_bps").mean().alias("expectancy_bps"),
+            pl.len().cast(pl.UInt32).alias("observations"),
         )
     )
+
+
+_EXPECTANCY_EVALUATORS: dict[
+    str, Callable[[FollowerExecutionStream, pl.DataFrame, pl.DataFrame], pl.DataFrame]
+] = {
+    "trajectory": lambda stream, _raw, bars: _trajectory_expectancy(stream.panel, bars),
+    "bar_markout": lambda stream, _raw, bars: _markout(stream.rebalances, bars),
+    "raw_markout": lambda _stream, raw_orders, bars: _markout(raw_orders, bars),
+}
+
+
+def _score_expectancy(
+    stream: FollowerExecutionStream, raw_orders: pl.DataFrame, bars: pl.DataFrame, *, mode: str
+) -> pl.DataFrame:
+    return _EXPECTANCY_EVALUATORS[mode](stream, raw_orders, bars)
 
 
 # --------------------------------------------------------------------------- #
@@ -577,17 +800,20 @@ def score_universe(
         (pl.col("event_ts_ms") >= start_ms) & (pl.col("event_ts_ms") < as_of.value)
     )
     equity_frame = equity.collect().filter(pl.col("event_ts_ms") <= as_of.value)
-    if raw.height == 0:
+
+    def _empty_universe(
+        slice_rows: int, empty_excluded: tuple[ScoreExclusion, ...], empty_notes: list[str]
+    ) -> UniverseScorecard:
         return UniverseScorecard(
             as_of=as_of,
             lookback_days=lookback_days,
             config=settings,
             cards=(),
             audit=(),
-            excluded=(),
+            excluded=empty_excluded,
             tiers=observed_tiers,
             slice_days=len(fills.days),
-            slice_rows=0,
+            slice_rows=slice_rows,
             undated=allow_undated,
             source_sha=digest(
                 {
@@ -595,11 +821,14 @@ def score_universe(
                     "lookback_days": lookback_days,
                     "config": settings.data,
                     "slice": fills.as_dict(),
-                    "rows": 0,
+                    "rows": slice_rows,
                 }
             ),
-            notes=("NO_FILL_ROWS",),
+            notes=tuple(sorted(set(empty_notes))),
         )
+
+    if raw.height == 0:
+        return _empty_universe(0, (), ["NO_FILL_ROWS"])
 
     orders = (
         raw.with_columns(
@@ -629,13 +858,44 @@ def score_universe(
     notes: list[str] = []
     if dropped:
         notes.append(f"UNSCORED_FILLS_UNKNOWN_SIDE_OR_PRICE:{dropped}")
-
-    q10 = orders.group_by("wallet").agg(
-        pl.col("abs_usd").quantile(0.10, interpolation="nearest").alias("q10_order_usd"),
-        pl.len().alias("orders"),
-    )
-    eligible_q10 = q10.filter(pl.col("q10_order_usd") >= float(settings.min_baseline_order_usd))
     excluded: list[ScoreExclusion] = []
+
+    if settings.exclude_non_market_symbols and orders.height > 0:
+        non_market_mask = pl.col("coin_norm").str.contains(_NON_MARKET_SYMBOL_RE) | (
+            pl.col("coin_norm") == ""
+        )
+        non_market = orders.filter(non_market_mask)
+        if non_market.height > 0:
+            notes.append(f"UNSCORED_NON_MARKET_SYMBOLS:{non_market.height}")
+            orders = orders.filter(~non_market_mask)
+            tradable_wallets = orders.select("wallet").unique()
+            only_non_market = (
+                non_market.join(tradable_wallets, on="wallet", how="anti")
+                .group_by("wallet")
+                .agg(pl.len().alias("observed"))
+            )
+            for row in only_non_market.iter_rows(named=True):
+                excluded.append(
+                    ScoreExclusion(
+                        wallet=row["wallet"],
+                        reason="NO_TRADABLE_MARKET_FILLS",
+                        observed=int(row["observed"]),
+                    )
+                )
+
+    if orders.height == 0:
+        return _empty_universe(
+            raw.height,
+            tuple(sorted(excluded, key=lambda row: (row.wallet, row.reason))),
+            notes + ["NO_SCORABLE_WALLET"],
+        )
+
+    orders = orders.sort(["wallet", "coin_norm", "event_ts_ms", "arrival_seq"])
+    pod_equity = float(settings.pod_equity_usd)
+    stream = _build_follower_stream(orders, pod_equity=pod_equity)
+
+    q10 = _q10_order_stats(stream, orders, net_by_bar=settings.net_orders_by_bar)
+    eligible_q10 = q10.filter(pl.col("q10_order_usd") >= float(settings.min_baseline_order_usd))
     for row in q10.filter(
         pl.col("q10_order_usd") < float(settings.min_baseline_order_usd)
     ).iter_rows(named=True):
@@ -646,9 +906,9 @@ def score_universe(
                 observed=int(row["orders"]),
             )
         )
-    orders = orders.join(eligible_q10.select("wallet"), on="wallet", how="inner").sort(
-        ["wallet", "coin", "event_ts_ms", "arrival_seq"]
-    )
+    eligible_q10_wallets = eligible_q10.select("wallet")
+    orders = orders.join(eligible_q10_wallets, on="wallet", how="inner")
+    stream = stream.filter_wallets(eligible_q10_wallets)
 
     account_value: dict[str, Decimal] = {}
     if equity_frame.height:
@@ -668,30 +928,14 @@ def score_universe(
             continue
         scored.append(wallet)
     if not scored:
-        return UniverseScorecard(
-            as_of=as_of,
-            lookback_days=lookback_days,
-            config=settings,
-            cards=(),
-            audit=(),
-            excluded=tuple(sorted(excluded, key=lambda row: (row.wallet, row.reason))),
-            tiers=observed_tiers,
-            slice_days=len(fills.days),
-            slice_rows=raw.height,
-            undated=allow_undated,
-            source_sha=digest(
-                {
-                    "as_of_ms": as_of.value,
-                    "lookback_days": lookback_days,
-                    "config": settings.data,
-                    "slice": fills.as_dict(),
-                    "rows": raw.height,
-                }
-            ),
-            notes=tuple(notes + ["NO_SCORABLE_WALLET"]),
+        return _empty_universe(
+            raw.height,
+            tuple(sorted(excluded, key=lambda row: (row.wallet, row.reason))),
+            notes + ["NO_SCORABLE_WALLET"],
         )
 
     orders = orders.filter(pl.col("wallet").is_in(scored))
+    stream = stream.filter_wallets(scored)
     traded_coins = sorted(orders["coin_norm"].unique().to_list())
     bars_slice = facts.scan(
         "bars_1m",
@@ -704,37 +948,30 @@ def score_universe(
     )
     bars_frame = bars_slice.collect()
 
-    participation_rows, volume_exclusions = _participation(orders, bars_frame)
+    participation_source = stream.rebalances if settings.net_orders_by_bar else orders
+    bucket_ms = GRID_MS if settings.net_orders_by_bar else 60_000
+    valid_volume, volume_exclusions, volume_notes = _venue_volume_panel(
+        participation_source,
+        bars_frame,
+        bucket_ms=bucket_ms,
+        max_missing_frac=float(settings.max_missing_volume_frac),
+    )
+    if volume_notes:
+        notes.extend(volume_notes)
     if volume_exclusions:
         excluded.extend(volume_exclusions)
         excluded_volume_wallets = {row.wallet for row in volume_exclusions}
         scored = [wallet for wallet in scored if wallet not in excluded_volume_wallets]
         orders = orders.filter(pl.col("wallet").is_in(scored))
+        stream = stream.filter_wallets(scored)
     if not scored:
-        return UniverseScorecard(
-            as_of=as_of,
-            lookback_days=lookback_days,
-            config=settings,
-            cards=(),
-            audit=(),
-            excluded=tuple(sorted(excluded, key=lambda row: (row.wallet, row.reason))),
-            tiers=observed_tiers,
-            slice_days=len(fills.days),
-            slice_rows=raw.height,
-            undated=allow_undated,
-            source_sha=digest(
-                {
-                    "as_of_ms": as_of.value,
-                    "lookback_days": lookback_days,
-                    "config": settings.data,
-                    "slice": fills.as_dict(),
-                    "rows": raw.height,
-                }
-            ),
-            notes=tuple(notes + ["NO_SCORABLE_WALLET"]),
+        return _empty_universe(
+            raw.height,
+            tuple(sorted(excluded, key=lambda row: (row.wallet, row.reason))),
+            notes + ["NO_SCORABLE_WALLET"],
         )
 
-    panel = _bars(orders, pod_equity=float(settings.pod_equity_usd))
+    panel = stream.panel
     bars = panel.select("bar_ms").unique().sort("bar_ms")["bar_ms"].to_numpy()
     width = len(bars)
     index = {bar: position for position, bar in enumerate(bars)}
@@ -748,25 +985,29 @@ def score_universe(
         positions = [index[bar] for bar in grouped["bar_ms"].to_list()]
         returns[row_index, positions] = grouped["net_ret_frac"].to_numpy()
 
-    markout = _markout(orders, bars_frame)
+    drawdowns = [_peak_dd(returns[row_index]) * pod_equity for row_index in range(len(scored))]
+    k_results = [_suggested_k(drawdown, settings) for drawdown in drawdowns]
+    scale_by_wallet = {
+        wallet: (float(k_results[row_index][0]) if settings.participation_scale_by_k else 1.0)
+        for row_index, wallet in enumerate(scored)
+    }
+    participation_rows = _participation_shares(valid_volume, scale_by_wallet=scale_by_wallet)
+
+    markout = _score_expectancy(stream, orders, bars_frame, mode=settings.expectancy_mode)
     window_start = as_of.value - settings.active_days_window_days * 86_400_000
+    active_source = stream.rebalances if settings.net_orders_by_bar else orders
     active = (
-        orders.filter(pl.col("event_ts_ms") >= window_start)
+        active_source.filter(pl.col("event_ts_ms") >= window_start)
         .group_by("wallet")
         .agg(pl.col("day").n_unique().alias("active_days"))
     )
 
-    drawdowns = [
-        _peak_dd(returns[row_index]) * float(settings.pod_equity_usd)
-        for row_index in range(len(scored))
-    ]
-    k_results = [_suggested_k(drawdown, settings) for drawdown in drawdowns]
     weights = np.array([float(k) for k, _ in k_results], dtype=np.float64)
     cdar_shares = _euler_marginal_cdar_shares(returns, weights, settings.cdar_alpha)
     labels = _cluster_labels(returns, settings.cluster_count)
 
     markout_rows = {
-        row["wallet"]: (float(row["markout_bps"]), int(row["fills"]))
+        row["wallet"]: (float(row["expectancy_bps"]), int(row["observations"]))
         for row in markout.iter_rows(named=True)
     }
     active_rows = {row["wallet"]: int(row["active_days"]) for row in active.iter_rows(named=True)}

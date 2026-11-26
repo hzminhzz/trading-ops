@@ -227,3 +227,14 @@ as historical evidence.
    dual clocks) existed only in `portfolio_risk_policy`; the roster carries the Q12
    latch and vetoes, not a containment simulator. The deletion is recorded with
    that gap explicit — it must not be re-implemented as a second decision engine.
+
+---
+
+## 2026-11-26 — Stage-1 Follower Execution Stream Defaults (ADR 0005)
+
+Live Hyperliquid hybrid cohort studies (`2026-11-25`) showed four raw-print distortions in Stage-1 scoring when leaders executed maker/TWAP splits or held multi-hour swings on 5m checkpoints; see `docs/adr/0005-follower-execution-stream-stage1.md`:
+
+1. **Score the 5m follower stream, never raw sub-bar splits or uncopiable symbols.** `score_universe` strips `[/:\s]` non-`MarketSpec` tickers (`exclude_non_market_symbols=True`, emitting `UNSCORED_NON_MARKET_SYMBOLS` / `NO_TRADABLE_MARKET_FILLS`) and nets fills into `(wallet, coin_norm, bar_ms)` rebalances with exact token inventory (`position_qty = cum_sum(delta_qty)`) before testing `min_baseline_order_usd = $15`.
+2. **Scale participation by `suggested_k` on 5m venue buckets and keep sparse gaps explicit.** `participation_scale_by_k=True` evaluates `suggested_k`-scaled follower impact against 5m-aggregated `bars_1m.quote_volume_usd` (`FACT_STORE_BARS_5M_FOLLOWER_K_SCALED`), excludes `VENUE_VOLUME_UNKNOWN` whenever valid bars `== 0` or missing/zero volume exceeds `max_missing_volume_frac` (`0.02`), and records any within-tolerance gaps explicitly via `TOLERATED_MISSING_VOLUME_BARS:<wallet>:<missing>/<total>` in `UniverseScorecard.notes` (never silent proxies).
+3. **Prefer follower trajectory edge (`FOLLOWER_BAR_TRAJECTORY_EDGE`) over `+5m` raw fill markout.** Realized + tail PIT mark-to-market trajectory PnL per dollar of rebalanced turnover retains profitable swing leaders despite `+5m` entry noise while rejecting churning losers with positive `+5m` noise bounces (`NEGATIVE_5M_MARKOUT`).
+

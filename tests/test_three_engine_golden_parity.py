@@ -424,6 +424,7 @@ def test_three_engines_end_to_end_golden_parity(tmp_path: Path, monkeypatch) -> 
             max_euler_cdar_share=Decimal(1),
             max_p95_participation_1m=Decimal(1),
             max_max_participation_1m=Decimal(1),
+            expectancy_mode="bar_markout",
         ),
         allow_undated=True,
     )

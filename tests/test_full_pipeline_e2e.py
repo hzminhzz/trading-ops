@@ -448,6 +448,8 @@ def _stage_and_sign_e2e_release(tmp_path: Path) -> E2EReleaseFixture:
         max_euler_cdar_share=Decimal("0.70"),
         max_p95_participation_1m=Decimal(1),
         max_max_participation_1m=Decimal(1),
+        # Synthetic reset tick at T0 - GRID_MS tests +5m markout rather than full trajectory PnL.
+        expectancy_mode="bar_markout",
     )
     seats = (
         SeatSpec("seat_1", Decimal(200), Decimal("0.70")),

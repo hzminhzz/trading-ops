@@ -1,7 +1,10 @@
 # ADR 0004 — Stage-1 scoring and the kernel walk-forward own the research path
 
 **Status:** accepted (Phase D, Slice 4: new research path, cross-engine parity
-proof, and the Guardian/PM03 clone removal).
+proof, and the Guardian/PM03 clone removal). §1 defaults are amended by
+[ADR 0005](0005-follower-execution-stream-stage1.md) (5m `FollowerExecutionStream`,
+`k`-scaled bar participation, bounded audited missing-volume tolerance, and
+trajectory expectancy).
 
 ## Context
 

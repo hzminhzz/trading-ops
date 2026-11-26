@@ -2,6 +2,11 @@
 
 All notable changes to `trading-ops` are documented in this file.
 
+## [Stage-1 FollowerExecutionStream Defaults] - 2026-11-26
+
+### Changed
+- Amends ADR 0004 §1 via `docs/adr/0005-follower-execution-stream-stage1.md`, `LESSONS.md`, and `AGENTS.md`: updated `src/trading_ops/research/scoring.py` defaults to [`FollowerExecutionStream`](src/trading_ops/research/scoring.py) (`exclude_non_market_symbols=True`, `net_orders_by_bar=True` with exact coin inventory tracking, `participation_scale_by_k=True` over 5m `bars_1m` liquidity with `max_missing_volume_frac=0.02` audited via `TOLERATED_MISSING_VOLUME_BARS`, and `expectancy_mode="trajectory"`), while preserving opt-in `"bar_markout"` / `"raw_markout"` modes and `WalletScorecard` schemas.
+
 ## [Colab Runner & Onboarding Overhaul] - 2026-11-24
 
 ### Added
