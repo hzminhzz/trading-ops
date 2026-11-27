@@ -1640,3 +1640,85 @@ def test_backtest_report_serialization_preserves_constraints_and_execution_ms() 
     assert invalid_payload["portfolio_constraints_valid"] is False
     assert invalid_payload["fills"][0]["checkpoint_ms"] == WINDOW_START
     assert invalid_payload["fills"][0]["execution_ms"] == WINDOW_START + GRID_MS
+
+
+def test_reconstruct_causal_panel_handles_null_fill_price(tmp_path: Path) -> None:
+    """Real monitored-plus-six Reservoir fills can carry price=None while inventory is valid."""
+    import polars as pl
+    from copytrade_pm.facts import FactStore
+    from copytrade_pm.facts import manifest as mf
+    from copytrade_pm.facts.schemas import schema_for
+
+    from trading_ops.research.backtest import _panel
+
+    fact_store = FactStore(tmp_path / "facts", create=True)
+    try:
+        t0 = WINDOW_START
+        day = datetime.fromtimestamp(t0 / 1000, UTC).date().isoformat()
+        rows = [
+            {
+                "wallet": WALLET_A,
+                "coin": "ETH",
+                "dex": "hyperliquid",
+                "dex_raw": "hyperliquid",
+                "provider": "vike",
+                "side": "buy",
+                "size": Decimal(3),
+                "price": None,
+                "fee": Decimal(0),
+                "fee_token": "USDC",
+                "size_usd": Decimal(0),
+                "start_position": Decimal(2),
+                "closed_pnl": Decimal(0),
+                "trade_id": "301",
+                "order_id": "301",
+                "direction": "",
+                "is_liquidation": False,
+                "is_maker": False,
+                "crossed": True,
+                "exchange_ts": datetime.fromtimestamp(t0 / 1000, UTC),
+                "event_ts_ms": t0,
+                "source_ts": datetime.fromtimestamp(t0 / 1000, UTC).isoformat(),
+                "first_known_at_ms": t0 + 1_000,
+                "known_at_basis": "SYNTHETIC_NULL_PRICE",
+                "arrival_seq": 0,
+                "source_id": "synthetic",
+                "source_rank": 1,
+                "batch_sha16": "",
+            }
+        ]
+        prepared = fact_store.prepare_day("fills", day, pl.DataFrame(rows, schema=schema_for("fills")))
+        write = fact_store.write_day(prepared)
+        with fact_store.connect() as con:
+            mf.record_day(
+                con,
+                batch=mf.DayBatch(
+                    kind="fills",
+                    day=day,
+                    batch_sha16=write.batch_sha16,
+                    path=str(write.path),
+                    rows=write.rows,
+                    file_sha256=write.file_sha256,
+                    inputs_fingerprint=write.file_sha256[:16],
+                ),
+                source_ids=["synthetic"],
+                bytes_count=write.bytes_count,
+                inputs=[],
+                day_sources=[{"source_id": "synthetic", "rows_written": write.rows}],
+                first_known_min_ms=t0 + 1_000,
+                first_known_max_ms=t0 + 1_000,
+                closed_at=datetime.now(UTC).isoformat(),
+            )
+        panel = _panel(
+            fact_store,
+            BacktestWindow(t0, t0 + GRID_MS),
+            lookback_days=1,
+            tiers=None,
+            allow_undated=False,
+        )
+    finally:
+        fact_store.close()
+
+    assert panel.height == 1
+    assert Decimal(str(panel["quantity"][0])) == Decimal(5)
+    assert panel["price"][0] is None

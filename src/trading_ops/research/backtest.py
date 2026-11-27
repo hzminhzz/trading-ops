@@ -707,17 +707,17 @@ def _reconstruct_causal_panel(orders: pl.DataFrame) -> pl.DataFrame:
     for row in ordered.iter_rows():
         grouped.setdefault((str(row[0]), str(row[1])), []).append(row)
 
-    out_rows: list[tuple[str, str, int, Decimal, float]] = []
+    out_rows: list[tuple[str, str, int, Decimal, float | None]] = []
     for (wallet, coin), rows in sorted(grouped.items()):
         auth_event_key = (-1, -1)
         auth_pos = _ZERO
         post_auth_deltas: list[tuple[tuple[int, int], Decimal]] = []
-        by_bar: dict[int, tuple[Decimal, float]] = {}
+        by_bar: dict[int, tuple[Decimal, float | None]] = {}
         for row in rows:
             bar_ms = int(row[2])
             event_key = (int(row[3]), int(row[4]))
             signed_size = row[5] if isinstance(row[5], Decimal) else Decimal(str(row[5]))
-            price = float(row[6])
+            price = float(row[6]) if row[6] is not None else None
             raw_start = row[7] if has_start_col else None
             if raw_start is not None:
                 if event_key > auth_event_key:
