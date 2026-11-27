@@ -471,6 +471,7 @@ def test_run_stage2_pods_process_pool_spawn_parity(tmp_path: Path) -> None:
     alias_to_address = {alias: addr for addr, alias in ALIAS_MAP.items()}
     rulebook = study.build_cft_rulebook(evidence_sha="d" * 64)
 
+    syn_oos = (datetime(2026, 10, 4, tzinfo=UTC), datetime(2026, 10, 7, tzinfo=UTC))
     seq_results = study.run_stage2_pods(
         pods,
         src_store_path=src_root / "facts",
@@ -479,6 +480,7 @@ def test_run_stage2_pods_process_pool_spawn_parity(tmp_path: Path) -> None:
         rulebook=rulebook,
         max_workers=1,
         anchor_days=("2026-10-01", anchor_day_3),
+        oos_window=syn_oos,
     )
     mp_results = study.run_stage2_pods(
         pods,
@@ -488,6 +490,7 @@ def test_run_stage2_pods_process_pool_spawn_parity(tmp_path: Path) -> None:
         rulebook=rulebook,
         max_workers=2,
         anchor_days=("2026-10-01", anchor_day_3),
+        oos_window=syn_oos,
     )
 
     assert len(mp_results) == 2
@@ -507,6 +510,7 @@ def test_run_stage2_pods_process_pool_spawn_parity(tmp_path: Path) -> None:
         ALIAS_MAP,
         "d" * 64,
         ("2026-10-01", anchor_day_3),
+        syn_oos,
     )
     assert direct["pod_id"] == "MPOD-01"
 
@@ -561,6 +565,7 @@ def test_resolve_max_workers_reserves_one_core_and_validates(
         rulebook=rulebook,
         max_workers=0,
         anchor_days=("2026-10-01",),
+        oos_window=(datetime(2026, 10, 2, tzinfo=UTC), datetime(2026, 10, 4, tzinfo=UTC)),
     )
     assert len(auto_res) == 1
     assert auto_res[0]["pod_id"] == "MPOD-01"

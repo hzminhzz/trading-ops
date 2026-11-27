@@ -13,8 +13,8 @@ dependencies = [
 
 [tool.uv.sources]
 # Single rulebook/copy-mandate authority: prop-production hosts the stdlib kernel wheel.
-copytrade-kernel = { git = "https://github.com/hzminhzz/prop-production.git", subdirectory = "packages/copytrade-kernel", rev = "d0ad4c234f89049d91c88444d31a17286e3e684a" }
-copytrade-pm = { git = "https://github.com/hzminhzz/copytrade-pm.git", rev = "e9aabc29b046d1a01928c2ed47d6543296a4134c" }
+copytrade-kernel = { git = "https://github.com/hzminhzz/prop-production.git", subdirectory = "packages/copytrade-kernel", rev = "b1338984673b2c6225f1a13446bb6c596c67022d" }
+copytrade-pm = { git = "https://github.com/hzminhzz/copytrade-pm.git", rev = "a2cf400c3aeb7a9d47be87b6e1576bde3bda2669" }
 
 [dependency-groups]
 dev = ["pytest>=8.3", "ruff>=0.8"]

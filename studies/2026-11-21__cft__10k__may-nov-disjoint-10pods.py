@@ -852,6 +852,8 @@ def evaluate_single_pod(
     address_to_alias: Mapping[str, str],
     rulebook: Rulebook,
     anchor_days: Sequence[str] = DEFAULT_EQUITY_ANCHOR_DAYS,
+    oos_window: tuple[datetime, datetime] = STAGE2_OOS_WINDOW,
+    nov_window: tuple[datetime, datetime] = STAGE2_NOV_WINDOW,
 ) -> dict[str, Any]:
     """Build an isolated pod FactStore and evaluate strict_gate + permissive_constituent."""
     t0 = time.perf_counter()
@@ -878,7 +880,7 @@ def evaluate_single_pod(
                     STRICT_SEATS,
                     ScoreConfig(),
                     "nov_dump",
-                    STAGE2_NOV_WINDOW,
+                    nov_window,
                     30,
                 ),
                 (
@@ -886,7 +888,7 @@ def evaluate_single_pod(
                     STRICT_SEATS,
                     ScoreConfig(),
                     "sep_nov_oos",
-                    STAGE2_OOS_WINDOW,
+                    oos_window,
                     123,
                 ),
                 (
@@ -894,7 +896,7 @@ def evaluate_single_pod(
                     PERMISSIVE_SEATS,
                     PERMISSIVE_SCORE_CONFIG,
                     "nov_dump",
-                    STAGE2_NOV_WINDOW,
+                    nov_window,
                     123,
                 ),
                 (
@@ -902,7 +904,7 @@ def evaluate_single_pod(
                     PERMISSIVE_SEATS,
                     PERMISSIVE_SCORE_CONFIG,
                     "sep_nov_oos",
-                    STAGE2_OOS_WINDOW,
+                    oos_window,
                     123,
                 ),
             ):
@@ -996,6 +998,8 @@ def _evaluate_pod_process(
     address_to_alias: dict[str, str],
     evidence_sha: str,
     anchor_days: tuple[str, ...],
+    oos_window: tuple[datetime, datetime] = STAGE2_OOS_WINDOW,
+    nov_window: tuple[datetime, datetime] = STAGE2_NOV_WINDOW,
 ) -> dict[str, Any]:
     """Child-process Stage-2 pod worker rebuilding Rulebook from picklable args."""
     rulebook = build_cft_rulebook(evidence_sha=evidence_sha)
@@ -1006,6 +1010,8 @@ def _evaluate_pod_process(
         address_to_alias=address_to_alias,
         rulebook=rulebook,
         anchor_days=anchor_days,
+        oos_window=oos_window,
+        nov_window=nov_window,
     )
 
 
@@ -1028,6 +1034,8 @@ def run_stage2_pods(
     rulebook: Rulebook,
     max_workers: int = 4,
     anchor_days: Sequence[str] = DEFAULT_EQUITY_ANCHOR_DAYS,
+    oos_window: tuple[datetime, datetime] = STAGE2_OOS_WINDOW,
+    nov_window: tuple[datetime, datetime] = STAGE2_NOV_WINDOW,
 ) -> list[dict[str, Any]]:
     """Run isolated Stage-2 kernel backtests across selected pods."""
     resolved_workers = resolve_max_workers(max_workers)
@@ -1041,6 +1049,8 @@ def run_stage2_pods(
                 address_to_alias=address_to_alias,
                 rulebook=rulebook,
                 anchor_days=anchor_days,
+                oos_window=oos_window,
+                nov_window=nov_window,
             )
             for pod in ordered
         ]
@@ -1064,6 +1074,8 @@ def run_stage2_pods(
                         plain_addr_to_alias,
                         str(rulebook.evidence_sha),
                         plain_anchors,
+                        oos_window,
+                        nov_window,
                     ): str(pod["pod_id"])
                     for pod in ordered
                 }
@@ -1080,6 +1092,8 @@ def run_stage2_pods(
                         plain_addr_to_alias,
                         str(rulebook.evidence_sha),
                         plain_anchors,
+                        oos_window,
+                        nov_window,
                     ): str(pod["pod_id"])
                     for pod in ordered
                 }

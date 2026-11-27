@@ -770,9 +770,10 @@ def _venue_prices(
 ) -> dict[str, dict[int, float]]:
     """Use only completed venue candles known by the bucket's decision deadline."""
     start_day = datetime.fromtimestamp((window.start_ms - GRID_MS) / 1000, UTC).date().isoformat()
+    scan_coins = sorted(set(coins) | {coin.upper() for coin in coins})
     bars = facts.scan(
         "bars_1m",
-        coins=coins,
+        coins=scan_coins,
         start_day=start_day,
         end_day=window.end_day,
         as_of_ms=window.end_ms,
@@ -799,7 +800,8 @@ def _venue_prices(
         )
         .sort(["coin", "bar_ms", "event_ts_ms", "source_rank", "arrival_seq"])
     )
-    return _prices(bars)
+    by_upper = {coin.upper(): series for coin, series in _prices(bars).items()}
+    return {coin: by_upper[coin.upper()] for coin in coins if coin.upper() in by_upper}
 
 
 def _quantities_by_bar(panel: pl.DataFrame) -> dict[int, dict[str, dict[str, Decimal]]]:
