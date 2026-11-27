@@ -38,6 +38,7 @@ from .backtest import (
     MarketSpec,
     run_kernel_backtest,
 )
+from .diagnostics import summarize_backtest_diagnostics
 from .fee_schedule import (
     DEFAULT_FEE_SCHEDULE_PATH,
     FeeQuote,
@@ -98,4 +99,5 @@ __all__ = [
     "run_kernel_backtest",
     "score_universe",
     "state_payload",
+    "summarize_backtest_diagnostics",
 ]

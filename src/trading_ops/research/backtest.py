@@ -22,12 +22,13 @@ What this layer *does* own, and labels as research:
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
-from decimal import Decimal
+from decimal import ROUND_DOWN, Decimal
 from typing import Any
 
+import numpy as np
 import polars as pl
 from copytrade_kernel import (
     AccountState,
@@ -65,8 +66,18 @@ from copytrade_pm.roster import (
     reconcile_roster,
 )
 
+from .allocation import AllocationPolicy, allocate_fixed_k_portfolio
 from .golden import GoldenStep, ending_state_rows, golden_step
-from .scoring import GRID_MS, ScoreConfig, bench_from_scorecard, score_universe
+from .scoring import (
+    GRID_MS,
+    ScoreConfig,
+    UniverseScorecard,
+    bench_from_scorecard,
+    euler_marginal_cdar_shares,
+    peak_drawdown,
+    score_universe,
+    sizing_gate_failures,
+)
 
 __all__ = [
     "DAY_MS",
@@ -195,6 +206,8 @@ class BacktestConfig:
     scenario_shock: Decimal = Decimal("-0.10")
     score_config: ScoreConfig = field(default_factory=ScoreConfig)
     allow_undated: bool = False
+    allocation_policy: AllocationPolicy | None = None
+    drop_sub_min_opening_legs: bool = False
 
     def __post_init__(self) -> None:
         if not self.account_id:
@@ -211,6 +224,12 @@ class BacktestConfig:
             raise ValueError("HEDGE_TOLERANCE")
         if self.lookback_days < 1:
             raise ValueError("INVALID_LOOKBACK")
+        if self.allocation_policy is not None and not isinstance(
+            self.allocation_policy, AllocationPolicy
+        ):
+            raise TypeError("INVALID_ALLOCATION_POLICY")
+        if type(self.drop_sub_min_opening_legs) is not bool:
+            raise ValueError("INVALID_DROP_SUB_MIN_OPENING_LEGS")
 
     def policy_fields(self, coins: Sequence[str], *, now_ms: int) -> dict[str, Any]:
         return {
@@ -245,9 +264,15 @@ class LedgerFill:
     realized_pnl_usd: Decimal
     reduce_only: bool
 
+    @property
+    def execution_ms(self) -> int:
+        """Timestamp of modeled execution at the checkpoint deadline."""
+        return self.checkpoint_ms + GRID_MS
+
     def data(self) -> dict[str, Any]:
         return {
             "checkpoint_ms": self.checkpoint_ms,
+            "execution_ms": self.execution_ms,
             "market": self.market,
             "net_delta_qty": str(self.net_delta_qty),
             "executable_price": str(self.executable_price),
@@ -303,6 +328,9 @@ class BacktestReport:
     source_sha: str
     ledger: tuple[LedgerBar, ...] = ()
     fills: tuple[LedgerFill, ...] = ()
+    challenge_target_reached: bool = False
+    challenge_outcome: str = "SURVIVED"
+    portfolio_constraints_valid: bool = True
 
     @property
     def decision_count(self) -> int:
@@ -323,6 +351,9 @@ class BacktestReport:
             "ending_equity": str(self.ending_equity),
             "allocation_mode_share": dict(sorted(self.allocation_mode_share.items())),
             "challenge_pass_rate": self.challenge_pass_rate,
+            "challenge_target_reached": self.challenge_target_reached,
+            "challenge_outcome": self.challenge_outcome,
+            "portfolio_constraints_valid": self.portfolio_constraints_valid,
             "challenge_reasons": list(self.challenge_reasons),
             "coverage": self.coverage,
             "reconcile_plans": list(self.reconcile_plans),
@@ -408,7 +439,7 @@ class _ReplayLedger:
         net_orders: tuple[NetOrderIntent, ...] | None = None,
     ) -> tuple[LedgerFill, ...]:
         """Book one accepted execution projection; return the net broker fills."""
-        bar_fills = self._apply_net_executions(
+        bar_fills, net_deltas = self._apply_net_executions(
             targets=targets,
             quotes=quotes,
             markets=markets,
@@ -416,7 +447,11 @@ class _ReplayLedger:
             checkpoint_ms=checkpoint_ms,
             net_orders=net_orders,
         )
-        self._apply_owner_attribution(pod_targets=pod_targets, quotes=quotes)
+        self._apply_owner_attribution(
+            pod_targets=pod_targets,
+            quotes=quotes,
+            net_deltas=net_deltas,
+        )
         self._reconcile(targets)
         self.fills.extend(bar_fills)
         return bar_fills
@@ -430,7 +465,7 @@ class _ReplayLedger:
         config: BacktestConfig,
         checkpoint_ms: int,
         net_orders: tuple[NetOrderIntent, ...] | None,
-    ) -> tuple[LedgerFill, ...]:
+    ) -> tuple[tuple[LedgerFill, ...], dict[str, Decimal]]:
         if net_orders is not None:
             intent_deltas = {intent.market: intent for intent in net_orders}
             for market in sorted(set(targets) | set(self.positions) | set(intent_deltas)):
@@ -455,7 +490,9 @@ class _ReplayLedger:
                     execution_items.append((market, delta, reduce_only))
 
         bar_fills: list[LedgerFill] = []
+        net_deltas: dict[str, Decimal] = {}
         for market, delta, reduce_only in execution_items:
+            net_deltas[market] = delta
             executable = Decimal(quotes[market]["ask"] if delta > 0 else quotes[market]["bid"])
             spec = markets[market]
             notional = abs(delta) * executable
@@ -482,31 +519,51 @@ class _ReplayLedger:
                     reduce_only=reduce_only,
                 )
             )
-        return tuple(bar_fills)
+        return tuple(bar_fills), net_deltas
 
     def _apply_owner_attribution(
         self,
         *,
         pod_targets: dict[str, dict[str, str]],
         quotes: dict[str, dict[str, Any]],
+        net_deltas: dict[str, Decimal],
     ) -> None:
-        for owner in sorted(set(pod_targets) | set(self.owner_positions)):
+        all_owners = sorted(set(pod_targets) | set(self.owner_positions))
+        deltas_by_market: dict[str, dict[str, Decimal]] = {}
+        for owner in all_owners:
             holder = self.owner_book(owner)
-            basis = self.owner_basis.setdefault(owner, {})
+            self.owner_basis.setdefault(owner, {})
             book = pod_targets.get(owner, {})
             for market in sorted(set(book) | set(holder)):
-                desired = Decimal(book.get(market, "0"))
-                current = holder.get(market, _ZERO)
-                delta = desired - current
-                if not delta:
-                    continue
-                executable = Decimal(quotes[market]["ask"] if delta > 0 else quotes[market]["bid"])
+                delta = Decimal(book.get(market, "0")) - holder.get(market, _ZERO)
+                if delta:
+                    deltas_by_market.setdefault(market, {})[owner] = delta
+
+        for market, owner_deltas in sorted(deltas_by_market.items()):
+            mid = (Decimal(quotes[market]["bid"]) + Decimal(quotes[market]["ask"])) / Decimal(2)
+            net_delta = net_deltas.get(market, _ZERO)
+            if net_delta == _ZERO:
+                same_price = opp_price = mid
+            else:
+                executable = Decimal(
+                    quotes[market]["ask"] if net_delta > 0 else quotes[market]["bid"]
+                )
+                same_side_gross = sum(
+                    (abs(d) for d in owner_deltas.values() if d * net_delta > 0), _ZERO
+                )
+                net_frac = abs(net_delta) / same_side_gross
+                same_price = net_frac * executable + (Decimal(1) - net_frac) * mid
+                opp_price = mid
+            for owner, delta in sorted(owner_deltas.items()):
+                fill_px = (
+                    same_price if (net_delta != _ZERO and delta * net_delta > 0) else opp_price
+                )
                 realized = _apply_position_delta(
-                    holder,
-                    basis,
+                    self.owner_positions[owner],
+                    self.owner_basis[owner],
                     market=market,
                     delta=delta,
-                    executable=executable,
+                    executable=fill_px,
                 )
                 if realized:
                     self.owner_realized[owner] = self.owner_realized.get(owner, _ZERO) + realized
@@ -598,13 +655,21 @@ def _panel(
             pl.col("size").cast(pl.Decimal(38, 12)).alias("size_dec"),
             pl.col("price").cast(pl.Float64).alias("price"),
             pl.col("event_ts_ms").cast(pl.Int64),
-            (pl.col("event_ts_ms") // GRID_MS * GRID_MS).alias("bar_ms"),
+            (
+                pl.max_horizontal(
+                    pl.col("event_ts_ms"),
+                    pl.col("first_known_at_ms").fill_null(pl.col("event_ts_ms")) - 1,
+                )
+                // GRID_MS
+                * GRID_MS
+            ).alias("bar_ms"),
         )
         .filter(
             pl.col("side_sign").is_not_null()
             & pl.col("size_dec").is_not_null()
             & (pl.col("size_dec") != 0)
             & (pl.col("event_ts_ms") < window.end_ms)
+            & (pl.col("bar_ms") < window.end_ms)
         )
         .with_columns(
             pl.when(pl.col("side_sign") > 0)
@@ -613,18 +678,76 @@ def _panel(
             .alias("signed_size")
         )
     )
-    return (
-        orders.sort(["wallet", "coin", "bar_ms", "event_ts_ms", "arrival_seq"])
-        .with_columns(
-            pl.col("signed_size").cum_sum().over(["wallet", "coin"]).alias("quantity")
-        )
-        .group_by(["wallet", "coin", "bar_ms"])
-        .agg(
-            pl.col("quantity").last().alias("quantity"),
-            pl.col("price").last().alias("price"),
-        )
-        .sort(["coin", "bar_ms", "wallet"])
+    if orders.height == 0:
+        return orders.select(
+            ["wallet", "coin", "bar_ms", "price"]
+        ).with_columns(pl.lit(Decimal(0)).cast(pl.Decimal(38, 12)).alias("quantity"))
+    return _reconstruct_causal_panel(orders)
+
+
+def _reconstruct_causal_panel(orders: pl.DataFrame) -> pl.DataFrame:
+    """Reconstruct causal ``(wallet, coin, bar_ms)`` inventory without lookahead or double counting."""
+    has_start_col = "start_position" in orders.columns
+    select_cols = [
+        "wallet",
+        "coin",
+        "bar_ms",
+        "event_ts_ms",
+        "arrival_seq",
+        "signed_size",
+        "price",
+    ]
+    if has_start_col:
+        select_cols.append("start_position")
+    ordered = orders.select(select_cols).sort(
+        ["wallet", "coin", "bar_ms", "event_ts_ms", "arrival_seq"]
     )
+
+    grouped: dict[tuple[str, str], list[tuple[Any, ...]]] = {}
+    for row in ordered.iter_rows():
+        grouped.setdefault((str(row[0]), str(row[1])), []).append(row)
+
+    out_rows: list[tuple[str, str, int, Decimal, float]] = []
+    for (wallet, coin), rows in sorted(grouped.items()):
+        auth_event_key = (-1, -1)
+        auth_pos = _ZERO
+        post_auth_deltas: list[tuple[tuple[int, int], Decimal]] = []
+        by_bar: dict[int, tuple[Decimal, float]] = {}
+        for row in rows:
+            bar_ms = int(row[2])
+            event_key = (int(row[3]), int(row[4]))
+            signed_size = row[5] if isinstance(row[5], Decimal) else Decimal(str(row[5]))
+            price = float(row[6])
+            raw_start = row[7] if has_start_col else None
+            if raw_start is not None:
+                if event_key > auth_event_key:
+                    auth_event_key = event_key
+                    start_dec = (
+                        raw_start
+                        if isinstance(raw_start, Decimal)
+                        else Decimal(str(raw_start))
+                    )
+                    auth_pos = start_dec + signed_size
+                    post_auth_deltas = [
+                        (k, d) for k, d in post_auth_deltas if k > auth_event_key
+                    ]
+            elif event_key > auth_event_key:
+                post_auth_deltas.append((event_key, signed_size))
+            current_pos = auth_pos + sum((d for _, d in post_auth_deltas), _ZERO)
+            by_bar[bar_ms] = (current_pos, price)
+        for bar_ms, (qty, price) in sorted(by_bar.items()):
+            out_rows.append((wallet, coin, bar_ms, qty, price))
+
+    schema = {
+        "wallet": pl.String,
+        "coin": pl.String,
+        "bar_ms": pl.Int64,
+        "quantity": pl.Decimal(38, 12),
+        "price": pl.Float64,
+    }
+    if not out_rows:
+        return pl.DataFrame(schema=schema)
+    return pl.DataFrame(out_rows, schema=schema, orient="row").sort(["coin", "bar_ms", "wallet"])
 
 
 def _prices(panel: pl.DataFrame) -> dict[str, dict[int, float]]:
@@ -792,6 +915,70 @@ def _source_quantity(frame: CheckpointBatch[Any], owner: str, key: str) -> Decim
     raise ValueError("Q15_REJECTION_WITHOUT_LEG")
 
 
+def _validate_seated_portfolio(
+    book_state: SeatBook,
+    scorecard: UniverseScorecard,
+    policy: AllocationPolicy,
+    day_ms: int,
+    *,
+    draining_anchors: Mapping[str, Decimal] | None = None,
+) -> list[str]:
+    """Validate seated portfolio (incumbents, promotions, and draining residuals)."""
+    leases = [lease for _, lease in book_state.seats if lease is not None]
+    active_wallets = {lease.wallet for lease in leases}
+    anchors = {
+        wallet: k_val
+        for wallet, k_val in sorted((draining_anchors or {}).items())
+        if wallet not in active_wallets and k_val > _ZERO
+    }
+    if not leases and not anchors:
+        return []
+    warnings: list[str] = []
+    by_wallet = scorecard.by_wallet
+    portfolio_entries: list[tuple[str, Decimal]] = []
+    for lease in leases:
+        if lease.wallet not in by_wallet:
+            warnings.append(f"SEATED_SCORECARD_MISSING:{day_ms}:{lease.wallet}")
+            continue
+        portfolio_entries.append((lease.wallet, lease.k))
+    for wallet, k_val in sorted(anchors.items()):
+        if wallet not in by_wallet:
+            warnings.append(f"SEATED_SCORECARD_MISSING:{day_ms}:{wallet}")
+            continue
+        portfolio_entries.append((wallet, k_val))
+    if not portfolio_entries:
+        return warnings
+
+    matrix = np.array(
+        [scorecard.wallet_returns(wallet) for wallet, _ in portfolio_entries],
+        dtype=np.float64,
+    )
+    weights = np.array([float(k_val) for _, k_val in portfolio_entries], dtype=np.float64)
+    seated_dd = peak_drawdown((matrix * weights[:, None]).sum(axis=0)) * float(
+        policy.pod_equity_usd
+    )
+    if (
+        policy.portfolio_dd_budget_usd is not None
+        and seated_dd > float(policy.portfolio_dd_budget_usd) + 1e-9
+    ):
+        warnings.append(f"SEATED_PORTFOLIO_DD_ABOVE_BUDGET:{day_ms}")
+    cdar_shares = euler_marginal_cdar_shares(matrix, weights, policy.cdar_alpha)
+    for idx, (wallet, k_val) in enumerate(portfolio_entries):
+        raw_p95, raw_max = scorecard.wallet_unscaled_participation(wallet)
+        failures = sizing_gate_failures(
+            raw_p95 * float(k_val),
+            raw_max * float(k_val),
+            float(cdar_shares[idx]),
+            max_p95=policy.max_p95_participation,
+            max_max=policy.max_max_participation,
+            max_cdar=policy.max_euler_cdar_share,
+        )
+        if failures:
+            codes = ",".join(gate.value for gate in failures)
+            warnings.append(f"SEATED_PORTFOLIO_CONSTRAINT_BREACH:{day_ms}:{wallet}:{codes}")
+    return warnings
+
+
 def run_kernel_backtest(
     facts: FactStore,
     *,
@@ -857,9 +1044,16 @@ def run_kernel_backtest(
     modes: list[str] = []
     reasons: set[str] = set()
     warnings: set[str] = set()
+    wallet_by_owner: dict[str, str] = {}
+    k_by_owner: dict[str, Decimal] = {}
+    portfolio_constraints_valid = True
+    if settings.drop_sub_min_opening_legs:
+        warnings.add("EXPERIMENTAL_RESEARCH_OPENING_DUST_FILTER")
     recorded = 0
     account_state: dict[str, Any] = {}
     rulebook_sha = _rulebook_sha(rulebook)
+    target_equity = settings.initial_equity + Decimal(rulebook.target)
+    target_reached = False
     # One reconciliation per UTC day: at the window start (the entry point of the
     # walk-forward) and at every following midnight, so a mid-day start still
     # steps every five minute bar in its first segment.
@@ -882,14 +1076,83 @@ def run_kernel_backtest(
         if roster is not None:
             scorecard.record(roster)
         recorded += len(scorecard.cards)
+        draining_anchors: dict[str, Decimal] = {}
+        if settings.allocation_policy is not None:
+            by_wallet = scorecard.by_wallet
+            retained_incumbents = {
+                lease.wallet: lease.k
+                for _, lease in book_state.seats
+                if lease is not None
+                and lease.wallet in by_wallet
+                and not any(gate in policy.evict_on for gate in by_wallet[lease.wallet].failures)
+            }
+            active_retained_owners = {
+                lease.owner
+                for _, lease in book_state.seats
+                if lease is not None and lease.wallet in retained_incumbents
+            }
+            draining_anchors = {
+                wallet_by_owner[owner]: k_by_owner[owner]
+                for owner, holder in book.owner_positions.items()
+                if any(qty != _ZERO for qty in holder.values())
+                and owner not in active_retained_owners
+                and owner in wallet_by_owner
+                and wallet_by_owner[owner] not in retained_incumbents
+            }
+            bench = allocate_fixed_k_portfolio(
+                scorecard,
+                policy=settings.allocation_policy,
+                incumbent_k={**draining_anchors, **retained_incumbents},
+            ).to_bench_candidates(scorecard)
+        else:
+            bench = bench_from_scorecard(scorecard)
         plan = reconcile_roster(
             current=book_state,
             policy=policy,
             as_of=KnownAtTs(day_ms),
             scorecard=scorecard.by_wallet,
-            bench=bench_from_scorecard(scorecard),
+            bench=bench,
         )
+        if settings.allocation_policy is not None:
+            seated_violations = _validate_seated_portfolio(
+                plan.next_book,
+                scorecard,
+                settings.allocation_policy,
+                day_ms,
+                draining_anchors=draining_anchors,
+            )
+            if seated_violations:
+                old_wallets = {
+                    lease.wallet for _, lease in book_state.seats if lease is not None
+                }
+                new_wallets = {
+                    lease.wallet for _, lease in plan.next_book.seats if lease is not None
+                }
+                if new_wallets - old_wallets:
+                    warnings.add(f"SEATED_PROMOTIONS_BLOCKED:{day_ms}")
+                    plan = reconcile_roster(
+                        current=book_state,
+                        policy=policy,
+                        as_of=KnownAtTs(day_ms),
+                        scorecard=scorecard.by_wallet,
+                        bench=(),
+                    )
+                    seated_violations = _validate_seated_portfolio(
+                        plan.next_book,
+                        scorecard,
+                        settings.allocation_policy,
+                        day_ms,
+                        draining_anchors=draining_anchors,
+                    )
+            if seated_violations:
+                portfolio_constraints_valid = False
+                warnings.add(f"SEATED_PORTFOLIO_UNQUALIFIED:{day_ms}")
+                warnings.update(seated_violations)
         book_state = plan.next_book
+        for _, lease in book_state.seats:
+            if lease is not None:
+                wallet_by_owner[lease.owner] = lease.wallet
+                k_by_owner[lease.owner] = lease.k
         plans.append(plan.sha)
         modes.append(plan.mode.value)
         warnings.update(f"{warning}:{day_ms}" for warning in plan.warnings)
@@ -912,6 +1175,8 @@ def run_kernel_backtest(
         anchor_cash = settings.initial_equity + book.realized
         anchor_unrealized = book.unrealized(day_marks)
         equity = anchor_cash + anchor_unrealized
+        if Decimal(rulebook.target) > 0 and equity >= target_equity:
+            target_reached = True
         account_state, step_reasons = account_step(
             account_state,
             AccountValuation(
@@ -972,34 +1237,47 @@ def run_kernel_backtest(
                 bar += GRID_MS
                 continue
             now_ms = bar + GRID_MS
-            outcomes = tuple(
-                sorted(
-                    (
-                        SourceOutcome(
-                            owner=lease.owner,
-                            sizing=FixedKSizing(lease.k),
-                            published_at=KnownAtTs(bar),
-                            deadline=DecisionMs(now_ms),
-                            legs=tuple(
-                                SourceLeg(
-                                    instrument=specs[coin].instrument,
-                                    market=coin,
-                                    quantity=quantity,
-                                    mark=Decimal(quotes[coin]["bid"]),
-                                )
-                                for coin, quantity in sorted(
-                                    source_positions.get(lease.wallet, {}).items()
-                                )
-                            ),
-                            provenance=RetrospectiveArchive(
-                                archive_sha=f"{bar:016x}".rjust(16, "0")
-                            ),
+            outcome_list: list[SourceOutcome[RetrospectiveArchive]] = []
+            for lease in leases:
+                owner_held = book.owner_positions.get(lease.owner, {})
+                legs: list[SourceLeg] = []
+                for coin, quantity in sorted(source_positions.get(lease.wallet, {}).items()):
+                    if settings.drop_sub_min_opening_legs and owner_held.get(coin, _ZERO) == _ZERO:
+                        spec = specs[coin]
+                        mark_px = Decimal(quotes[coin]["bid"])
+                        exec_px = Decimal(
+                            quotes[coin]["ask"] if quantity > 0 else quotes[coin]["bid"]
                         )
-                        for lease in leases
-                    ),
-                    key=lambda outcome: outcome.owner,
+                        req_notional = abs(quantity * mark_px * lease.k)
+                        step_qty = ((req_notional / exec_px) / spec.qty_step).to_integral_value(
+                            rounding=ROUND_DOWN
+                        ) * spec.qty_step
+                        if (
+                            step_qty == _ZERO
+                            or step_qty < spec.min_qty
+                            or (step_qty * exec_px) < spec.min_notional
+                        ):
+                            warnings.add(f"DROPPED_SUB_MIN_OPENING_LEG:{bar}:{coin}")
+                            continue
+                    legs.append(
+                        SourceLeg(
+                            instrument=specs[coin].instrument,
+                            market=coin,
+                            quantity=quantity,
+                            mark=Decimal(quotes[coin]["bid"]),
+                        )
+                    )
+                outcome_list.append(
+                    SourceOutcome(
+                        owner=lease.owner,
+                        sizing=FixedKSizing(lease.k),
+                        published_at=KnownAtTs(bar),
+                        deadline=DecisionMs(now_ms),
+                        legs=tuple(legs),
+                        provenance=RetrospectiveArchive(archive_sha=f"{bar:016x}".rjust(16, "0")),
+                    )
                 )
-            )
+            outcomes = tuple(sorted(outcome_list, key=lambda outcome: outcome.owner))
             frame = CheckpointBatch(checkpoint_ms=CheckpointMs(bar), outcomes=outcomes)
             owners = sorted(
                 {lease.owner for lease in leases}
@@ -1117,6 +1395,26 @@ def run_kernel_backtest(
             bar_cash = settings.initial_equity + book.realized
             bar_unrealized = book.unrealized(marks)
             equity = bar_cash + bar_unrealized
+            if bar_fills or bar + GRID_MS >= day_end:
+                account_state, post_reasons = account_step(
+                    account_state,
+                    AccountValuation(
+                        account_binding=rulebook.account_binding,
+                        observed_at_ms=bar,
+                        equity=equity,
+                        cash=bar_cash,
+                        unrealized=bar_unrealized,
+                        initial_margin=_ZERO,
+                        maintenance_margin=_ZERO,
+                        ready=True,
+                    ),
+                    rulebook,
+                    now_ms,
+                    rulebook_sha=rulebook_sha,
+                )
+                reasons.update(post_reasons)
+            if Decimal(rulebook.target) > 0 and equity >= target_equity:
+                target_reached = True
             ledger_bars.append(
                 LedgerBar(
                     checkpoint_ms=bar,
@@ -1165,6 +1463,10 @@ def run_kernel_backtest(
         book,
         memory,
     )
+    challenge_target_reached = bool(target_reached and not breaches)
+    challenge_outcome = (
+        "BREACHED" if breaches else ("PASSED" if challenge_target_reached else "SURVIVED")
+    )
     return BacktestReport(
         window=window,
         account_id=settings.account_id,
@@ -1194,4 +1496,7 @@ def run_kernel_backtest(
         ),
         ledger=tuple(ledger_bars),
         fills=tuple(book.fills),
+        challenge_target_reached=challenge_target_reached,
+        challenge_outcome=challenge_outcome,
+        portfolio_constraints_valid=portfolio_constraints_valid,
     )

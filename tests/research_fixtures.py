@@ -37,6 +37,7 @@ def _fill(
     side: str,
     size: float,
     price: float,
+    start_position: float = 0.0,
 ) -> dict:
     return {
         "wallet": wallet,
@@ -46,7 +47,7 @@ def _fill(
         "side": side,
         "size": size,
         "price": price,
-        "start_position": 0.0,
+        "start_position": start_position,
         "trade_id": index + 1,
     }
 
@@ -67,10 +68,12 @@ def wallet_round_trips(
     the Stage-1 audit is supposed to measure.
     """
     rows = []
+    pos = Decimal(0)
     for index in range(bars):
         at_ms = start_ms + index * GRID_MS
         buy = index % 6 < 3
         price = base_price * (1.0 + 0.0006 * index + 0.0004 * ((index % 6) - 2))
+        fill_size = size if buy else size * 0.8
         rows.append(
             _fill(
                 wallet,
@@ -78,10 +81,12 @@ def wallet_round_trips(
                 index,
                 at_ms=at_ms,
                 side="buy" if buy else "sell",
-                size=size if buy else size * 0.8,
+                size=fill_size,
                 price=price,
+                start_position=float(pos),
             )
         )
+        pos += Decimal(str(fill_size)) if buy else -Decimal(str(fill_size))
     return rows
 
 

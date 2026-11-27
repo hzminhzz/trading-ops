@@ -26,4 +26,5 @@ Amends [ADR 0004](0004-slice4-kernel-research-path.md) §1 so [`score_universe`]
 ## Consequences
 
 * Upstream `copytrade_pm.roster.WalletScorecard` and `GateFailure` contracts stay binary-compatible (`p95_participation_1m`, `markout_5m_bps`, `NEGATIVE_5M_MARKOUT` hold the configured Stage-1 metric and threshold outcome while `UniverseScorecard.basis` and `ScoreConfig.data` pin the exact measurement mode inside `source_sha`).
+* With `ScoreConfig(decouple_sizing_gates=True)`, Stage-1 gates evaluate intrinsic wallet evidence only while [`allocate_fixed_k_portfolio`](../../src/trading_ops/research/allocation.py) owns joint `AllocationPolicy` sizing (`portfolio_dd_budget_usd` scaling + surviving-cohort Euler marginal CDaR / participation re-evaluation) and feeds `BacktestConfig.allocation_policy`.
 * All ADR-0004 strict-PIT (`first_known_at_ms <= as_of`, `allow_undated`), exclusion-over-zero-fabrication, Euler marginal CDaR, and Stage-2 kernel walk-forward invariants remain unchanged.

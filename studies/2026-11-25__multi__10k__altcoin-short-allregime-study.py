@@ -68,8 +68,9 @@ from trading_ops.research import (
     lookup_tier_fee,
     run_kernel_backtest,
     score_universe,
+    summarize_backtest_diagnostics,
 )
-from trading_ops.research.scoring import _euler_marginal_cdar_shares
+from trading_ops.research.scoring import euler_marginal_cdar_shares as _euler_marginal_cdar_shares
 
 HEX_ADDRESS_RE = re.compile(r"(?i)0x[0-9a-f]{4,}")
 STUDY_STEM = "2026-11-25__multi__10k__altcoin-short-allregime-study"
@@ -1287,152 +1288,9 @@ def _compute_oos_diagnostics(
     shortfall_bps: Decimal,
     spread_bps: Decimal,
 ) -> dict[str, Any]:
-    """Reconstruct exact MTM equity curve, DDs, 1m bar participation, and 7-tuple EV blocks."""
-    bars_df = pod_facts.scan(
-        "bars_1m",
-        start_day=window.start_day,
-        end_day=window.end_day,
-        allow_unknown_known_at=True,
-    ).collect()
-    bar_lookup: dict[tuple[str, int], tuple[float, float]] = {}
-    if bars_df.height > 0:
-        for row in bars_df.select(["coin", "event_ts_ms", "close", "quote_volume_usd"]).iter_rows():
-            bar_lookup[(str(row[0]).upper(), int(row[1]))] = (float(row[2]), float(row[3]))
-
-    positions: dict[str, Decimal] = {}
-    entry_basis: dict[str, Decimal] = {}
-    realized = Decimal(0)
-    initial = Decimal(10_000)
-    half_spread = float(spread_bps) / 20_000.0
-    cost_rate = fee_rate + shortfall_bps / Decimal(10_000)
-
-    participations: list[float] = []
-    unknown_vol_trades = 0
-    day_events: dict[str, list[tuple[float, float]]] = {}
-    step_by_ms = {step.checkpoint_ms: step for step in report.decisions}
-
-    peak_eq = float(initial)
-    max_p2t_dd = 0.0
-    min_eq_overall = float(initial)
-
-    bar = window.start_ms
-    while bar < window.end_ms:
-        day_str = datetime.fromtimestamp(bar / 1000, UTC).date().isoformat()
-        step = step_by_ms.get(bar)
-        if step is not None and step.status == "ACCEPTED":
-            for intent in step.net_intents:
-                coin = str(intent["market"]).upper()
-                delta = Decimal(str(intent["net_delta_qty"]))
-                if delta == 0:
-                    continue
-                px_vol = bar_lookup.get((coin, bar))
-                if px_vol is None:
-                    px_vol = bar_lookup.get((coin, bar - 60_000)) or bar_lookup.get(
-                        (coin, bar + 60_000)
-                    )
-                if px_vol is None or px_vol[0] <= 0.0:
-                    unknown_vol_trades += 1
-                    continue
-                mid_px, qvol = px_vol
-                if qvol > 0.0:
-                    participations.append(abs(float(delta)) * mid_px / qvol)
-                else:
-                    unknown_vol_trades += 1
-
-                exec_px = Decimal(
-                    f"{mid_px * (1.0 + half_spread if delta > 0 else 1.0 - half_spread):.8f}"
-                )
-                realized -= abs(delta) * exec_px * cost_rate
-                cur = positions.get(coin, Decimal(0))
-                new_qty = cur + delta
-                if cur != 0 and (cur > 0) != (delta > 0):
-                    closed = min(abs(cur), abs(delta))
-                    realized += (exec_px - entry_basis[coin]) * closed * (1 if cur > 0 else -1)
-                if new_qty == 0:
-                    positions.pop(coin, None)
-                    entry_basis.pop(coin, None)
-                elif cur == 0 or (cur > 0) != (new_qty > 0):
-                    positions[coin] = new_qty
-                    entry_basis[coin] = exec_px
-                else:
-                    old_abs = abs(cur)
-                    add_abs = abs(delta)
-                    entry_basis[coin] = (old_abs * entry_basis[coin] + add_abs * exec_px) / abs(
-                        new_qty
-                    )
-                    positions[coin] = new_qty
-
-        unreal = Decimal(0)
-        for coin, qty in positions.items():
-            px_vol = bar_lookup.get((coin, bar))
-            if px_vol is not None and px_vol[0] > 0.0:
-                unreal += (Decimal(repr(px_vol[0])) - entry_basis[coin]) * qty
-
-        cash_now = float(initial + realized)
-        eq_now = cash_now + float(unreal)
-        peak_eq = max(peak_eq, eq_now)
-        max_p2t_dd = max(max_p2t_dd, peak_eq - eq_now)
-        min_eq_overall = min(min_eq_overall, eq_now)
-        day_events.setdefault(day_str, []).append((eq_now, cash_now))
-        bar += 300_000
-
-    static_floor_dd = max(0.0, float(initial) - min_eq_overall)
-
-    sorted_days = sorted(day_events.keys())
-    n_days = len(sorted_days)
-    is_chop = np.zeros(n_days, dtype=bool)
-    day_end = np.zeros(n_days, dtype=np.float64)
-    day_max = np.zeros(n_days, dtype=np.float64)
-    day_min_eq = np.zeros(n_days, dtype=np.float64)
-    day_swept = np.zeros(n_days, dtype=np.float64)
-    day_max_first = np.ones(n_days, dtype=bool)
-    day_min_bal = np.zeros(n_days, dtype=np.float64)
-
-    prev_close_eq = float(initial)
-    for i, d in enumerate(sorted_days):
-        pts = day_events[d]
-        eqs = [p[0] - prev_close_eq for p in pts]
-        bals = [p[1] - prev_close_eq for p in pts]
-        is_chop[i] = d >= "2026-10-01"
-        day_end[i] = eqs[-1]
-        day_max[i] = max(0.0, max(eqs))
-        day_min_eq[i] = min(0.0, min(eqs))
-        day_min_bal[i] = min(0.0, min(bals))
-        idx_max = int(np.argmax(eqs))
-        idx_min = int(np.argmin(eqs))
-        day_max_first[i] = idx_max <= idx_min
-        prev_close_eq = pts[-1][0]
-
-    blocks = (is_chop, day_end, day_max, day_min_eq, day_swept, day_max_first, day_min_bal)
-
-    if participations:
-        arr = np.array(participations, dtype=np.float64)
-        part_summary = {
-            "n_trades": len(participations),
-            "unknown_vol_trades": unknown_vol_trades,
-            "median_1m": round(float(np.median(arr)), 6),
-            "p95_1m": round(float(np.quantile(arr, 0.95)), 6),
-            "max_1m": round(float(np.max(arr)), 6),
-            "bars_above_1pct": int(np.sum(arr > 0.01)),
-            "bars_above_5pct": int(np.sum(arr > 0.05)),
-        }
-    else:
-        part_summary = {
-            "n_trades": 0,
-            "unknown_vol_trades": unknown_vol_trades,
-            "median_1m": 0.0,
-            "p95_1m": 0.0,
-            "max_1m": 0.0,
-            "bars_above_1pct": 0,
-            "bars_above_5pct": 0,
-        }
-
-    return {
-        "peak_to_trough_dd_usd": round(max_p2t_dd, 2),
-        "static_floor_dd_usd": round(static_floor_dd, 2),
-        "participation": part_summary,
-        "blocks": blocks,
-    }
+    """Compute MTM equity curve, DDs, 1m bar participation, and 7-tuple EV blocks from ``report.ledger``."""
+    del fee_rate, shortfall_bps, spread_bps
+    return summarize_backtest_diagnostics(report, facts=pod_facts, window=window)
 
 
 def _evaluate_one_task(
@@ -1554,6 +1412,10 @@ def _evaluate_one_task(
         "peak_to_trough_dd_usd": diag["peak_to_trough_dd_usd"],
         "static_floor_dd_usd": diag["static_floor_dd_usd"],
         "challenge_pass_rate": float(report.challenge_pass_rate),
+        "challenge_target_reached": report.challenge_target_reached,
+        "challenge_outcome": report.challenge_outcome,
+        "survival_no_breach": report.challenge_outcome != "BREACHED",
+        "portfolio_constraints_valid": report.portfolio_constraints_valid,
         "challenge_reasons": [_sanitize_text(r, address_to_alias) for r in report.challenge_reasons],
         "allocation_mode_share": dict(sorted(report.allocation_mode_share.items())),
         "decision_count": int(report.decision_count),
@@ -1620,10 +1482,12 @@ def _run_stage2_for_pods(
         for fut in as_completed(futs):
             res = fut.result()
             results.append(res)
+            max_part = res["participation"]["max_1m"]
+            max_part_str = f"{max_part:.4f}" if max_part is not None else "UNKNOWN"
             print(
                 f"  [done] {res['pod_id']} {res['firm_slug']} {res['cost_label']} ({res['cfg_mode']}) "
-                f"net=${res['net_pnl_usd']} pass={res['challenge_pass_rate']} "
-                f"max_part={res['participation']['max_1m']:.4f} "
+                f"net=${res['net_pnl_usd']} survived={res['survival_no_breach']} "
+                f"max_part={max_part_str} "
                 f"ev_blend=${res['ev_blended'].get('net_ev_usd')}",
                 flush=True,
             )
@@ -1926,8 +1790,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         for r in strict_stage2
         if r["cost_label"] == "2x"
         and r["net_pnl_usd"] > 0.0
-        and r["challenge_pass_rate"] == 1.0
+        and r["survival_no_breach"]
+        and r["portfolio_constraints_valid"]
+        and r["participation"]["capacity_evidence_complete"]
+        and r["participation"]["n_trades"] > 0
+        and r["participation"]["max_1m"] is not None
         and r["participation"]["max_1m"] <= 0.05
+        and r["participation"]["p95_1m"] is not None
         and r["participation"]["p95_1m"] <= 0.01
         and (
             r["allocation_mode_share"].get("ACTIVE", 0.0)

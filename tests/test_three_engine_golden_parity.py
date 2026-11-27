@@ -165,7 +165,9 @@ def _stamp(ms: int) -> str:
     return datetime.fromtimestamp(ms / 1000, UTC).isoformat()
 
 
-def _fill(at_ms: int, side: str, size: float, price: float, trade_id: int) -> dict[str, Any]:
+def _fill(
+    at_ms: int, side: str, size: float, price: float, trade_id: int, *, start_position: float = 0.0
+) -> dict[str, Any]:
     return {
         "wallet": WALLET_A,
         "exchange_ts": datetime.fromtimestamp(at_ms / 1000, UTC),
@@ -174,7 +176,7 @@ def _fill(at_ms: int, side: str, size: float, price: float, trade_id: int) -> di
         "side": side,
         "size": size,
         "price": price,
-        "start_position": 0.0,
+        "start_position": start_position,
         "trade_id": trade_id,
     }
 
@@ -351,16 +353,17 @@ def test_three_engines_end_to_end_golden_parity(tmp_path: Path, monkeypatch) -> 
                 float(abs(net_lookback)),
                 10000.0,
                 trade_id,
+                start_position=float(net_lookback),
             )
         )
         trade_id += 1
     # T0: flat (0 qty) with a price observation at 10000.
-    fills.append(_fill(T0, "buy", 0.125, 10000.0, trade_id))
-    fills.append(_fill(T0 + 1000, "sell", 0.125, 10000.0, trade_id + 1))
+    fills.append(_fill(T0, "buy", 0.125, 10000.0, trade_id, start_position=0.0))
+    fills.append(_fill(T0 + 1000, "sell", 0.125, 10000.0, trade_id + 1, start_position=0.125))
     # T1: open +3 BTC.
-    fills.append(_fill(T1, "buy", 3.0, 10000.0, trade_id + 2))
+    fills.append(_fill(T1, "buy", 3.0, 10000.0, trade_id + 2, start_position=0.0))
     # T2: partial reduce to +1 BTC.
-    fills.append(_fill(T2, "sell", 2.0, 10000.0, trade_id + 3))
+    fills.append(_fill(T2, "sell", 2.0, 10000.0, trade_id + 3, start_position=3.0))
 
     store = build_store(
         tmp_path / "backtest",

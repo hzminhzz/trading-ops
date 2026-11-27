@@ -66,11 +66,8 @@ roster for seats and the kernel for orders.
   `outcomes=()` so `copytrade_kernel.decision.plan_execution` preserves
   `frozen_pods` (Q16/Q21) and re-nets residuals; open residual owners are
   included in `ending_state`.
-* Accepted projections are booked as modelled paper fills per owner at the
-  executable side plus explicit fee and shortfall; the account book is the sum of
-  the owner books (asserted, not assumed).
-* Daily floors are evaluated by `copytrade_kernel.account_step` on modelled
-  equity; `challenge_pass_rate` is `1.0` only when no floor reason fired.
+* Accepted projections are booked by `_ReplayLedger` (`BacktestReport.ledger` / `BacktestReport.fills`) strictly on net `NetOrderIntent` broker executions (with fees/shortfall on net flow, exact causal `start_position` + `first_known_at_ms` inventory reconstruction, completed PIT `bars_1m` marks, and internal-crossing `mid` owner attribution that conserves account gross PnL).
+* Daily floors are evaluated by `copytrade_kernel.account_step` on modelled equity; `challenge_pass_rate` stays `1.0` when no floor reason fired (survival) while `challenge_target_reached` and `challenge_outcome` (`BREACHED` / `SURVIVED` / `PASSED`) distinguish target completion from survival.
 * Provenance is `RetrospectiveArchive` throughout: this path is research and can
   never authorize trading.
 

@@ -445,9 +445,9 @@ def euler_marginal_cdar_shares(
 def peak_drawdown(values: np.ndarray) -> float:
     if values.size == 0:
         return 0.0
-    curve = np.cumsum(values)
+    curve = np.concatenate([np.zeros(1, dtype=np.float64), np.cumsum(values)])
     peak = np.maximum.accumulate(curve)
-    return float(np.max(peak - curve)) if curve.size else 0.0
+    return float(np.max(peak - curve))
 
 
 def sizing_gate_failures(

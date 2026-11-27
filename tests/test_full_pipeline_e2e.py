@@ -49,7 +49,9 @@ for candidate in (PROD / "src", PROD / "tests"):
 from copytrade_kernel import KnownAtTs, Rulebook, RulebookCatalog
 from copytrade_kernel.clocks import DecisionMs
 from copytrade_pm.facts import FactIngestor, FactStore
+from copytrade_pm.facts import manifest as mf
 from copytrade_pm.facts.migrate import Migration, new_receipt
+from copytrade_pm.facts.schemas import schema_for
 from copytrade_pm.facts.sources import build_catalogue
 from copytrade_pm.pm_checkpoint_journal import CwsaPolicy
 from copytrade_pm.pm_checkpoint_source import (
@@ -274,11 +276,21 @@ def _build_strict_pit_universe(root: Path) -> FactStore:
         )
     )
 
+    running_pos: dict[tuple[str, str], Decimal] = {}
+    for row in fills:
+        key = (str(row["wallet"]), str(row["coin"]))
+        pos = running_pos.get(key, Decimal(0))
+        row["start_position"] = pos
+        delta = Decimal(str(row["size"])) * (1 if row["side"] == "buy" else -1)
+        running_pos[key] = pos + delta
+
     store_root = root / "facts"
     ws_root = root / "wallet_store"
     ws_root.mkdir(parents=True, exist_ok=True)
+    archive_fills = [row for row in fills if row["event_ts_ms"] < T0]
+    live_fills = [row for row in fills if row["event_ts_ms"] >= T0]
     by_wallet_day: dict[tuple[str, str], list[dict[str, Any]]] = {}
-    for row in fills:
+    for row in archive_fills:
         day = row["exchange_ts"].date().isoformat()
         by_wallet_day.setdefault((row["wallet"], day), []).append(row)
 
@@ -309,7 +321,7 @@ def _build_strict_pit_universe(root: Path) -> FactStore:
                 "trade_id": [int(r["trade_id"]) for r in day_rows],
                 "crossed": [True for _ in day_rows],
                 "closed_pnl": [0.0 for _ in day_rows],
-                "start_position": [0.0 for _ in day_rows],
+                "start_position": [float(r["start_position"]) for r in day_rows],
                 "source": ["vike" for _ in day_rows],
                 "source_ts": [r["source_ts"] for r in day_rows],
             }
@@ -332,6 +344,69 @@ def _build_strict_pit_universe(root: Path) -> FactStore:
         new_receipt(store_root=store_root, sources=sources, not_supplied=absent, kinds=("fills",))
     )
     ingestor = FactIngestor(store)
+    if live_fills:
+        by_day_live: dict[str, list[dict[str, Any]]] = {}
+        for idx, r in enumerate(live_fills):
+            day = r["exchange_ts"].date().isoformat()
+            by_day_live.setdefault(day, []).append(
+                {
+                    "wallet": r["wallet"],
+                    "coin": r["coin"],
+                    "dex": "hyperliquid",
+                    "dex_raw": "hyperliquid",
+                    "provider": "vike",
+                    "side": r["side"],
+                    "size": r["size"],
+                    "price": r["price"],
+                    "fee": Decimal(0),
+                    "fee_token": "USDC",
+                    "size_usd": r["size_usd"],
+                    "start_position": r["start_position"],
+                    "closed_pnl": Decimal(0),
+                    "trade_id": r["trade_id"],
+                    "order_id": r["order_id"],
+                    "direction": "",
+                    "is_liquidation": False,
+                    "is_maker": False,
+                    "crossed": True,
+                    "exchange_ts": r["exchange_ts"],
+                    "event_ts_ms": r["event_ts_ms"],
+                    "source_ts": r["source_ts"],
+                    "first_known_at_ms": r["event_ts_ms"] + 1_000,
+                    "known_at_basis": "SYNTHETIC_PER_BAR",
+                    "arrival_seq": idx,
+                    "source_id": "synthetic-capture",
+                    "source_rank": 1,
+                    "batch_sha16": "",
+                }
+            )
+        for day, day_rows in sorted(by_day_live.items()):
+            existing = store.read_day("fills", day)
+            offered = pl.DataFrame(day_rows, schema=schema_for("fills"))
+            combined = offered if existing is None else pl.concat([existing, offered], how="vertical_relaxed")
+            prepared = store.prepare_day("fills", day, combined)
+            write = store.write_day(prepared)
+            known = [r["first_known_at_ms"] for r in day_rows]
+            with store.connect() as con:
+                mf.record_day(
+                    con,
+                    batch=mf.DayBatch(
+                        kind="fills",
+                        day=day,
+                        batch_sha16=write.batch_sha16,
+                        path=str(write.path),
+                        rows=write.rows,
+                        file_sha256=write.file_sha256,
+                        inputs_fingerprint=write.file_sha256[:16],
+                    ),
+                    source_ids=["synthetic-capture"],
+                    bytes_count=write.bytes_count,
+                    inputs=[],
+                    day_sources=[{"source_id": "synthetic-capture", "rows_written": write.rows}],
+                    first_known_min_ms=min(known),
+                    first_known_max_ms=max(known),
+                    closed_at=datetime.now(UTC).isoformat(),
+                )
     for wallet, av in (
         (WALLET_A, Decimal(12000)),
         (WALLET_B, Decimal(15000)),
