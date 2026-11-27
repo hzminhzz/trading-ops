@@ -354,3 +354,253 @@ def test_backtest_computes_headroom_and_realized_made_via_account_step(
     # After the first fill incurs costs, intraday drawdown (realized_made) is positive.
     assert Decimal(captured_finances[1]["realized_made"]) > Decimal(0)
     assert Decimal(captured_finances[1]["headroom"]) < Decimal(400)
+
+
+def test_closed_position_pnl_reaches_account_cash_after_costs() -> None:
+    """A profitable or losing round trip changes account cash, not just owner PnL."""
+    from trading_ops.research.backtest import _ReplayLedger
+
+    for exit_price, expected_cash in (("110", "10009.27550"), ("90", "9989.34450")):
+        ledger = _ReplayLedger()
+        markets = {"BTC": MarketSpec("BTC")}
+        config = BacktestConfig()
+        for target, price in (("1", "100"), ("0", exit_price)):
+            ledger.apply(
+                targets={"BTC": target},
+                pod_targets={"synthetic": {"BTC": target}},
+                quotes={"BTC": {"ask": price, "bid": price}},
+                markets=markets,
+                config=config,
+            )
+        assert not ledger.positions
+        assert config.initial_equity + ledger.realized == Decimal(expected_cash)
+
+
+def test_opposing_owners_reconcile_without_basis_mismatch() -> None:
+    """Opposing owner positions in the same market must net cleanly without crashing basis."""
+    from trading_ops.research.backtest import _ReplayLedger
+
+    ledger = _ReplayLedger()
+    markets = {"BTC": MarketSpec("BTC")}
+    config = BacktestConfig()
+    fills = ledger.apply(
+        targets={"BTC": "1"},
+        pod_targets={"owner_a": {"BTC": "2"}, "owner_b": {"BTC": "-1"}},
+        quotes={"BTC": {"ask": "100", "bid": "100"}},
+        markets=markets,
+        config=config,
+    )
+    assert ledger.positions == {"BTC": Decimal(1)}
+    assert ledger.basis["BTC"]["entry_price"] == Decimal(100)
+    assert len(fills) == 1
+    assert fills[0].net_delta_qty == Decimal(1)
+    # Fee + shortfall on 1 net BTC ($100 * 34.5 bps = $0.345), NOT 3 gross BTC.
+    assert ledger.costs == Decimal("0.34500")
+
+
+def test_internally_netted_zero_delta_incurs_zero_broker_cost() -> None:
+    """Owners offsetting to zero net delta must incur zero broker fees or shortfall."""
+    from trading_ops.research.backtest import _ReplayLedger
+
+    ledger = _ReplayLedger()
+    markets = {"BTC": MarketSpec("BTC")}
+    config = BacktestConfig()
+    fills = ledger.apply(
+        targets={"BTC": "0"},
+        pod_targets={"owner_a": {"BTC": "1"}, "owner_b": {"BTC": "-1"}},
+        quotes={"BTC": {"ask": "100", "bid": "100"}},
+        markets=markets,
+        config=config,
+    )
+    assert fills == ()
+    assert ledger.costs == Decimal(0)
+    assert ledger.positions == {}
+
+
+def test_swing_position_survives_quiet_checkpoint_and_emits_canonical_ledger(
+    tmp_path: Path,
+) -> None:
+    """Quiet checkpoints carry source positions and emit bar-level canonical ledger rows."""
+    from dataclasses import replace
+
+    from research_fixtures import _fill, bars_1m_from_fills
+
+    training = wallet_round_trips(
+        WALLET_A,
+        "BTC",
+        start_ms=WINDOW_START - 2 * DAY_MS,
+        bars=2 * 288 - 1,
+        base_price=10000.0,
+        size=0.078125,
+    )
+    net = sum(
+        Decimal(str(row["size"])) * (1 if row["side"] == "buy" else -1) for row in training
+    )
+    fills = training + [
+        _fill(
+            WALLET_A,
+            "BTC",
+            len(training),
+            at_ms=WINDOW_START - GRID_MS,
+            side="sell" if net > 0 else "buy",
+            size=float(abs(net)),
+            price=10000.0,
+        ),
+        _fill(
+            WALLET_A,
+            "BTC",
+            len(training) + 1,
+            at_ms=WINDOW_START,
+            side="buy",
+            size=3.0,
+            price=10000.0,
+        ),
+        _fill(
+            WALLET_A,
+            "BTC",
+            len(training) + 2,
+            at_ms=WINDOW_START + 2 * GRID_MS,
+            side="sell",
+            size=3.0,
+            price=10100.0,
+        ),
+    ]
+    quiet_mark = _fill(
+        WALLET_A,
+        "BTC",
+        len(fills) + 1,
+        at_ms=WINDOW_START + GRID_MS,
+        side="buy",
+        size=1.0,
+        price=10050.0,
+    )
+    store = build_store(
+        tmp_path,
+        fills=fills,
+        equity={WALLET_A: (Decimal(12000), 6)},
+        bars_1m_rows=bars_1m_from_fills(fills + [quiet_mark]),
+    )
+    try:
+        report = run_kernel_backtest(
+            store,
+            window=BacktestWindow(WINDOW_START, WINDOW_START + 3 * GRID_MS),
+            seats=(SeatSpec("seat_1", Decimal(200), Decimal("1.0")),),
+            rulebook=_rulebook(),
+            markets=(MarketSpec("BTC"),),
+            config=BacktestConfig(
+                lookback_days=2,
+                allow_undated=True,
+                score_config=replace(PERMISSIVE, expectancy_mode="bar_markout"),
+                quote_spread_bps=Decimal(0),
+            ),
+        )
+    finally:
+        store.close()
+
+    assert report.decision_count == 3
+    first, quiet, close = report.decisions
+    assert len(first.ending_positions) == 1
+    assert quiet.ending_positions == first.ending_positions
+    assert not quiet.net_intents
+    assert close.ending_positions == ()
+    assert report.ending_positions == ()
+    assert Decimal(first.ending_positions[0][2]) == Decimal("0.015")
+    assert report.ending_equity == Decimal("10000.459825")
+    assert len(report.ledger) == 3
+    assert report.ledger[-1].equity == report.ending_equity
+    assert report.ledger[1].net_fill_count == 0
+    assert len(report.fills) == 2
+    assert report.fills[0].net_delta_qty == Decimal("0.015")
+    assert report.fills[1].net_delta_qty == Decimal("-0.015")
+    assert report.ledger[-1].cash == (
+        Decimal(10000)
+        + sum((f.realized_pnl_usd for f in report.fills), Decimal(0))
+        - sum((f.fee_usd + f.shortfall_usd for f in report.fills), Decimal(0))
+    )
+
+
+def test_netted_zero_opposing_owner_residuals_still_require_bar_mark(
+    tmp_path: Path,
+) -> None:
+    """Two owners netting to 0 in account positions must still require a bar mark to drain."""
+    from dataclasses import replace
+
+    import pytest
+    from research_fixtures import _fill, bars_1m_from_fills
+
+    training_a = wallet_round_trips(
+        WALLET_A,
+        "BTC",
+        start_ms=WINDOW_START - 2 * DAY_MS,
+        bars=2 * 288 - 1,
+        base_price=10000.0,
+        size=0.078125,
+    )
+    net_a = sum(
+        Decimal(str(row["size"])) * (1 if row["side"] == "buy" else -1) for row in training_a
+    )
+    training_b = wallet_round_trips(
+        WALLET_B,
+        "BTC",
+        start_ms=WINDOW_START - 2 * DAY_MS,
+        bars=2 * 288 - 1,
+        base_price=10000.0,
+        size=0.078125,
+    )
+    net_b = sum(
+        Decimal(str(row["size"])) * (1 if row["side"] == "buy" else -1) for row in training_b
+    )
+    fills = training_a + training_b + [
+        _fill(
+            WALLET_A,
+            "BTC",
+            len(training_a),
+            at_ms=WINDOW_START - GRID_MS,
+            side="sell" if net_a > 0 else "buy",
+            size=float(abs(net_a)),
+            price=10000.0,
+        ),
+        _fill(
+            WALLET_B,
+            "BTC",
+            len(training_b),
+            at_ms=WINDOW_START - GRID_MS,
+            side="sell" if net_b > 0 else "buy",
+            size=float(abs(net_b)),
+            price=10000.0,
+        ),
+        # At WINDOW_START both wallets open opposite +2 / -2 BTC (net 0); at +GRID_MS BTC has no bar mark.
+        _fill(WALLET_A, "BTC", 9001, at_ms=WINDOW_START, side="buy", size=2.0, price=10000.0),
+        _fill(WALLET_B, "BTC", 9002, at_ms=WINDOW_START, side="sell", size=2.0, price=10000.0),
+    ]
+    bars = [
+        row
+        for row in bars_1m_from_fills(fills)
+        if row["event_ts_ms"] <= WINDOW_START
+    ]
+    store = build_store(
+        tmp_path,
+        fills=fills,
+        equity={WALLET_A: (Decimal(12000), 6), WALLET_B: (Decimal(12000), 6)},
+        bars_1m_rows=bars,
+    )
+    try:
+        with pytest.raises(ValueError, match=f"MISSING_REQUIRED_MARK:{WINDOW_START + GRID_MS}:BTC"):
+            run_kernel_backtest(
+                store,
+                window=BacktestWindow(WINDOW_START, WINDOW_START + 2 * GRID_MS),
+                seats=(
+                    SeatSpec("seat_1", Decimal(200), Decimal("1.0")),
+                    SeatSpec("seat_2", Decimal(200), Decimal("1.0")),
+                ),
+                rulebook=_rulebook(),
+                markets=(MarketSpec("BTC"),),
+                config=BacktestConfig(
+                    lookback_days=2,
+                    allow_undated=True,
+                    score_config=replace(PERMISSIVE, expectancy_mode="bar_markout"),
+                    quote_spread_bps=Decimal(0),
+                ),
+            )
+    finally:
+        store.close()

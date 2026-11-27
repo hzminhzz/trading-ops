@@ -25,7 +25,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
-from decimal import ROUND_DOWN, Decimal
+from decimal import Decimal
 from typing import Any
 
 import polars as pl
@@ -42,6 +42,7 @@ from copytrade_kernel import (
     KnownAtTs,
     MarketContext,
     NativeInstrument,
+    NetOrderIntent,
     OpeningMissed,
     OwnerBook,
     RetrospectiveArchive,
@@ -72,6 +73,8 @@ __all__ = [
     "BacktestConfig",
     "BacktestReport",
     "BacktestWindow",
+    "LedgerBar",
+    "LedgerFill",
     "MarketSpec",
     "run_kernel_backtest",
 ]
@@ -230,6 +233,58 @@ class BacktestConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class LedgerFill:
+    """One modelled net broker execution booked by the canonical replay ledger."""
+
+    checkpoint_ms: int
+    market: str
+    net_delta_qty: Decimal
+    executable_price: Decimal
+    fee_usd: Decimal
+    shortfall_usd: Decimal
+    realized_pnl_usd: Decimal
+    reduce_only: bool
+
+    def data(self) -> dict[str, Any]:
+        return {
+            "checkpoint_ms": self.checkpoint_ms,
+            "market": self.market,
+            "net_delta_qty": str(self.net_delta_qty),
+            "executable_price": str(self.executable_price),
+            "fee_usd": str(self.fee_usd),
+            "shortfall_usd": str(self.shortfall_usd),
+            "realized_pnl_usd": str(self.realized_pnl_usd),
+            "reduce_only": self.reduce_only,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LedgerBar:
+    """One 5m bar valuation snapshot from the canonical replay ledger."""
+
+    checkpoint_ms: int
+    cash: Decimal
+    unrealized: Decimal
+    equity: Decimal
+    realized_pnl: Decimal
+    cumulative_costs: Decimal
+    gross_notional: Decimal
+    net_fill_count: int
+
+    def data(self) -> dict[str, Any]:
+        return {
+            "checkpoint_ms": self.checkpoint_ms,
+            "cash": str(self.cash),
+            "unrealized": str(self.unrealized),
+            "equity": str(self.equity),
+            "realized_pnl": str(self.realized_pnl),
+            "cumulative_costs": str(self.cumulative_costs),
+            "gross_notional": str(self.gross_notional),
+            "net_fill_count": self.net_fill_count,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class BacktestReport:
     """Everything one run produced, including golden decision identities."""
 
@@ -246,6 +301,8 @@ class BacktestReport:
     scorecards_recorded: int
     warnings: tuple[str, ...]
     source_sha: str
+    ledger: tuple[LedgerBar, ...] = ()
+    fills: tuple[LedgerFill, ...] = ()
 
     @property
     def decision_count(self) -> int:
@@ -271,24 +328,70 @@ class BacktestReport:
             "reconcile_plans": list(self.reconcile_plans),
             "scorecards_recorded": self.scorecards_recorded,
             "warnings": list(self.warnings),
+            "ledger": [bar.data() for bar in self.ledger],
+            "fills": [fill.data() for fill in self.fills],
             "source_sha": self.source_sha,
         }
 
 
 # --------------------------------------------------------------------------- #
-# research book: positions, entry basis and realized PnL per owner
+# canonical replay ledger: net broker execution + owner attribution sub-ledger
+
+
+def _apply_position_delta(
+    positions: dict[str, Decimal],
+    basis: dict[str, dict[str, Decimal]],
+    *,
+    market: str,
+    delta: Decimal,
+    executable: Decimal,
+) -> Decimal:
+    """Apply ``delta`` to ``positions``/``basis`` in place; return gross realized PnL."""
+    current = positions.get(market, _ZERO)
+    desired = current + delta
+    entry = basis.get(market)
+    realized = _ZERO
+    if entry is not None and current and (current > 0) != (delta > 0):
+        closed = min(abs(current), abs(delta))
+        realized = (executable - entry["entry_price"]) * closed * (1 if current > 0 else -1)
+    if not desired:
+        positions.pop(market, None)
+        basis.pop(market, None)
+        return realized
+    if entry is None or not current or (current > 0) != (desired > 0):
+        new_entry = executable
+    elif (current > 0) == (delta > 0):
+        new_entry = (abs(current) * entry["entry_price"] + abs(delta) * executable) / abs(desired)
+    else:
+        new_entry = entry["entry_price"]
+    positions[market] = desired
+    basis[market] = {"quantity": desired, "entry_price": new_entry}
+    return realized
 
 
 @dataclass
-class _Book:
-    """Modelled paper book; the account leg is always the sum of owner legs."""
+class _ReplayLedger:
+    """Canonical replay ledger: net broker execution plus owner attribution.
+
+    Account cash, costs, positions, and basis are driven strictly by net broker
+    executions (``NetOrderIntent`` / ``targets`` deltas), never gross owner legs.
+    Owner attribution is maintained separately and asserted to sum to account
+    positions on every step without forbidding opposing-owner books.
+    """
 
     positions: dict[str, Decimal] = field(default_factory=dict)
     basis: dict[str, dict[str, Decimal]] = field(default_factory=dict)
+    realized_pnl: Decimal = _ZERO
+    costs: Decimal = _ZERO
     owner_positions: dict[str, dict[str, Decimal]] = field(default_factory=dict)
     owner_basis: dict[str, dict[str, dict[str, Decimal]]] = field(default_factory=dict)
     owner_realized: dict[str, Decimal] = field(default_factory=dict)
-    realized: Decimal = _ZERO
+    fills: list[LedgerFill] = field(default_factory=list)
+
+    @property
+    def realized(self) -> Decimal:
+        """Net account realized PnL (gross trading PnL minus execution costs)."""
+        return self.realized_pnl - self.costs
 
     def owner_book(self, owner: str) -> dict[str, Decimal]:
         return self.owner_positions.setdefault(owner, {})
@@ -301,9 +404,92 @@ class _Book:
         quotes: dict[str, dict[str, Any]],
         markets: dict[str, MarketSpec],
         config: BacktestConfig,
-    ) -> Decimal:
-        """Book modelled fills for one accepted projection; return cash cost."""
-        cost = _ZERO
+        checkpoint_ms: int = 0,
+        net_orders: tuple[NetOrderIntent, ...] | None = None,
+    ) -> tuple[LedgerFill, ...]:
+        """Book one accepted execution projection; return the net broker fills."""
+        bar_fills = self._apply_net_executions(
+            targets=targets,
+            quotes=quotes,
+            markets=markets,
+            config=config,
+            checkpoint_ms=checkpoint_ms,
+            net_orders=net_orders,
+        )
+        self._apply_owner_attribution(pod_targets=pod_targets, quotes=quotes)
+        self._reconcile(targets)
+        self.fills.extend(bar_fills)
+        return bar_fills
+
+    def _apply_net_executions(
+        self,
+        *,
+        targets: dict[str, str],
+        quotes: dict[str, dict[str, Any]],
+        markets: dict[str, MarketSpec],
+        config: BacktestConfig,
+        checkpoint_ms: int,
+        net_orders: tuple[NetOrderIntent, ...] | None,
+    ) -> tuple[LedgerFill, ...]:
+        if net_orders is not None:
+            intent_deltas = {intent.market: intent for intent in net_orders}
+            for market in sorted(set(targets) | set(self.positions) | set(intent_deltas)):
+                expected = Decimal(targets.get(market, "0")) - self.positions.get(market, _ZERO)
+                observed = intent_deltas[market].net_delta_qty if market in intent_deltas else _ZERO
+                if expected != observed:
+                    raise ValueError(
+                        f"KERNEL_NET_INTENT_MISMATCH:{market}:{observed}!={expected}"
+                    )
+            execution_items = [
+                (intent.market, intent.net_delta_qty, intent.reduce_only)
+                for intent in sorted(net_orders, key=lambda row: row.market)
+                if intent.net_delta_qty
+            ]
+        else:
+            execution_items = []
+            for market in sorted(set(targets) | set(self.positions)):
+                current = self.positions.get(market, _ZERO)
+                delta = Decimal(targets.get(market, "0")) - current
+                if delta:
+                    reduce_only = bool(current and current * delta < 0 and abs(delta) <= abs(current))
+                    execution_items.append((market, delta, reduce_only))
+
+        bar_fills: list[LedgerFill] = []
+        for market, delta, reduce_only in execution_items:
+            executable = Decimal(quotes[market]["ask"] if delta > 0 else quotes[market]["bid"])
+            spec = markets[market]
+            notional = abs(delta) * executable
+            fee_usd = notional * spec.fee_rate
+            shortfall_usd = notional * (config.shortfall_bps / Decimal(10_000))
+            self.costs += fee_usd + shortfall_usd
+            fill_realized = _apply_position_delta(
+                self.positions,
+                self.basis,
+                market=market,
+                delta=delta,
+                executable=executable,
+            )
+            self.realized_pnl += fill_realized
+            bar_fills.append(
+                LedgerFill(
+                    checkpoint_ms=checkpoint_ms,
+                    market=market,
+                    net_delta_qty=delta,
+                    executable_price=executable,
+                    fee_usd=fee_usd,
+                    shortfall_usd=shortfall_usd,
+                    realized_pnl_usd=fill_realized,
+                    reduce_only=reduce_only,
+                )
+            )
+        return tuple(bar_fills)
+
+    def _apply_owner_attribution(
+        self,
+        *,
+        pod_targets: dict[str, dict[str, str]],
+        quotes: dict[str, dict[str, Any]],
+    ) -> None:
         for owner in sorted(set(pod_targets) | set(self.owner_positions)):
             holder = self.owner_book(owner)
             basis = self.owner_basis.setdefault(owner, {})
@@ -315,71 +501,32 @@ class _Book:
                 if not delta:
                     continue
                 executable = Decimal(quotes[market]["ask"] if delta > 0 else quotes[market]["bid"])
-                spec = markets[market]
-                delta = (delta / spec.qty_step).to_integral_value(
-                    rounding=ROUND_DOWN
-                ) * spec.qty_step
-                if not delta:
-                    continue
-                cost += (
-                    abs(delta)
-                    * executable
-                    * (spec.fee_rate + config.shortfall_bps / Decimal(10_000))
+                realized = _apply_position_delta(
+                    holder,
+                    basis,
+                    market=market,
+                    delta=delta,
+                    executable=executable,
                 )
-                desired = current + delta
-                entry = basis.get(market)
-                if entry is not None and current and (current > 0) == (delta > 0):
-                    closed = _ZERO
-                elif entry is not None:
-                    closed = min(abs(current), abs(delta))
-                    self.owner_realized[owner] = self.owner_realized.get(owner, _ZERO) + (
-                        (executable - entry["entry_price"]) * closed * (1 if current > 0 else -1)
-                    )
-                else:
-                    closed = _ZERO
-                if not desired:
-                    holder.pop(market, None)
-                    basis.pop(market, None)
-                    continue
-                if entry is None or not current or (current > 0) != (desired > 0):
-                    new_entry = executable
-                else:
-                    remaining = abs(current) - closed
-                    new_entry = (
-                        remaining * entry["entry_price"] + (abs(delta) - closed) * executable
-                    ) / abs(desired)
-                holder[market] = desired
-                basis[market] = {"quantity": desired, "entry_price": new_entry}
-        self._reconcile(targets)
-        return cost
+                if realized:
+                    self.owner_realized[owner] = self.owner_realized.get(owner, _ZERO) + realized
 
     def _reconcile(self, targets: dict[str, str]) -> None:
-        """Account positions are the owner sum; the kernel guarantees equality."""
-        self.positions = {}
-        self.basis = {}
-        for owner, holder in sorted(self.owner_positions.items()):
-            for market, quantity in sorted(holder.items()):
-                self.positions[market] = self.positions.get(market, _ZERO) + quantity
-        for market, target in targets.items():
-            if self.positions.get(market, _ZERO) != Decimal(target):
+        """Account positions must always equal the sum of owner positions."""
+        owner_sums: dict[str, Decimal] = {}
+        for holder in self.owner_positions.values():
+            for market, quantity in holder.items():
+                if quantity:
+                    owner_sums[market] = owner_sums.get(market, _ZERO) + quantity
+        for market in sorted(set(targets) | set(owner_sums) | set(self.positions)):
+            expected = Decimal(targets.get(market, "0"))
+            account_qty = self.positions.get(market, _ZERO)
+            owner_qty = owner_sums.get(market, _ZERO)
+            if account_qty != expected or owner_qty != expected:
                 raise ValueError(
                     "KERNEL_OWNER_SUM_MISMATCH:"
-                    f"{market}:{self.positions.get(market, _ZERO)}!={target}"
+                    f"{market}:account={account_qty}:owners={owner_qty}!={expected}"
                 )
-        for market, quantity in self.positions.items():
-            if not quantity:
-                continue
-            legs = [
-                (abs(holder[market]), holder_basis[market]["entry_price"])
-                for owner, holder in self.owner_positions.items()
-                for holder_basis in (self.owner_basis.get(owner, {}),)
-                if market in holder and market in holder_basis
-            ]
-            total = sum((size for size, _ in legs), _ZERO)
-            if total != abs(quantity):
-                raise ValueError("KERNEL_OWNER_BASIS_MISMATCH")
-            entry = sum((size * price for size, price in legs), _ZERO) / total
-            self.basis[market] = {"quantity": quantity, "entry_price": entry}
 
     def unrealized(self, prices: dict[str, float]) -> Decimal:
         total = _ZERO
@@ -389,6 +536,14 @@ class _Book:
             if entry is None or price is None:
                 continue
             total += (Decimal(repr(price)) - entry["entry_price"]) * quantity
+        return total
+
+    def gross_notional(self, prices: dict[str, float]) -> Decimal:
+        total = _ZERO
+        for market, quantity in self.positions.items():
+            price = prices.get(market)
+            if price is not None and quantity:
+                total += abs(quantity) * Decimal(repr(price))
         return total
 
     def owner_pnl(self, owner: str, prices: dict[str, float]) -> Decimal:
@@ -432,25 +587,36 @@ def _panel(
     normalised = pl.col("side").cast(pl.String).str.to_uppercase()
     sign = (
         pl.when(normalised.is_in(["B", "BUY", "LONG", "BID"]))
-        .then(pl.lit(1.0))
+        .then(pl.lit(1))
         .when(normalised.is_in(["A", "S", "SELL", "SHORT", "ASK"]))
-        .then(pl.lit(-1.0))
-        .otherwise(pl.lit(None, dtype=pl.Float64))
+        .then(pl.lit(-1))
+        .otherwise(pl.lit(None, dtype=pl.Int8))
     )
-    orders = fills.with_columns(
-        sign.alias("side_sign"),
-        pl.col("size").cast(pl.Float64).alias("size"),
-        pl.col("price").cast(pl.Float64).alias("price"),
-        pl.col("event_ts_ms").cast(pl.Int64),
-        (pl.col("event_ts_ms") // GRID_MS * GRID_MS).alias("bar_ms"),
-    ).filter(pl.col("side_sign").is_not_null() & pl.col("size").is_finite() & (pl.col("size") != 0))
-    return (
-        orders.sort(["wallet", "coin", "event_ts_ms", "arrival_seq"])
+    orders = (
+        fills.with_columns(
+            sign.alias("side_sign"),
+            pl.col("size").cast(pl.Decimal(38, 12)).alias("size_dec"),
+            pl.col("price").cast(pl.Float64).alias("price"),
+            pl.col("event_ts_ms").cast(pl.Int64),
+            (pl.col("event_ts_ms") // GRID_MS * GRID_MS).alias("bar_ms"),
+        )
+        .filter(
+            pl.col("side_sign").is_not_null()
+            & pl.col("size_dec").is_not_null()
+            & (pl.col("size_dec") != 0)
+            & (pl.col("event_ts_ms") < window.end_ms)
+        )
         .with_columns(
-            (pl.col("side_sign") * pl.col("size"))
-            .cum_sum()
-            .over(["wallet", "coin"])
-            .alias("quantity")
+            pl.when(pl.col("side_sign") > 0)
+            .then(pl.col("size_dec"))
+            .otherwise(-pl.col("size_dec"))
+            .alias("signed_size")
+        )
+    )
+    return (
+        orders.sort(["wallet", "coin", "bar_ms", "event_ts_ms", "arrival_seq"])
+        .with_columns(
+            pl.col("signed_size").cum_sum().over(["wallet", "coin"]).alias("quantity")
         )
         .group_by(["wallet", "coin", "bar_ms"])
         .agg(
@@ -463,21 +629,83 @@ def _panel(
 
 def _prices(panel: pl.DataFrame) -> dict[str, dict[int, float]]:
     result: dict[str, dict[int, float]] = {}
-    for row in panel.group_by(["coin", "bar_ms"]).agg(pl.col("price").last()).iter_rows(named=True):
+    if panel.height == 0:
+        return result
+    valid = panel.filter(pl.col("price").is_finite() & (pl.col("price") > 0))
+    for row in valid.group_by(["coin", "bar_ms"]).agg(pl.col("price").last()).iter_rows(named=True):
         result.setdefault(row["coin"], {})[int(row["bar_ms"])] = float(row["price"])
     return result
 
 
-def _quantities(panel: pl.DataFrame, bar_ms: int) -> dict[str, dict[str, Decimal]]:
-    result: dict[str, dict[str, Decimal]] = {}
-    for row in panel.filter(pl.col("bar_ms") == bar_ms).iter_rows(named=True):
-        quantity = row["quantity"]
+def _venue_prices(
+    facts: FactStore,
+    window: BacktestWindow,
+    coins: Sequence[str],
+    *,
+    tiers: Iterable[ProvenanceTier] | None,
+    allow_undated: bool,
+) -> dict[str, dict[int, float]]:
+    """Use only completed venue candles known by the bucket's decision deadline."""
+    start_day = datetime.fromtimestamp((window.start_ms - GRID_MS) / 1000, UTC).date().isoformat()
+    bars = facts.scan(
+        "bars_1m",
+        coins=coins,
+        start_day=start_day,
+        end_day=window.end_day,
+        as_of_ms=window.end_ms,
+        tiers=tiers,
+        allow_unknown_known_at=allow_undated,
+    ).collect()
+    if bars.height == 0:
+        return {}
+    bars = (
+        bars.with_columns(
+            (pl.col("event_ts_ms") // GRID_MS * GRID_MS).alias("bar_ms"),
+            pl.col("close").cast(pl.Float64).alias("price"),
+        )
+        .filter(
+            (pl.col("event_ts_ms") >= window.start_ms - GRID_MS)
+            & (pl.col("event_ts_ms") + 60_000 <= pl.col("bar_ms") + GRID_MS)
+            & (pl.col("bar_ms") < window.end_ms)
+            & (
+                pl.col("first_known_at_ms").is_null()
+                | (pl.col("first_known_at_ms") <= pl.col("bar_ms") + GRID_MS)
+            )
+            & pl.col("price").is_finite()
+            & (pl.col("price") > 0)
+        )
+        .sort(["coin", "bar_ms", "event_ts_ms", "source_rank", "arrival_seq"])
+    )
+    return _prices(bars)
+
+
+def _quantities_by_bar(panel: pl.DataFrame) -> dict[int, dict[str, dict[str, Decimal]]]:
+    result: dict[int, dict[str, dict[str, Decimal]]] = {}
+    if panel.height == 0:
+        return result
+    for bar_ms, wallet, coin, quantity in panel.select(
+        ["bar_ms", "wallet", "coin", "quantity"]
+    ).iter_rows():
         if quantity is None:
             continue
-        value = Decimal(repr(float(quantity)))
-        if value:
-            result.setdefault(row["wallet"], {})[row["coin"]] = value
+        value = quantity if isinstance(quantity, Decimal) else Decimal(str(quantity))
+        # Zero is an explicit inventory clear, distinct from no-trade quiet bars.
+        result.setdefault(int(bar_ms), {}).setdefault(wallet, {})[coin] = value.normalize()
     return result
+
+
+def _update_source_positions(
+    positions: dict[str, dict[str, Decimal]],
+    updates: dict[str, dict[str, Decimal]],
+) -> None:
+    """Apply explicit inventory updates; quiet bars carry the previous quantity."""
+    for wallet, changes in updates.items():
+        book = positions.setdefault(wallet, {})
+        for coin, quantity in changes.items():
+            if quantity:
+                book[coin] = quantity
+            else:
+                book.pop(coin, None)
 
 
 def _fmt_decimal(value: Decimal) -> str:
@@ -498,7 +726,7 @@ def _quote(price: float, *, spread_bps: Decimal, known_at_ms: int) -> dict[str, 
 
 def _kernel_state(
     owners: Sequence[str],
-    book: _Book,
+    book: _ReplayLedger,
     memory: dict[str, dict[NativeInstrument, OpeningMissed]],
 ) -> KernelState:
     return KernelState(
@@ -521,7 +749,7 @@ def _kernel_state(
     )
 
 
-def _basis_payload(book: _Book) -> dict[str, Any]:
+def _basis_payload(book: _ReplayLedger) -> dict[str, Any]:
     return {
         market: {"quantity": str(entry["quantity"]), "entry_price": str(entry["entry_price"])}
         for market, entry in sorted(book.basis.items())
@@ -606,7 +834,13 @@ def run_kernel_backtest(
     specs = {spec.symbol: spec for spec in (markets or [MarketSpec(coin) for coin in coins])}
     if set(coins) - set(specs):
         raise ValueError("MARKET_SPEC_MISSING")
-    prices = _prices(panel)
+    prices = _venue_prices(
+        facts, window, coins, tiers=tiers, allow_undated=settings.allow_undated
+    )
+    quantities_by_bar = _quantities_by_bar(panel)
+    source_positions: dict[str, dict[str, Decimal]] = {}
+    for prior_bar in sorted(b for b in quantities_by_bar if b < window.start_ms):
+        _update_source_positions(source_positions, quantities_by_bar[prior_bar])
 
     book_state = SeatBook.empty(
         settings.account_id,
@@ -614,10 +848,11 @@ def run_kernel_backtest(
         as_of=KnownAtTs(window.start_ms),
         policy_epoch=_POLICY_EPOCH,
     )
-    book = _Book()
+    book = _ReplayLedger()
     memory: dict[str, dict[NativeInstrument, OpeningMissed]] = {}
     equity = settings.initial_equity
     decisions: list[GoldenStep] = []
+    ledger_bars: list[LedgerBar] = []
     plans: list[str] = []
     modes: list[str] = []
     reasons: set[str] = set()
@@ -658,7 +893,22 @@ def run_kernel_backtest(
         plans.append(plan.sha)
         modes.append(plan.mode.value)
         warnings.update(f"{warning}:{day_ms}" for warning in plan.warnings)
-        day_marks = {coin: prices[coin][day_ms] for coin in coins if day_ms in prices.get(coin, {})}
+        previous_bar = day_ms - GRID_MS
+        day_marks = {
+            coin: prices[coin][previous_bar]
+            for coin in coins
+            if previous_bar in prices.get(coin, {})
+        }
+        held_coins = {
+            coin for coin, quantity in book.positions.items() if quantity
+        } | {
+            coin
+            for holder in book.owner_positions.values()
+            for coin, quantity in holder.items()
+            if quantity
+        }
+        if held_coins - day_marks.keys():
+            raise ValueError(f"MISSING_HELD_MARK_AT_DAILY_ANCHOR:{day_ms}")
         anchor_cash = settings.initial_equity + book.realized
         anchor_unrealized = book.unrealized(day_marks)
         equity = anchor_cash + anchor_unrealized
@@ -681,6 +931,7 @@ def run_kernel_backtest(
         reasons.update(step_reasons)
         bar = day_ms
         while bar < day_end:
+            _update_source_positions(source_positions, quantities_by_bar.get(bar, {}))
             leases = [lease for _, lease in book_state.seats if lease is not None]
             has_open_residuals = any(any(holder.values()) for holder in book.owner_positions.values())
             if not leases and not has_open_residuals:
@@ -689,7 +940,6 @@ def run_kernel_backtest(
                 continue
             if not leases and has_open_residuals:
                 warnings.add(f"FLAT_WITH_DRAINING_RESIDUALS:{bar}")
-            quantities = _quantities(panel, bar)
             quotes: dict[str, dict[str, Any]] = {}
             for coin in coins:
                 price = prices.get(coin, {}).get(bar)
@@ -700,6 +950,23 @@ def run_kernel_backtest(
                     spread_bps=settings.quote_spread_bps,
                     known_at_ms=bar + GRID_MS - 1000,
                 )
+            required_coins = (
+                {
+                    coin
+                    for lease in leases
+                    for coin in source_positions.get(lease.wallet, {})
+                }
+                | {coin for coin, quantity in book.positions.items() if quantity}
+                | {
+                    coin
+                    for holder in book.owner_positions.values()
+                    for coin, quantity in holder.items()
+                    if quantity
+                }
+            )
+            missing_quotes = required_coins - quotes.keys()
+            if missing_quotes:
+                raise ValueError(f"MISSING_REQUIRED_MARK:{bar}:{','.join(sorted(missing_quotes))}")
             if not quotes:
                 warnings.add(f"NO_QUOTE_AT_BAR:{bar}")
                 bar += GRID_MS
@@ -721,9 +988,8 @@ def run_kernel_backtest(
                                     mark=Decimal(quotes[coin]["bid"]),
                                 )
                                 for coin, quantity in sorted(
-                                    quantities.get(lease.wallet, {}).items()
+                                    source_positions.get(lease.wallet, {}).items()
                                 )
-                                if coin in quotes
                             ),
                             provenance=RetrospectiveArchive(
                                 archive_sha=f"{bar:016x}".rjust(16, "0")
@@ -819,14 +1085,17 @@ def run_kernel_backtest(
             if execution is None:
                 raise ValueError("KERNEL_INPUTS_REQUIRED")
             status = execution.risk.data().get("status")
+            bar_fills: tuple[LedgerFill, ...] = ()
             if status == "ACCEPTED" and execution.execution_plan is not None:
                 projection = execution.execution_plan.data()
-                book.realized -= book.apply(
+                bar_fills = book.apply(
                     targets=projection["targets"],
                     pod_targets=projection["pod_targets"],
                     quotes=quotes,
                     markets=specs,
                     config=settings,
+                    checkpoint_ms=bar,
+                    net_orders=execution.net_orders,
                 )
             elif status != "ACCEPTED":
                 warnings.add(f"KERNEL_{status}_AT_{bar}")
@@ -845,7 +1114,21 @@ def run_kernel_backtest(
                     next_state=_kernel_state(owners, book, memory),
                 )
             )
-            equity = settings.initial_equity + book.realized + book.unrealized(marks)
+            bar_cash = settings.initial_equity + book.realized
+            bar_unrealized = book.unrealized(marks)
+            equity = bar_cash + bar_unrealized
+            ledger_bars.append(
+                LedgerBar(
+                    checkpoint_ms=bar,
+                    cash=bar_cash,
+                    unrealized=bar_unrealized,
+                    equity=equity,
+                    realized_pnl=book.realized_pnl,
+                    cumulative_costs=book.costs,
+                    gross_notional=book.gross_notional(marks),
+                    net_fill_count=len(bar_fills),
+                )
+            )
             bar += GRID_MS
 
     present = {
@@ -909,4 +1192,6 @@ def run_kernel_backtest(
                 "ending": [list(row) for row in ending_state_rows(ending_state)],
             }
         ),
+        ledger=tuple(ledger_bars),
+        fills=tuple(book.fills),
     )

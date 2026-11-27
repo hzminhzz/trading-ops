@@ -118,6 +118,7 @@ class ScoreConfig:
     participation_scale_by_k: bool = True
     max_missing_volume_frac: Decimal = Decimal("0.02")
     expectancy_mode: str = "trajectory"
+    decouple_sizing_gates: bool = False
 
     def __post_init__(self) -> None:
         for name in (
@@ -142,6 +143,7 @@ class ScoreConfig:
             "exclude_non_market_symbols",
             "net_orders_by_bar",
             "participation_scale_by_k",
+            "decouple_sizing_gates",
         ):
             if type(getattr(self, flag)) is not bool:
                 raise ValueError(f"INVALID_SCORE_CONFIG:{flag}")
@@ -176,6 +178,7 @@ class ScoreConfig:
             "participation_scale_by_k": self.participation_scale_by_k,
             "max_missing_volume_frac": str(self.max_missing_volume_frac),
             "expectancy_mode": self.expectancy_mode,
+            "decouple_sizing_gates": self.decouple_sizing_gates,
         }
 
 
@@ -229,12 +232,15 @@ def _basis_for(config: ScoreConfig, *, undated: bool) -> dict[str, str]:
         if config.net_orders_by_bar and config.participation_scale_by_k
         else LEGACY_PARTICIPATION_BASIS
     )
-    return {
+    basis = {
         "participation": participation,
         "cdar_share": "EULER_MARGINAL_CDAR_COHORT",
         "markout": EXPECTANCY_BASIS_BY_MODE[config.expectancy_mode],
         "pit": "RETROSPECTIVE_UNDATED" if undated else "STRICT_KNOWN_AT",
     }
+    if config.decouple_sizing_gates:
+        basis["sizing_gates"] = "DECOUPLED_PORTFOLIO_SEAM"
+    return basis
 
 
 @dataclass(frozen=True, slots=True)
@@ -257,6 +263,21 @@ class UniverseScorecard:
     _returns_by_wallet: dict[str, tuple[float, ...]] = field(
         default_factory=dict, repr=False, compare=False
     )
+    _unscaled_participation_by_wallet: dict[str, tuple[float, float]] = field(
+        default_factory=dict, repr=False, compare=False
+    )
+
+    def wallet_returns(self, wallet: str) -> tuple[float, ...]:
+        """Return bar-aligned unit-scale wallet return series, or fail closed."""
+        if wallet not in self._returns_by_wallet:
+            raise ValueError(f"SCORECARD_MISSING_RETURNS:{wallet}")
+        return self._returns_by_wallet[wallet]
+
+    def wallet_unscaled_participation(self, wallet: str) -> tuple[float, float]:
+        """Return unscaled ``(p95, max)`` venue participation shares, or fail closed."""
+        if wallet not in self._unscaled_participation_by_wallet:
+            raise ValueError(f"SCORECARD_MISSING_PARTICIPATION:{wallet}")
+        return self._unscaled_participation_by_wallet[wallet]
 
     def __post_init__(self) -> None:
         if not self.basis:
@@ -379,7 +400,7 @@ def _build_follower_stream(orders: pl.DataFrame, *, pod_equity: float) -> Follow
     return FollowerExecutionStream(panel=bar_panel, rebalances=rebalances)
 
 
-def _euler_marginal_cdar_shares(
+def euler_marginal_cdar_shares(
     returns: np.ndarray,
     weights: np.ndarray,
     alpha: float,
@@ -421,12 +442,30 @@ def _euler_marginal_cdar_shares(
     return contrib / port_cdar
 
 
-def _peak_dd(values: np.ndarray) -> float:
+def peak_drawdown(values: np.ndarray) -> float:
     if values.size == 0:
         return 0.0
     curve = np.cumsum(values)
     peak = np.maximum.accumulate(curve)
     return float(np.max(peak - curve)) if curve.size else 0.0
+
+
+def sizing_gate_failures(
+    raw_p95: float,
+    raw_max: float,
+    raw_cdar_share: float,
+    *,
+    max_p95: Decimal,
+    max_max: Decimal,
+    max_cdar: Decimal,
+) -> tuple[GateFailure, ...]:
+    """Evaluate participation and Euler marginal CDaR limits consistently."""
+    failures: list[GateFailure] = []
+    if raw_p95 > float(max_p95) or raw_max > float(max_max):
+        failures.append(GateFailure.PARTICIPATION_LIMIT)
+    if Decimal(repr(max(raw_cdar_share, 0.0))) > max_cdar:
+        failures.append(GateFailure.MARGINAL_CDAR_LIMIT)
+    return tuple(failures)
 
 
 def _upgma_labels(dist: np.ndarray, clusters: int) -> list[int]:
@@ -985,13 +1024,20 @@ def score_universe(
         positions = [index[bar] for bar in grouped["bar_ms"].to_list()]
         returns[row_index, positions] = grouped["net_ret_frac"].to_numpy()
 
-    drawdowns = [_peak_dd(returns[row_index]) * pod_equity for row_index in range(len(scored))]
+    drawdowns = [peak_drawdown(returns[row_index]) * pod_equity for row_index in range(len(scored))]
     k_results = [_suggested_k(drawdown, settings) for drawdown in drawdowns]
     scale_by_wallet = {
         wallet: (float(k_results[row_index][0]) if settings.participation_scale_by_k else 1.0)
         for row_index, wallet in enumerate(scored)
     }
     participation_rows = _participation_shares(valid_volume, scale_by_wallet=scale_by_wallet)
+    unscaled_participation_rows = (
+        participation_rows
+        if not settings.participation_scale_by_k
+        else _participation_shares(
+            valid_volume, scale_by_wallet={wallet: 1.0 for wallet in scored}
+        )
+    )
 
     markout = _score_expectancy(stream, orders, bars_frame, mode=settings.expectancy_mode)
     window_start = as_of.value - settings.active_days_window_days * 86_400_000
@@ -1003,7 +1049,7 @@ def score_universe(
     )
 
     weights = np.array([float(k) for k, _ in k_results], dtype=np.float64)
-    cdar_shares = _euler_marginal_cdar_shares(returns, weights, settings.cdar_alpha)
+    cdar_shares = euler_marginal_cdar_shares(returns, weights, settings.cdar_alpha)
     labels = _cluster_labels(returns, settings.cluster_count)
 
     markout_rows = {
@@ -1036,12 +1082,17 @@ def score_universe(
                 failures.append(GateFailure.NEGATIVE_5M_MARKOUT)
             if markout_fills < settings.min_markout_fills:
                 failures.append(GateFailure.MARKOUT_NOT_COPYABLE)
-        if raw_p95 > float(settings.max_p95_participation_1m) or raw_worst > float(
-            settings.max_max_participation_1m
-        ):
-            failures.append(GateFailure.PARTICIPATION_LIMIT)
-        if Decimal(repr(max(raw_cdar_share, 0.0))) > settings.max_euler_cdar_share:
-            failures.append(GateFailure.MARGINAL_CDAR_LIMIT)
+        if not settings.decouple_sizing_gates:
+            failures.extend(
+                sizing_gate_failures(
+                    raw_p95,
+                    raw_worst,
+                    raw_cdar_share,
+                    max_p95=settings.max_p95_participation_1m,
+                    max_max=settings.max_max_participation_1m,
+                    max_cdar=settings.max_euler_cdar_share,
+                )
+            )
         if no_dd:
             notes.append(f"NO_DRAWDOWN_EVIDENCE:{wallet}")
         cards.append(
@@ -1116,6 +1167,7 @@ def score_universe(
         source_sha=source_sha,
         notes=tuple(sorted(set(notes))),
         _returns_by_wallet=returns_by_wallet,
+        _unscaled_participation_by_wallet=unscaled_participation_rows,
     )
 
 
@@ -1143,7 +1195,7 @@ def bench_from_scorecard(
             dtype=np.float64,
         )
         bench_weights = np.array([float(card.suggested_k) for card in eligible], dtype=np.float64)
-        bench_shares = _euler_marginal_cdar_shares(
+        bench_shares = euler_marginal_cdar_shares(
             bench_returns, bench_weights, scorecard.config.cdar_alpha
         )
         marginal_shares = [

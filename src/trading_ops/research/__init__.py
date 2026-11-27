@@ -22,11 +22,19 @@ Public surface (two deep operations plus the golden identity)::
 
 from __future__ import annotations
 
+from .allocation import (
+    AllocationPolicy,
+    PortfolioAllocationPlan,
+    WalletAllocation,
+    allocate_fixed_k_portfolio,
+)
 from .backtest import (
     DAY_MS,
     BacktestConfig,
     BacktestReport,
     BacktestWindow,
+    LedgerBar,
+    LedgerFill,
     MarketSpec,
     run_kernel_backtest,
 )
@@ -63,16 +71,22 @@ __all__ = [
     "DECISION_SHA_SCHEMA",
     "DEFAULT_FEE_SCHEDULE_PATH",
     "GRID_MS",
+    "AllocationPolicy",
     "BacktestConfig",
     "BacktestReport",
     "BacktestWindow",
     "FeeQuote",
     "GoldenStep",
+    "LedgerBar",
+    "LedgerFill",
     "MarketSpec",
+    "PortfolioAllocationPlan",
     "ScoreAuditRow",
     "ScoreConfig",
     "ScoreExclusion",
     "UniverseScorecard",
+    "WalletAllocation",
+    "allocate_fixed_k_portfolio",
     "bench_from_scorecard",
     "decision_payload",
     "decision_sha",
